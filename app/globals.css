@@ -1,0 +1,2 @@
+/* Global styles entrypoint: imports shared theme tokens and applies app-wide base styles. */
+@import "../styles/theme.css";

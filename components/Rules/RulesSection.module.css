@@ -1,0 +1,282 @@
+/**
+ * RulesSection.module.css
+ * -----------------------
+ * Layout and editor styling for the Rules section.
+ * Ensures text stays left-aligned, titles have a red underline,
+ * and any attached imagery sits to the right side of the content block.
+ */
+
+.section {
+  margin-top: 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.sectionHeader h2 {
+  margin: 0.25rem 0 0;
+  font-size: 2rem;
+}
+
+.eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-muted);
+  font-size: 0.8rem;
+}
+
+.rulesList {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.ruleCard {
+  width: 100%;
+}
+
+.ruleRow {
+  display: flex;
+  gap: 1.75rem;
+  align-items: stretch;
+}
+
+.textColumn {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+}
+
+.ruleTitleGroup {
+  text-align: left;
+  margin-bottom: 0.75rem;
+}
+
+.ruleTitle {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.ruleUnderline {
+  display: block;
+  width: 80px;
+  height: 4px;
+  background: var(--color-maroon);
+  border-radius: 999px;
+  margin-top: 0.35rem;
+}
+
+.ruleBody {
+  text-align: left;
+  color: #333333;
+  line-height: 1.5;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.ruleBody p {
+  margin: 0;
+}
+
+.imageColumn {
+  flex: 1.1;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+.imageFrame {
+  margin: 0;
+}
+
+.imageFrame img {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+}
+
+.imageFrame figcaption {
+  margin-top: 0.35rem;
+  font-size: 0.85rem;
+  color: var(--color-muted);
+}
+
+.ruleActions {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.actionButton,
+.secondaryButton,
+.closeButton,
+.removeImageButton {
+  border-radius: var(--radius-sm);
+  padding: 0.55rem 1.2rem;
+  font-weight: 600;
+  border: 1px solid var(--color-maroon);
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.actionButton {
+  background: var(--color-maroon);
+  color: var(--color-text-inverse);
+}
+
+.actionButton:hover {
+  background: var(--color-maroon-dark);
+}
+
+.secondaryButton,
+.closeButton {
+  background: transparent;
+  color: var(--color-maroon);
+}
+
+.secondaryButton:hover,
+.closeButton:hover {
+  background: rgba(107, 35, 53, 0.08);
+}
+
+.removeImageButton {
+  background: rgba(192, 57, 43, 0.1);
+  color: #a03122;
+  border-color: #a03122;
+}
+
+.removeImageButton:hover {
+  background: rgba(192, 57, 43, 0.2);
+}
+
+.editorOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  z-index: 200;
+}
+
+.editorCard {
+  width: min(640px, 100%);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.editorHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.editorHeader h3 {
+  margin: 0;
+}
+
+.editorBody {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-weight: 600;
+}
+
+.field input,
+.field textarea {
+  border-radius: var(--radius-sm);
+  border: 1px solid #d0d0d0;
+  padding: 0.65rem 0.75rem;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.field textarea {
+  min-height: 130px;
+  resize: vertical;
+}
+
+.imagesFieldset {
+  border: 1px solid #e3e3e3;
+  border-radius: var(--radius-sm);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.imagesFieldHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  font-weight: 600;
+}
+
+.helperText {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--color-muted);
+}
+
+.imageInputs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem;
+  align-items: end;
+}
+
+.imageInputs label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-weight: 600;
+}
+
+.imageInputs input {
+  border-radius: var(--radius-sm);
+  border: 1px solid #d0d0d0;
+  padding: 0.5rem 0.65rem;
+}
+
+.editorFooter {
+  margin-top: 1.5rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+@media (max-width: 900px) {
+  .ruleRow {
+    flex-direction: column;
+  }
+
+  .imageColumn {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  }
+
+  .sectionHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+

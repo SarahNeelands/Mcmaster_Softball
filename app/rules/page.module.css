@@ -1,0 +1,83 @@
+/**
+ * rules/page.module.css
+ * ---------------------
+ * Layout and theming for the dedicated rules page hero and content stack.
+ */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.main {
+  flex: 1;
+  width: min(1200px, 96%);
+  margin: 0 auto;
+  padding: 1.75rem 0 2.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.intro {
+  background: linear-gradient(135deg, #f4e6ed 0%, #ffffff 45%, #f8f3f6 100%);
+  border: 1px solid #e5d6de;
+  border-radius: 16px;
+  padding: 1.75rem 1.5rem;
+  box-shadow: var(--shadow-soft);
+}
+
+.eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-muted);
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.title {
+  margin: 0.35rem 0 0.4rem;
+  font-size: 2.3rem;
+  color: var(--color-maroon);
+}
+
+.subtitle {
+  margin: 0;
+  color: #333333;
+  max-width: 760px;
+  line-height: 1.55;
+}
+
+.meta {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-top: 0.9rem;
+}
+
+.badge {
+  border-radius: 999px;
+  padding: 0.4rem 0.75rem;
+  background: #f1dce5;
+  color: var(--color-maroon-dark);
+  font-weight: 700;
+  font-size: 0.9rem;
+  border: 1px solid #dfc2cf;
+}
+
+@media (max-width: 800px) {
+  .main {
+    width: 100%;
+    padding: 1.25rem 0.75rem 2rem;
+  }
+
+  .intro {
+    padding: 1.4rem 1.1rem;
+  }
+
+  .title {
+    font-size: 1.9rem;
+  }
+}

@@ -1,0 +1,15 @@
+/**
+ * teams/[slug]/page.module.css
+ * ----------------------------
+ * Layout styles for the team detail page wrapper.
+ */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.main {
+  flex: 1;
+}

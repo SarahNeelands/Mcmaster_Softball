@@ -1,0 +1,35 @@
+/**
+ * HeroBanner.module.css
+ * ----------------------
+ * Styles for the maroon hero banner and centered typography treatment.
+ */
+
+.hero {
+  background: linear-gradient(135deg, var(--color-maroon), var(--color-maroon-dark));
+  color: var(--color-text-inverse);
+  text-align: center;
+  padding: 4rem 1.5rem;
+  box-shadow: var(--shadow-soft);
+}
+
+.title {
+  margin: 0;
+  font-size: 2.5rem;
+  letter-spacing: 0.1em;
+}
+
+.subtitle {
+  margin-top: 1rem;
+  font-size: 1.25rem;
+  opacity: 0.9;
+}
+
+@media (min-width: 768px) {
+  .title {
+    font-size: 3rem;
+  }
+
+  .subtitle {
+    font-size: 1.5rem;
+  }
+}

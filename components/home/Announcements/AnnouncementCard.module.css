@@ -1,0 +1,101 @@
+/**
+ * AnnouncementCard.module.css
+ * ----------------------------
+ * Styles for individual announcement cards, including layout and typography.
+ */
+
+.card {
+  display: grid;
+  grid-template-columns: minmax(48px, 70px) 1fr;
+  grid-template-rows: repeat(2, auto);
+  column-gap: 0.85rem;
+  row-gap: 0.75rem;
+  padding: 1.1rem 1.5rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+  font-family: "Inter", sans-serif;
+}
+
+.card:first-of-type {
+  padding-top: 0.75rem;
+}
+
+.card:last-of-type {
+  border-bottom: none;
+  padding-bottom: 0.85rem;
+}
+
+.dateCell {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  display: flex;
+  align-items: flex-start;
+}
+
+.titleCell {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.date {
+  color: var(--color-maroon);
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.titleRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.editButton {
+  border: 1px solid var(--color-maroon);
+  border-radius: var(--radius-sm);
+  padding: 0.25rem 0.7rem;
+  background: transparent;
+  color: var(--color-maroon);
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+  white-space: nowrap;
+  font-size: 0.8rem;
+}
+
+.editButton:hover {
+  background: var(--color-maroon);
+  color: var(--color-text-inverse);
+}
+
+.title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 500;
+}
+
+.body {
+  grid-column: 2;
+  grid-row: 2;
+  margin: 0;
+  color: var(--color-text-main);
+  line-height: 1.4;
+}
+
+@media (max-width: 640px) {
+  .card {
+    grid-template-columns: 1fr;
+  }
+
+  .dateCell {
+    grid-row: 1;
+    margin-bottom: 0.5rem;
+  }
+
+  .titleCell {
+    grid-row: 2;
+  }
+
+  .body {
+    grid-column: 1;
+    grid-row: 3;
+  }
+}

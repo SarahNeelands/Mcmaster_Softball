@@ -1,0 +1,52 @@
+/**
+ * Footer.module.css
+ * ------------------
+ * Styles for the site footer, including maroon background treatment and layout.
+ */
+
+.footer {
+  background: var(--color-maroon);
+  color: var(--color-text-inverse);
+  padding: 2rem 1.5rem;
+}
+
+.content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.heading {
+  margin: 0;
+  font-size: 1.5rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.contacts {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.role {
+  margin: 0;
+  font-weight: 600;
+  opacity: 0.85;
+}
+
+.link {
+  color: var(--color-text-inverse);
+  text-decoration: none;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+@media (min-width: 768px) {
+  .contacts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

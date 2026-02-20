@@ -1,0 +1,130 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid grey;
+  border-radius: var(--radius-sm);
+  background: #fff;
+  overflow: hidden;
+
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+
+  /* keep it subtle; matches your maroon CTAs */
+  background:  var(--color-maroon);
+}
+
+.title {
+  margin: 0;
+  font-size:  1.2rem;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+  color: white;
+}
+
+.scoreLabel {
+  font-size: 1rem;
+  font-weight: 700;
+  color: white;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0.75rem 1rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+
+  transition: background 0.2s ease;
+}
+
+.row:first-child {
+  border-top: none;
+}
+
+.row:hover {
+  background: rgba(107, 35, 53, 0.06);
+}
+
+.left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+.rankText {
+  font-weight: 400; /* not bold */
+  color: rgba(0, 0, 0, 0.78);
+}
+.rank {
+  width: 5.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+.rankText {
+  font-weight: 650;
+  color: rgba(0, 0, 0, 0.78);
+}
+
+/* keep medals understated */
+.medal {
+  font-size: 0.95rem;
+  line-height: 1;
+  opacity: 0.9;
+}
+
+.teamLink {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  font-weight: 400;
+  color: rgba(0, 0, 0, 0.85);
+  text-decoration: none;
+}
+
+.teamLink:hover {
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+
+/* arrows: small and clean */
+.arrow {
+  font-size: 0.9rem;
+  line-height: 1;
+  margin-left: 0.15rem;
+}
+
+.up {
+  color: #16a34a;
+}
+
+.down {
+  color: maroon
+}
+
+/* score should match your maroon CTA color */
+.points {
+  font-weight: 800;
+  font-size: 1.25rem;
+  color: var(--color-maroon);
+  flex-shrink: 0;
+}

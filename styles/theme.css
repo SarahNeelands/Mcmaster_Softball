@@ -1,0 +1,81 @@
+/**
+ * theme.css
+ * ---------
+ * Global theme tokens and base styles for the University Softball League front page.
+ * Responsible for defining CSS variables and shared typography/color rules.
+ */
+
+:root {
+  --color-bg: #ffffff;
+  --color-surface: #ffffff;
+  --color-maroon: #6b2335;
+  --color-maroon-dark: #521a28;
+  --color-text-main: #222222;
+  --color-text-inverse: #ffffff;
+  --color-muted: #777777;
+  --color-win: #1b7a3c;
+  --color-loss: #c0392b;
+  --border-subtle: #e5e7eb;
+  --radius-md: 12px;
+  --radius-sm: 8px;
+  --shadow-soft: 0 12px 24px rgba(0, 0, 0, 0.08);
+  --shadow-card: 0 8px 18px rgba(0, 0, 0, 0.06);
+  --font-family-base: "Inter", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-family-base);
+  background: var(--color-bg);
+  color: var(--color-text-main);
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+}
+
+body > div {
+  display: flex;
+  flex-direction: column;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+button {
+  font-family: inherit;
+}
+
+main {
+  flex: 1;
+}
+
+.layout-grid {
+  display: grid;
+  gap: 2rem;
+}
+
+@media (min-width: 960px) {
+  .layout-grid {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    align-items: start;
+  }
+}
+
+@media (min-width: 1024px) {
+  main {
+
+  }
+}

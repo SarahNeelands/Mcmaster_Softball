@@ -1,0 +1,18 @@
+/**
+ * Card.module.css
+ * ----------------
+ * Styling for shared card surfaces with padding, rounded corners, and shadow.
+ */
+
+.card {
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-card);
+}
+
+@media (max-width: 720px) {
+  .card {
+    padding: 1.25rem;
+  }
+}

@@ -1,0 +1,239 @@
+/**
+ * UpcomingMatches.module.css
+ * --------------------------
+ * Styling for upcoming matches card, including grid layout for games.
+ */
+
+.panel {
+  background: #ffffff;
+  border-radius: var(--radius-md);
+  padding: 0.5rem 1.1rem 0.6rem 1.5rem;
+  border: none;
+  box-shadow: none;
+  font-family: "Inter", sans-serif;
+  position: relative;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.header h3 {
+  margin: 0;
+}
+
+.editButton {
+  border: 1px solid var(--color-maroon);
+  background: transparent;
+  color: var(--color-maroon);
+  padding: 0.35rem 0.9rem;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.editButton:hover {
+  background: rgba(107, 35, 53, 0.08);
+}
+
+.headerDivider {
+  width: 100%;
+  height: 1px;
+  background: rgba(0, 0, 0, 0.12);
+  margin: 0.3rem 0 0.6rem;
+}
+
+.groupList {
+  display: flex;
+  flex-direction: column;
+  margin-top: 0.35rem;
+  gap: 0;
+}
+
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+  align-items: start;
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.65rem 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.group:last-of-type {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.group:first-of-type {
+  padding-top: 0.5rem;
+}
+
+.groupCard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.65rem 0.8rem;
+  margin: 0.4rem 0;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 10px;
+  background: #fff;
+}
+.dateLabel {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--color-maroon);
+  margin-bottom: 0.25rem;
+  display: block;
+}
+
+
+.date {
+  margin: 0;
+  font-size: 1.1rem;
+  color: var(--color-maroon);
+}
+
+.timeBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-left: 0.2rem;
+}
+
+.time {
+  font-weight: 700;
+  color: var(--color-text-main);
+}
+
+.games {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.gameRow {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1fr)
+    minmax(110px, max-content)
+    minmax(0, 1fr);
+
+  align-items: center;
+}
+
+
+
+
+.team {
+  min-width: 0;
+  max-width: 100%;
+  line-height: 1.25;
+  text-align: center;
+
+  /* 🔑 THIS IS THE FIX */
+  font-size: clamp(0.75rem, 1.1vw, 0.95rem);
+
+  overflow-wrap: anywhere;
+}
+
+.homeTeam {
+  text-align: left;
+}
+
+.awayTeam {
+  text-align: right;
+}
+
+.fieldInfo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  color: var(--color-muted);
+  text-align: center;
+  font-weight: 400;
+   min-width: 110px;
+  white-space: nowrap;
+  z-index: 2;
+  background: #fff; 
+}
+
+.field {
+  white-space: nowrap;
+}
+
+.emptyState {
+  margin: 1rem 0 0;
+  color: var(--color-muted);
+  font-style: italic;
+}
+
+.inlineInput {
+  width: 100%;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  font-size: 0.95rem;
+}
+
+.rowEdit {
+  border: 1px solid var(--color-maroon);
+  background: transparent;
+  color: var(--color-maroon);
+  border-radius: 6px;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.timeRow {
+  display: flex;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+@media (max-width: 720px) {
+  .panel {
+    padding: 1.1rem;
+  }
+
+  .cardGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .gameRow {
+    grid-template-columns: 1fr;
+  }
+
+  .fieldInfo {
+    justify-content: flex-start;
+  }
+
+  .team {
+    font-size: 0.9rem;
+  }
+}
+.readOnly {
+  pointer-events: none;
+  user-select: none;
+}
+
+.readOnly * {
+  user-select: none !important;
+  cursor: default !important;
+}

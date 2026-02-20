@@ -1,0 +1,53 @@
+/**
+ * MatchesSection.module.css
+ * -------------------------
+ * Styling for the matches column, including layout spacing and CTA buttons.
+ */
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.heading {
+  margin: 0;
+  font-size: 1.75rem;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  position: relative;
+}
+
+.column::before {
+  content: "";
+  position: absolute;
+  left: -1.5rem;
+  top: -2.25rem;
+  height: calc(100% + 2.25rem);
+  width: 1px;
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.footerCta {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.viewScheduleButton {
+  border: 1px solid var(--color-maroon);
+  background: transparent;
+  color: var(--color-maroon);
+  padding: 0.5rem 1.25rem;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.viewScheduleButton:hover {
+  background: rgba(107, 35, 53, 0.08);
+}

@@ -1,0 +1,59 @@
+.calendarStack {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.calendarCard {
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 0.6rem 0.7rem;
+  background: #fff;
+}
+
+.calendarLabel {
+  font-weight: 700;
+  margin-bottom: 0.35rem;
+}
+
+.monthGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.dayCell {
+  min-height: 46px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 2px 3px;
+  font-size: 0.8rem;
+}
+
+.inMonth {
+  background: #fff;
+  color: #111;
+}
+
+.outMonth {
+  background: #f9f9f9;
+  color: #999;
+}
+
+.dayNumber {
+  font-weight: 700;
+}
+
+.dotsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(6px, 1fr));
+  gap: 2px;
+  margin-top: 2px;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #6b2335;
+  display: inline-block;
+}

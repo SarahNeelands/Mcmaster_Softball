@@ -1,0 +1,70 @@
+/* ScheduleEditor.module.css */
+
+.editor {
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 0.75rem;
+  background: #fff;
+  margin-bottom: 1rem;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.footer {
+  margin-top: 0.75rem;
+}
+
+.addDay {
+  font-weight: 600;
+}
+
+.close {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+.dayCard {
+  border: 1px dashed #ddd;
+  border-radius: 8px;
+  padding: 0.5rem;
+}
+
+.dayHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.timeBlocks {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+.timeBlock {
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 0.5rem;
+}
+
+.timeHeader {
+  display: flex;
+  gap: 0.5rem;
+}
+.gameRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr auto;
+  gap: 0.25rem;
+  margin-top: 0.25rem;
+}
