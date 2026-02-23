@@ -6,6 +6,9 @@
     - returns all rules in descending order
   = GetRuleByID(id)
     - returns a rule by id
+
+  = GetAllRuleImages(rule id)
+    - returns all the images associated with a rule.
   = AddNewRule(rule)
     - adds a new rule to the database
   = UpdateRuleInfo(update)
@@ -14,6 +17,7 @@
     - updates a rule image in the database
   = DeleteRule()
     - deletes all rules with editing_status = 'deleted'
+  =
 */
 
 import { pool } from "../database/db";
@@ -41,6 +45,17 @@ export async function GetRuleByID(id: string)
     return rows;
 }
 
+export async function GetAllRuleImages(ruleId: string): Promise<RuleImage[]> {
+  const { rows } = await pool.query<RuleImage>(
+    `SELECT id, src, alt
+     FROM rule_images
+     WHERE rule_id = $1`,
+    [ruleId]
+  );
+
+  return rows;
+}
+
 
 //==============================================================================
 // Rules ADD functions
@@ -49,15 +64,15 @@ export async function GetRuleByID(id: string)
 export async function AddNewRule(rule: Rule)
 {
   const {rows} = await pool.query(
-    `INSERT INTO rules (name, content)
+    `INSERT INTO rules (title, content)
     VALUES ($1, $2)
     RETURNING *`,
     [
-      rule.name,
+      rule.title,
       rule.content
     ]
   );
-  if (rows.length === 0) {throw new Error(`Rule not added: ${rule.name}`);}
+  if (rows.length === 0) {throw new Error(`Rule not added: ${rule.title}`);}
   const ruleID = rows[0].id;
   for (const image of rule.images) {
     AddNewRuleImage(image, ruleID);
@@ -90,13 +105,13 @@ export async function UpdateRuleInfo(update: Rule)
   const {rows} = await pool.query(
     `UPDATE rules
     SET
-      name = $1,
+      title = $1,
       content = $2
     WHERE id = $3
     RETURNING *
     `,
     [
-      update.name,
+      update.title,
       update.content,
       update.id
     ],);
@@ -130,5 +145,13 @@ export async function DeleteRule()
   const {rows} = await pool.query(
   `DELETE FROM rules WHERE editing_status =  'deleted'
   RETURNING *`);
+  return rows;
+}
+
+export async function DeleteRuleImage(image_id: string)
+{
+  const {rows} = await pool.query(
+  `DELETE FROM rule_images WHERE id = $1
+  RETURNING *`, [image_id]);
   return rows;
 }

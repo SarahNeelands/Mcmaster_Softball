@@ -2,8 +2,9 @@
 
 export type Rule = {
   id: string;
-  name: string;
+  title: string;
   content: string;
+  editing_status: string;
   images: RuleImage[];
 }
 

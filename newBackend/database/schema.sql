@@ -5,7 +5,8 @@ CREATE TABLE announcements (
   title TEXT NOT NULL,
   content TEXT NOT NULL,
   date TEXT NOT NULL,
-  archived BOOLEAN NOT NULL DEFAULT FALSE
+  archived BOOLEAN NOT NULL DEFAULT FALSE,
+    editing_status TEXT NOT NULL CHECK (editing_status IN ('deleted','draft','published'))
 );
 
 CREATE TABLE matches (

@@ -1,11 +1,11 @@
 
 /*
   Repo Functions' for Announcements
-  = GetActiveAnnouncements(season_id)
+  = GetSeasonsActiveAnnouncements(season_id)
     - returns all active announcements in descending order for a given season
-  = GetArchivedAnnouncements(season_id)
+  = GetSeasonsArchivedAnnouncements(season_id)
     - returns all archived announcements in descending order for a given season
-  = AddNewAnnouncement(announcement)
+  = CreateNewAnnouncement(announcement)
     - adds a new announcement to the database
 
   = UpdateAnnouncement(update)
@@ -17,7 +17,7 @@ import { Announcement } from "../models/announcement_mod";
 //==============================================================================
 // Announcements GET functions
 //==============================================================================
-export async function getActiveAnnouncements(seasonId: string) {
+export async function GetActiveAnnouncements(seasonId: string) {
   const { rows } = await pool.query(
     `
     SELECT *
@@ -31,7 +31,7 @@ export async function getActiveAnnouncements(seasonId: string) {
 
   return rows;
 }
-export async function getArchivedAnnouncements(seasonId: string) {
+export async function GetArchivedAnnouncements(seasonId: string) {
   const { rows } = await pool.query(
     `
     SELECT *
@@ -52,7 +52,8 @@ export async function getArchivedAnnouncements(seasonId: string) {
 export async function AddNewAnnouncement(announcement: Announcement) {
   const {rows} = await pool.query(
     `INSERT INTO announcements (title, content, date, archived, season_id)
-    VALUES ($1, $2, $3, $4, $5)`,
+    VALUES ($1, $2, $3, $4, $5)
+    RETURNING *`,
     [
       announcement.title,
       announcement.content,
@@ -61,7 +62,9 @@ export async function AddNewAnnouncement(announcement: Announcement) {
       announcement.season_id
     ]
   );
-  return;
+
+  if (rows.length ===0) {throw new Error(`Repo Failed to create new announcement ${announcement.title}`);}
+  return ;
 }
 
 //==============================================================================

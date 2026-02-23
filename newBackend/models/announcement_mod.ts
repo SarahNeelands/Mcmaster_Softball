@@ -7,4 +7,5 @@ export type Announcement = {
   date: string;
   archived: boolean;
   season_id: string;
+  editing_status: string;
 }
