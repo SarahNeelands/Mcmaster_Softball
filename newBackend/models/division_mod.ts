@@ -7,5 +7,7 @@ export type Division ={
   loss_points: number,
   tie_points: number,
   teamIDs: string[],
-  standings: Standing[]
+  standings: Standing[],
+  editing_status: string
+
 }

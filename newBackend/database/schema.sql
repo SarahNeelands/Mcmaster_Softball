@@ -83,7 +83,8 @@ CREATE TABLE standings (
   ties INT NOT NULL DEFAULT 0,
   points INT NOT NULL DEFAULT 0,
   PRIMARY KEY (division_id, team_id),
-  series_id UUID NOT NULL REFERENCES series(id) ON DELETE CASCADE
+  series_id UUID NOT NULL REFERENCES series(id) ON DELETE CASCADE,
+  editing_status TEXT NOT NULL CHECK (editing_status IN ('draft','published','deleted'))
 
 );
 

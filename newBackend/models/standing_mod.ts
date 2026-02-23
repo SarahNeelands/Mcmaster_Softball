@@ -1,5 +1,5 @@
 export type Standing = {
-  teamID: string,
+  team_id: string,
   wins: number,
   losses: number,
   ties: number,
