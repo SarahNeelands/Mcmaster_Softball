@@ -24,13 +24,14 @@ import { Match } from "../models/match_mod";
 // Matches GET functions
 //==============================================================================
 
-export async function GetAllMatches() {
-  const {rows} = await pool.query(
-    `SELECT * FROM matches ORDER BY date DESC AND time DESC`
-    );
+export async function GetAllMatches(): Promise<Match[]> {
+  const { rows } = await pool.query<Match>(
+    `SELECT *
+     FROM matches
+     ORDER BY date DESC, time DESC`
+  );
   return rows;
 }
-
 export async function GetMatchById(id: string) {
   const {rows} = await pool.query (
     `SELECT * FROM matches WHERE id = id`
@@ -67,8 +68,8 @@ export async function AddNewMatch(match: Match) {
     [
       match.date,
       match.time,
-      match.home_team.id,
-      match.away_team.id,
+      match.home_team_id,
+      match.away_team_id,
       match.field,
       match.division_id,
       match.home_score,
@@ -103,8 +104,8 @@ export async function UpdateMatch(update: Match) {
       update.id,
       update.date,
       update.time,
-      update.home_team.id,
-      update.away_team.id,
+      update.home_team_id,
+      update.away_team_id,
       update.field,
       update.division_id,
       update.home_score,

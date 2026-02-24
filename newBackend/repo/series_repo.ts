@@ -29,6 +29,17 @@ export async function GetAllSeasonsSeries(season_id: string)
   return rows;
 }
 
+export async function GetSeasonSeriesIds(season_id: string): Promise<string[]>
+{
+  const {rows} = await pool.query<String[]>(
+    `SELECT id
+    FROM series
+    WHERE season_id = $1`,
+    [season_id]
+  );
+  return rows;
+}
+
 export async function GetSeriesById(series_id: string)  {
   const {rows} = await pool.query(
     `SELECT *

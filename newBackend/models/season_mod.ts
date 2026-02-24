@@ -2,7 +2,7 @@ import { Series } from "./series_mod";
 export type Season = {
   id: string,
   name: string,
-  series: Series[],
+  series_ids: string[],
   is_active: boolean,
   editing_status: string
 }

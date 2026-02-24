@@ -73,6 +73,7 @@ CREATE TABLE teams (
   co_captain_name TEXT NOT NULL,
   co_captain_email TEXT NOT NULL,
   editing_status TEXT NOT NULL CHECK (editing_status IN ('draft','published','deleted'))
+  season_id UUID NOT NULL REFERENCES seasons(id) ON DELETE CASCADE,
 );
 
 CREATE TABLE standings (
