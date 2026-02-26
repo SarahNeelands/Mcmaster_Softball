@@ -15,41 +15,54 @@ import { Season} from "../models/season_mod";
     - deletes all seasons with editing_status = 'deleted'
 */
 
+export type SeasonRow = {
+  id: string;
+  name: string;
+  editing_status: string;
+  start_date: string;
+  end_date: string;
+};
+
 //==============================================================================
 // Seasons GET functions
 //==============================================================================
 
-export async function GetAllSeasons(){
-  const {rows} = await pool.query(
+export async function GetAllSeasons():Promise<SeasonRow[]>{
+  const {rows} = await pool.query<SeasonRow>(
     `SELECT * 
-    FROM seasons`);
+    FROM seasons
+    ORDER BY start_date DESC`);
     return rows;
 }
 
-export async function GetCurrentSeason() {
-  const {rows} = await pool.query(
-    `SELECT * 
-    FROM seasons
-    WHERE is_active = true
-    LIMIT 1`);
-  return rows;
+export async function GetCurrentSeason():Promise<SeasonRow> {
+  const { rows } = await pool.query<SeasonRow>(
+    `SELECT *
+     FROM seasons
+     WHERE CURRENT_DATE BETWEEN start_date::date AND end_date::date
+     ORDER BY start_date::date DESC
+     LIMIT 1`
+  );
+  return rows[0] ?? null;
 }
+
 
 //==============================================================================
 // Seasons UPDATE functions
 //==============================================================================
 
-export async function UpdateSeasonById(season: Season) {
-  const {rows} = await pool.query(
+export async function UpdateSeason(season: Season): Promise<SeasonRow> {
+  const {rows} = await pool.query<SeasonRow>(
     `UPDATE seasons
     SET
       name =$1
-      is_active = $2
-    WHERE id = $3
+      start_date = $2
+      end_date =$3
+    WHERE id = $4
     RETURNING *`,
-  [season.name, season.is_active, season.id]);
+  [season.name, season.start_date, season.end_date, season.id]);
   if (rows.length ===0){throw new Error (`repo failed to update ${season.id}`);}
-  return;
+  return rows;
 }
 
 //==============================================================================
@@ -59,12 +72,23 @@ export async function UpdateSeasonById(season: Season) {
 export async function AddNewSeason(season: Season)
 {
   const {rows}= await pool.query(
-    `INSERT INTO seasons (name, is_active)
-    VALUES($1, $2)
+    `INSERT INTO seasons (name, start_date, end_date)
+    VALUES($1, $2, $3)
     RETURNING *`,
-    [season.name, season.is_active]
+    [season.name, season.start_date, season.end_date]
   );
   return rows[0];
+}
+
+export async function AddNewSeasonTeams(team_id: string, season_id: string): Promise<string[]>
+{
+  const {rows}= await pool.query<string>(
+    `INSERT INTO season_teams (season_id, team_id)
+    VALUES($1, $2)
+    RETURNING *`,
+    [season_id, team_id]
+  );
+  return rows;
 }
 
 //==============================================================================

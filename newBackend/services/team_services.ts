@@ -6,7 +6,14 @@ import { GetCurrentSeason } from "../repo/seasons_repo";
 // Team GET functions
 //==============================================================================
 
-export async function GetAllTeamsOfSeason(season_id: string) {
-    const data = await repo.GetAllTeams(season_id);
-
+export async function GetAllTeamsOfSeason(season_id: string): Promise<string[]> {
+    const data = await repo.GetAllTeamsOfSeason(season_id);
+    return data;
 }
+
+
+//==============================================================================
+// Team ADD functions
+//==============================================================================
+
+

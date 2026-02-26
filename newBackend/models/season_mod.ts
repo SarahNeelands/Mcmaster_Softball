@@ -3,6 +3,7 @@ export type Season = {
   id: string,
   name: string,
   series_ids: string[],
-  is_active: boolean,
-  editing_status: string
+  editing_status: string,
+  start_date: string,
+  end_date: string
 }

@@ -39,7 +39,8 @@ CREATE TABLE rule_images (
 CREATE TABLE seasons (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
-  is_active BOOLEAN NOT NULL DEFAULT TRUE
+  start_date DATE,
+  end_date DATE
 );
 
 CREATE TABLE series (
@@ -73,7 +74,6 @@ CREATE TABLE teams (
   co_captain_name TEXT NOT NULL,
   co_captain_email TEXT NOT NULL,
   editing_status TEXT NOT NULL CHECK (editing_status IN ('draft','published','deleted'))
-  season_id UUID NOT NULL REFERENCES seasons(id) ON DELETE CASCADE,
 );
 
 CREATE TABLE standings (
@@ -90,8 +90,14 @@ CREATE TABLE standings (
 
 );
 
-CREATE TABLE division_teams (
-  division_id UUID NOT NULL REFERENCES divisions(id) ON DELETE CASCADE,
+CREATE TABLE season_teams (
+  season_id UUID NOT NULL REFERENCES seasons(id) ON DELETE CASCADE,
   team_id UUID NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
-  PRIMARY KEY (division_id, team_id)
+  PRIMARY KEY (season_id, team_id)
+);
+CREATE TABLE series_team_divisions (
+  series_id UUID NOT NULL REFERENCES series(id) ON DELETE CASCADE,
+  team_id UUID NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+  division_id UUID NOT NULL REFERENCES divisions(id) ON DELETE CASCADE,
+  PRIMARY KEY (series_id, team_id)
 );
