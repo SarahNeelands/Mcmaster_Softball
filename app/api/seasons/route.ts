@@ -1,7 +1,6 @@
 import { NextResponse} from "next/server";
 import * as service from "@/backend/services/season_services";
 
-
 export async function GET(request: Request) {
   try {
     const url = new URL(request.url);
@@ -9,21 +8,26 @@ export async function GET(request: Request) {
     const search = url.searchParams.get("type"); // "current" | "specific" | "all"
 
     if (search === "current") {
-        const items = await service.GetCurrentSeason();
-        return NextResponse.json(items, { status: 200 });
+      const items = await service.GetCurrentSeason();
+      return NextResponse.json(items, { status: 200 });
     }
 
     if (search === "specific") {
-        if (season_id === null) {return NextResponse.json({ error: "Failed to get announcements" }, { status: 500 });}
-        const items = await service.GetSeasonById(season_id);
-        return NextResponse.json(items, { status: 200 });
-    }
-    if (search === "all") {
-        const items = await service.GetAllSeasons();
+      if (!season_id) {
+        return NextResponse.json({ error: "Missing season_id" }, { status: 400 });
+      }
+      const items = await service.GetSeasonById(season_id);
+      return NextResponse.json(items, { status: 200 });
     }
 
-    return NextResponse.json({ error: "Missing or invalid search" }, { status: 400 });
-  } catch {
+    if (search === "all") {
+      const items = await service.GetAllSeasons();
+      return NextResponse.json(items ?? [], { status: 200 });
+    }
+
+    return NextResponse.json({ error: "Missing or invalid type" }, { status: 400 });
+  } catch (e) {
+    console.error("GET seasons route error:", e);
     return NextResponse.json({ error: "Failed to get season/s" }, { status: 500 });
   }
 }

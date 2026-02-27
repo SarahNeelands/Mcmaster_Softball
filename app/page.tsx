@@ -6,14 +6,13 @@
 "use client";
 
 import {  useEffect, useState } from "react";
-import {fetchActiveAnnouncements, fetchArchivedAnnouncements} from "@/lib/api/public/p_announcements";
-import {fetchUpcomingMatches, fetchPreviousMatches} from "@/lib/api/public/p_matches";
-import {updateMatch,} from "@/lib/api/admin/a_matches";
 import { getVisibleMatches } from "@/lib/matches/visibilityFunctions";
-import { updateMatchWithSync } from "@/lib/matches/updateFunctions";
 
-import type { Announcement } from "@/types/announcements";
-import type { Match } from "@/types/matches";
+import type { Announcement } from "@/backend/models/announcement_mod";
+import type { Match } from "@/backend/models/match_mod";
+import type { Season } from "@/backend/models/season_mod";
+
+import {splitMatches} from "@/lib/matches/sortingFunctions";
 
 import Header from "@/components/layout/Header/Header";
 import Footer from "@/components/layout/Footer/Footer";
@@ -21,7 +20,9 @@ import HeroBanner from "@/components/home/HeroBanner/HeroBanner";
 import AnnouncementsSection from "@/components/home/Announcements/AnnouncementsSection";
 import MatchesSection from "@/components/home/Matches/MatchesSection";
 
-
+import * as apiA from "@/lib/api/announcement_api";
+import * as apiS from "@/lib/api/season_api";
+import * as apiM from "@/lib/api/match_api";
 
 export default function Home() {
   const [isAdmin, setIsAdmin] = useState(true);
@@ -30,10 +31,24 @@ export default function Home() {
 
   const [upcoming, setUpcoming] = useState<Match[]>([]);
   const [previous, setPrevious] = useState<Match[]>([]);
+  const [selectedSeason, setSelectedSeason]= useState<Season>();
 
-  
-  // when admin adds or edits announcements, update state
-  const handleAnnouncementsUpdate = (active: Announcement[], archived: Announcement[]) => {setActiveAnnouncements(active);setArchivedAnnouncements(archived);};
+
+  const handleAnnouncementChange = async (announcement: Announcement, change: string) => {
+    if (!selectedSeason) return;
+    if (change === "edit"){await apiA.UpdateAnnouncement(announcement);}
+    else if(change === "delete"){await apiA.DeleteAnnouncement(announcement);}
+    else if(change === "add"){await apiA.CreateAnnouncement(announcement);}
+    const [active, archived] = await Promise.all([
+      apiA.GetAnnouncements(selectedSeason.id, "active"),
+      apiA.GetAnnouncements(selectedSeason.id, "archived"),
+    ]);
+    setActiveAnnouncements(active);
+    setArchivedAnnouncements(archived);
+  };
+
+
+
   const handleUpdateMatch = (updated: Match) => updateMatchWithSync(updated, today, setUpcoming, setPrevious);
   const handlePublish = () => {alert("Changes published for public view.");};
   
@@ -43,22 +58,46 @@ export default function Home() {
   const today = new Date().toISOString().split("T")[0];
   
   useEffect(() => {
-    Promise.all([
-      fetchActiveAnnouncements(),
-      fetchArchivedAnnouncements(),
-      fetchUpcomingMatches(),
-      fetchPreviousMatches(),
-    ])
-    .then(([active, archived, upcoming, previous]) => {
+    const load = async () => {
+      // 1) get current season
+      const seasons = await apiS.GetSeasons("", "current"); // Season[]
+      let season = seasons[0];
+
+      // 2) if none, create an empty one
+      if (!season) {
+        const today = new Date().toISOString().split("T")[0];
+
+        const empty: Season = {
+          id: "temp",
+          name: "empty",
+          series_ids: [""],
+          editing_status: "draft",
+          start_date: today,
+          end_date: today,
+        };
+
+        season = await apiS.CreateSeason(empty); // ideally returns Season
+      }
+
+      setSelectedSeason(season);
+
+      // 3) fetch everything for that season
+      const [active, archived, matches] = await Promise.all([
+        apiA.GetAnnouncements(season.id, "active"),
+        apiA.GetAnnouncements(season.id, "archived"),
+        apiM.GetSeasonMatches(season.id),
+      ]);
+
+      // 4) set state
       setActiveAnnouncements(active);
       setArchivedAnnouncements(archived);
+
+      const { upcoming, previous } = splitMatches(matches);
       setUpcoming(upcoming);
       setPrevious(previous);
-    })
+    };
 
-    .catch((err) => {
-      console.error("Error fetching announcements:", err);
-    });
+    load().catch(err => console.error("Error fetching data:", err));
   }, []);
   return (
     <div id="page-top">
@@ -68,13 +107,16 @@ export default function Home() {
         onPublish={handlePublish}
       />
       <HeroBanner />
+      {selectedSeason && (
       <main>
+        
         <div className="layout-grid">
           <AnnouncementsSection
             activeAnnouncements={activeAnnouncements}
             archivedAnnouncements={archivedAnnouncements}
             isAdmin={isAdmin}
-            onAnnouncementsChange={handleAnnouncementsUpdate}
+            currentSeason= {selectedSeason}
+            onAnnouncementChange={handleAnnouncementChange}
           />
           <MatchesSection
             upcoming={visibleUpcoming}
@@ -83,7 +125,7 @@ export default function Home() {
             updateMatch={handleUpdateMatch}
           />
         </div>
-      </main>
+      </main>)}
       <Footer />
     </div>
   );

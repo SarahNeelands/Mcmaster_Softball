@@ -47,3 +47,17 @@ export function groupMatchesByMonth(matches: Match[]): MatchesByMonth[] {
         : a.month - b.month
   );
 }
+
+export function splitMatches(matches: Match[], now = new Date()) {
+  const toDate = (m: Match) => new Date(`${m.date}T${m.time}:00`);
+
+  const upcoming = matches
+    .filter(m => toDate(m) >= now)
+    .sort((a, b) => toDate(a).getTime() - toDate(b).getTime());
+
+  const previous = matches
+    .filter(m => toDate(m) < now)
+    .sort((a, b) => toDate(b).getTime() - toDate(a).getTime());
+
+  return { upcoming, previous };
+}

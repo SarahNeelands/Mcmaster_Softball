@@ -12,15 +12,16 @@ import React, { useMemo, useState } from "react";
 import AnnouncementCard from "./AnnouncementCard";
 import Card from "../../common/Card/Card";
 import styles from "./AnnouncementsSection.module.css";
-import type { Announcement } from "@/types/announcements";
+import { Announcement } from "@/backend/models/announcement_mod";
+import { Season } from "@/backend/models/season_mod";
 const DEFAULT_ANNOUNCEMENT_VISIBLE_COUNT = 4;
-import { addNewAnnouncement, editAnnouncement } from "@/lib/api/admin/a_announcements";
 
 interface AnnouncementsSectionProps {
   activeAnnouncements: Announcement[];
   archivedAnnouncements: Announcement[];
+  currentSeason: Season,
   isAdmin: boolean;
-  onAnnouncementsChange:(active: Announcement[], archived: Announcement[]) => void
+  onAnnouncementChange:(announcement: Announcement, change: string) => Promise<void>
 }
 
 const emptyDraft: Announcement = {
@@ -29,42 +30,28 @@ const emptyDraft: Announcement = {
   content: "",
   date: "", // ISO string
   archived: false,
+  season_id: "",
+  editing_status: "draft",
 };
 
 const AnnouncementsSection: React.FC<AnnouncementsSectionProps> = ({
   activeAnnouncements,
   archivedAnnouncements,
   isAdmin,
-  onAnnouncementsChange,
+  onAnnouncementChange,
+  currentSeason
 }) => {
+
   const [draft, setDraft] = useState<Announcement | null>(null);
   const [isCreating, setIsCreating] = useState<boolean>(false);
-  
   const [showAllActive, setShowAllActive] = useState<boolean>(false);
 
-  const sortedActiveAnnouncements = useMemo(
-    () =>
-      [...activeAnnouncements].sort((a, b) =>
-        new Date(b.date).getTime() - new Date(a.date).getTime()
-      ),
-    [activeAnnouncements]
-  );
-
-  const sortedArchivedAnnouncements = useMemo(
-    () =>
-      [...archivedAnnouncements].sort((a, b) =>
-        new Date(b.date).getTime() - new Date(a.date).getTime()
-      ),
-    [archivedAnnouncements]
-  );
-
   const visibleActiveAnnouncements = showAllActive
-  ? sortedActiveAnnouncements
-  : sortedActiveAnnouncements.slice(0, DEFAULT_ANNOUNCEMENT_VISIBLE_COUNT);
-
+  ? activeAnnouncements
+  : activeAnnouncements.slice(0, DEFAULT_ANNOUNCEMENT_VISIBLE_COUNT);
 
   const finalAnnouncements = showAllActive && isAdmin
-  ? [...visibleActiveAnnouncements, ...sortedArchivedAnnouncements]
+  ? [...visibleActiveAnnouncements, ...archivedAnnouncements]
   : visibleActiveAnnouncements;
 
   const closeEditor = () => {
@@ -82,37 +69,12 @@ const AnnouncementsSection: React.FC<AnnouncementsSectionProps> = ({
       alert("Please complete all fields before saving.");
       return;
     }
-
     if (isCreating) {
-      const createdAnnouncement = await addNewAnnouncement(
-        draft.title,
-        draft.content,
-        draft.date
-      );
-      onAnnouncementsChange(
-        [createdAnnouncement, ...activeAnnouncements],
-        archivedAnnouncements
-      );
-     
+      draft.season_id = currentSeason.id
+      onAnnouncementChange(draft, "add");
     }else {
-      const updatedAnnouncement = await editAnnouncement(
-        draft.id,
-        draft.title,
-        draft.content,
-        draft.date,
-        draft.archived,
-      )
-      const nextActive = activeAnnouncements.filter(a => a.id !== draft.id);
-      const nextArchived = archivedAnnouncements.filter(a => a.id !== draft.id);
-      if (updatedAnnouncement.archived) {
-        onAnnouncementsChange(nextActive, [updatedAnnouncement, ...nextArchived]);
-      } else {
-        onAnnouncementsChange([updatedAnnouncement, ...nextActive], nextArchived);
-      }
-
+      onAnnouncementChange(draft, "edit");
     }
-
-
     closeEditor();
   };
 

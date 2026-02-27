@@ -32,6 +32,24 @@ export async function GetAllMatches(): Promise<Match[]> {
   );
   return rows;
 }
+export async function GetAllSeasonMatches(seasonId: string): Promise<Match[]> {
+  const { rows } = await pool.query<Match>(
+    `
+    SELECT m.*
+    FROM matches m
+    JOIN divisions d ON d.id = m.division_id
+    JOIN series s ON s.id = d.series_id
+    WHERE s.season_id = $1
+      AND m.editing_status <> 'deleted'
+    ORDER BY m.date, m.time;
+    `,
+    [seasonId]
+  );
+  return rows;
+}
+
+
+
 export async function GetMatchById(id: string) {
   const {rows} = await pool.query (
     `SELECT * FROM matches WHERE id = id`

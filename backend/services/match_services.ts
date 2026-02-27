@@ -5,8 +5,8 @@ import * as repo from "../repo/matches_repo"
 // Matches GET functions
 //==============================================================================
 
-export async function GetAllMatches(): Promise<Match[]> {
-    const data = await repo.GetAllMatches();
+export async function GetAllSeasonMatches(season_id: string): Promise<Match[]> {
+    const data = await repo.GetAllSeasonMatches(season_id);
     return data;
 }
 

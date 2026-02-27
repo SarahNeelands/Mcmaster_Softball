@@ -4,7 +4,8 @@ import * as service from "@/backend/services/match_services";
 
 export async function GET(request: Request) {
   try {
-    const matches = await service.GetAllMatches()
+    const body = await request.json();
+    const matches = await service.GetAllSeasonMatches(body)
     return NextResponse.json(matches, {status: 200})
 
   } catch {
