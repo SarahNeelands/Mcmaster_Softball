@@ -36,6 +36,7 @@ export async function GetAllSeasons():Promise<SeasonRow[]>{
 }
 
 export async function GetCurrentSeason():Promise<SeasonRow> {
+  console.log("DB host:", process.env.PGHOST ?? process.env.DB_HOST ?? process.env.HOST);
   const { rows } = await pool.query<SeasonRow>(
     `SELECT *
      FROM seasons
@@ -46,7 +47,7 @@ export async function GetCurrentSeason():Promise<SeasonRow> {
   return rows[0] ?? null;
 }
 
-export async function GetSeasonById(id: string):Promise<SeasonRow> {
+export async function GetSeasonById(id: string):Promise<SeasonRow[]> {
   const { rows } = await pool.query<SeasonRow>(
     `SELECT *
      FROM seasons
@@ -60,7 +61,7 @@ export async function GetSeasonById(id: string):Promise<SeasonRow> {
 // Seasons UPDATE functions
 //==============================================================================
 
-export async function UpdateSeason(season: Season): Promise<SeasonRow> {
+export async function UpdateSeason(season: Season): Promise<SeasonRow[]> {
   const {rows} = await pool.query<SeasonRow>(
     `UPDATE seasons
     SET
@@ -81,17 +82,17 @@ export async function UpdateSeason(season: Season): Promise<SeasonRow> {
 export async function AddNewSeason(season: Season)
 {
   const {rows}= await pool.query(
-    `INSERT INTO seasons (name, start_date, end_date)
-    VALUES($1, $2, $3)
+    `INSERT INTO seasons (name, start_date, end_date, editing_status)
+    VALUES($1, $2, $3, $4)
     RETURNING *`,
-    [season.name, season.start_date, season.end_date]
+    [season.name, season.start_date, season.end_date, season.editing_status]
   );
   return rows[0];
 }
 
 export async function AddNewSeasonTeams(team_id: string, season_id: string): Promise<string[]>
 {
-  const {rows}= await pool.query<string>(
+  const {rows}= await pool.query(
     `INSERT INTO season_teams (season_id, team_id)
     VALUES($1, $2)
     RETURNING *`,
