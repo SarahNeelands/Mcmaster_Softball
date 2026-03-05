@@ -1,10 +1,11 @@
-import { Announcement } from "../models/announcement_mod";
+import { Announcement } from "@/types/announcement_mod";
 import * as repo from "../repo/announcements_repo"
 
 //==============================================================================
 // Announcements Adding functions
 //==============================================================================
 export async function AddNewAnnouncement(announcement: Announcement) {
+    announcement.editing_status ="draft";
     const data = await repo.AddNewAnnouncement(announcement);
     return data;
 }

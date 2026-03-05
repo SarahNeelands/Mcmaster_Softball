@@ -1,14 +1,6 @@
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 -- 1) independent tables first
-CREATE TABLE announcements (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  title TEXT NOT NULL,
-  content TEXT NOT NULL,
-  date TEXT NOT NULL,
-  archived BOOLEAN NOT NULL DEFAULT FALSE,
-  editing_status TEXT NOT NULL CHECK (editing_status IN ('deleted','draft','published'))
-);
 
 CREATE TABLE rules (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -43,6 +35,17 @@ CREATE TABLE seasons (
   end_date DATE,
   editing_status TEXT NOT NULL CHECK (editing_status IN ('draft','published','deleted'))
 );
+
+CREATE TABLE announcements (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title TEXT NOT NULL,
+  content TEXT NOT NULL,
+  date TEXT NOT NULL,
+  archived BOOLEAN NOT NULL DEFAULT FALSE,
+  season_id UUID NOT NULL REFERENCES seasons(id) ON DELETE CASCADE,
+  editing_status TEXT NOT NULL CHECK (editing_status IN ('deleted','draft','published'))
+);
+
 
 CREATE TABLE series (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

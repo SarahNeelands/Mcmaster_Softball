@@ -8,9 +8,9 @@
 import {  useEffect, useState } from "react";
 import { getVisibleMatches } from "@/lib/matches/visibilityFunctions";
 
-import type { Announcement } from "@/backend/models/announcement_mod";
-import type { Match } from "@/backend/models/match_mod";
-import type { Season } from "@/backend/models/season_mod";
+import type { Announcement } from "@/types/announcement_mod";
+import type { Match } from "@/types/match_mod";
+import type { Season } from "@/types/season_mod";
 
 import {splitMatches} from "@/lib/matches/sortingFunctions";
 
@@ -49,7 +49,14 @@ export default function Home() {
 
 
 
-  const handleUpdateMatch = (updated: Match) => updateMatchWithSync(updated, today, setUpcoming, setPrevious);
+  const handleUpdateMatch = async (updated: Match) => {
+    apiM.UpdateMatch(updated);
+    if (!selectedSeason){return;}
+    const allmatches = await apiM.GetSeasonMatches(selectedSeason?.id);
+    const { upcoming, previous } = splitMatches(allmatches);
+    setUpcoming(upcoming);
+    setPrevious(previous);
+  }
   const handlePublish = () => {alert("Changes published for public view.");};
   
   const visibleUpcoming = getVisibleMatches(upcoming, 2, "upcoming");
@@ -58,74 +65,63 @@ export default function Home() {
   const today = new Date().toISOString().split("T")[0];
   
   useEffect(() => {
-    const load = async () => {
-      // 1) get current season
-      const seasons = await apiS.GetSeasons("", "current"); // Season[]
-      let season = seasons[0];
+  const load = async () => {
+    // 1) get current season
+    const data = await apiS.GetSeasons("", "current"); // might be Season OR Season[]
+    const season = Array.isArray(data) ? data[0] : data;
 
-      // 2) if none, create an empty one
-      if (!season) {
-        const today = new Date().toISOString().split("T")[0];
+    if (!season) {
+      console.error("No current season returned.");
+      return;
+    }
 
-        const empty: Season = {
-          id: "temp",
-          name: "empty",
-          series_ids: [""],
-          editing_status: "draft",
-          start_date: today,
-          end_date: today,
-        };
+    setSelectedSeason(season);
 
-        season = await apiS.CreateSeason(empty); // ideally returns Season
-      }
+    const [active, archived, matches] = await Promise.all([
+      apiA.GetAnnouncements(season.id, "active"),
+      apiA.GetAnnouncements(season.id, "archived"),
+      apiM.GetSeasonMatches(season.id),
+    ]);
 
-      setSelectedSeason(season);
+    setActiveAnnouncements(active);
+    setArchivedAnnouncements(archived);
 
-      // 3) fetch everything for that season
-      const [active, archived, matches] = await Promise.all([
-        apiA.GetAnnouncements(season.id, "active"),
-        apiA.GetAnnouncements(season.id, "archived"),
-        apiM.GetSeasonMatches(season.id),
-      ]);
+    const { upcoming, previous } = splitMatches(matches);
+    setUpcoming(upcoming);
+    setPrevious(previous);
+  };
 
-      // 4) set state
-      setActiveAnnouncements(active);
-      setArchivedAnnouncements(archived);
-
-      const { upcoming, previous } = splitMatches(matches);
-      setUpcoming(upcoming);
-      setPrevious(previous);
-    };
-
-    load().catch(err => console.error("Error fetching data:", err));
-  }, []);
+  load().catch((err) => console.error("Error fetching data:", err));
+}, []);
   return (
-    <div id="page-top">
+    <div id="page-top" className="page">
       <Header
         isAdmin={isAdmin}
         onToggleAdmin={() => setIsAdmin((prev) => !prev)}
         onPublish={handlePublish}
       />
       <HeroBanner />
+
       {selectedSeason && (
-      <main>
-        
-        <div className="layout-grid">
-          <AnnouncementsSection
-            activeAnnouncements={activeAnnouncements}
-            archivedAnnouncements={archivedAnnouncements}
-            isAdmin={isAdmin}
-            currentSeason= {selectedSeason}
-            onAnnouncementChange={handleAnnouncementChange}
-          />
-          <MatchesSection
-            upcoming={visibleUpcoming}
-            previous={visiblePrevious}
-            isAdmin={isAdmin}
-            updateMatch={handleUpdateMatch}
-          />
-        </div>
-      </main>)}
+        <main className="main">
+          <div className="layout-grid">
+            <AnnouncementsSection
+              activeAnnouncements={activeAnnouncements}
+              archivedAnnouncements={archivedAnnouncements}
+              isAdmin={isAdmin}
+              currentSeason={selectedSeason}
+              onAnnouncementChange={handleAnnouncementChange}
+            />
+            <MatchesSection
+              upcoming={visibleUpcoming}
+              previous={visiblePrevious}
+              isAdmin={isAdmin}
+              updateMatch={handleUpdateMatch}
+            />
+          </div>
+        </main>
+      )}
+
       <Footer />
     </div>
   );

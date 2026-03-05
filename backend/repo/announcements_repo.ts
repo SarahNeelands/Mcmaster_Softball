@@ -13,7 +13,7 @@
 
 */
 import { pool } from "../database/db";
-import { Announcement } from "../models/announcement_mod";
+import { Announcement } from "../../types/announcement_mod";
 //==============================================================================
 // Announcements GET functions
 //==============================================================================
@@ -49,39 +49,41 @@ export async function GetArchivedAnnouncements(seasonId: string) {
 //==============================================================================
 // Announcements ADD functions
 //==============================================================================
-export async function AddNewAnnouncement(announcement: Announcement) {
-  const {rows} = await pool.query(
-    `INSERT INTO announcements (title, content, date, archived, season_id)
-    VALUES ($1, $2, $3, $4, $5)
+export async function AddNewAnnouncement(announcement: Announcement): Promise<Announcement> {
+  const {rows} = await pool.query<Announcement>(
+    `INSERT INTO announcements (title, content, date, archived, season_id, editing_status)
+    VALUES ($1, $2, $3, $4, $5,$6)
     RETURNING *`,
     [
       announcement.title,
       announcement.content,
       announcement.date,
       announcement.archived,
-      announcement.season_id
+      announcement.season_id,
+      announcement.editing_status
     ]
   );
 
   if (rows.length ===0) {throw new Error(`Repo Failed to create new announcement ${announcement.title}`);}
-  return ;
+  return rows[0];
 }
 
 //==============================================================================
 // Announcements UPDATE functions
 //==============================================================================
 
-export async function UpdateAnnouncement(update: Announcement) 
+export async function UpdateAnnouncement(update: Announcement): Promise<Announcement>
 {
-  const {rows} = await pool.query(
+  const {rows} = await pool.query<Announcement>(
     `UPDATE announcements
     SET
       title = $1,
       content = $2,
       date = $3,
       archived = $4,
-      season_id = $5
-    WHERE id = $6
+      season_id = $5,
+      editing_status = $6
+    WHERE id = $7
     RETURNING *
     `,
     [
@@ -90,9 +92,10 @@ export async function UpdateAnnouncement(update: Announcement)
       update.date,
       update.archived,
       update.season_id,
+      update.editing_status,
       update.id
     ]
     );
     if (rows.length === 0) {throw new Error(`Announcement not found: ${update.id}`);}
-    return;
+    return rows[0];
 }

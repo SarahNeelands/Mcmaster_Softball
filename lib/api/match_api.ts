@@ -1,8 +1,8 @@
 
-import { Match } from "@/backend/models/match_mod";
+import { Match } from "@/types/match_mod";
 
 export async function GetSeasonMatches(season_id: string): Promise<Match[]> {
-  const url = `/api/matches?season_id=${encodeURIComponent(season_id)}}`;
+  const url = `/api/matches?season_id=${encodeURIComponent(season_id)}`;
 
   const res = await fetch(url); 
   if (!res.ok) throw new Error(await res.text());

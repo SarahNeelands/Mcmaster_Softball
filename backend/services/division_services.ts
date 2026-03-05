@@ -1,4 +1,4 @@
-import {Division} from "../models/division_mod"
+import {Division} from "../../types/division_mod"
 import * as repo from "../repo/divisions_repo"
 
 

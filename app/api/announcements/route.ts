@@ -27,27 +27,44 @@ export async function GET(request: Request) {
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(req: Request) {
   try {
-    const body = await request.json();
+    const body = await req.json();
+    console.log("POST /api/announcements body:", body);
+
     const created = await service.AddNewAnnouncement(body);
     return NextResponse.json(created, { status: 201 });
-  } catch {
-    return NextResponse.json({ error: "Failed to create announcement" }, { status: 500 });
+  } catch (err: any) {
+    console.error("POST /api/announcements failed:", err);
+
+    return NextResponse.json(
+      {
+        error: "Failed to create announcement",
+        details: err?.message ?? String(err),
+        stack: err?.stack ?? null,
+      },
+      { status: 500 }
+    );
   }
 }
 
-export async function PUT(request: Request) {
+export async function PUT(req: Request) {
   try {
-    const body = await request.json();
-    const { data } = body;
-    const updated = await service.UpdateAnnouncement(data);
+    const body = await req.json();
+    console.log("PUT /api/announcements body:", body);
+
+    const update = body.data ?? body; // supports both shapes
+    const updated = await service.UpdateAnnouncement(update);
+
     return NextResponse.json(updated, { status: 200 });
-  } catch {
-    return NextResponse.json({ error: "Failed to update announcement" }, { status: 500 });
+  } catch (err: any) {
+    console.error("PUT /api/announcements failed:", err);
+    return NextResponse.json(
+      { error: "Failed to update announcement", details: err?.message ?? String(err) },
+      { status: 500 }
+    );
   }
 }
-
 export async function DELETE(request: Request) {
   try {
     const body = await request.json();

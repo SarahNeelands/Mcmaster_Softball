@@ -1,4 +1,4 @@
-import {Standing} from "../models/standing_mod";
+import {Standing} from "../../types/standing_mod";
 import { pool } from "../database/db";
 /* 
   Repo Functions' for Standings

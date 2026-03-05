@@ -1,5 +1,5 @@
 
-import { Series} from "../models/series_mod";
+import { Series} from "../../types/series_mod";
 import { pool } from "../database/db";
 /* 
   Repo Functions' for Series
@@ -31,7 +31,7 @@ export async function GetAllSeasonsSeries(season_id: string)
 
 export async function GetSeasonSeriesIds(season_id: string): Promise<string[]>
 {
-  const {rows} = await pool.query<String[]>(
+  const {rows} = await pool.query<string>(
     `SELECT id
     FROM series
     WHERE season_id = $1`,

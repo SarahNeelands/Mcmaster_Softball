@@ -1,5 +1,5 @@
 import { pool } from "../database/db";
-import { Season} from "../models/season_mod";
+import { Season} from "../../types/season_mod";
 
 /* 
   Repo Functions' for Seasons

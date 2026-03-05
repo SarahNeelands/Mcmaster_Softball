@@ -21,7 +21,7 @@
 */
 
 import { pool } from "../database/db";
-import { Rule, RuleImage } from "../models/rule_mod";
+import { Rule, RuleImage } from "../../types/rule_mod";
 
 //==============================================================================
 // Rules GET functions

@@ -12,8 +12,8 @@ import React, { useMemo, useState } from "react";
 import AnnouncementCard from "./AnnouncementCard";
 import Card from "../../common/Card/Card";
 import styles from "./AnnouncementsSection.module.css";
-import { Announcement } from "@/backend/models/announcement_mod";
-import { Season } from "@/backend/models/season_mod";
+import { Announcement } from "@/types/announcement_mod";
+import { Season } from "@/types/season_mod";
 const DEFAULT_ANNOUNCEMENT_VISIBLE_COUNT = 4;
 
 interface AnnouncementsSectionProps {

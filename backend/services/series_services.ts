@@ -1,4 +1,4 @@
-import {Series} from "../models/series_mod"
+import {Series} from "../../types/series_mod"
 import * as repo from "../repo/series_repo"
 import { GetAllSeriesDivisions } from "../repo/divisions_repo"
 

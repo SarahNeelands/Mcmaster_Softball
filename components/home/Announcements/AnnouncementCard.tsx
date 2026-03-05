@@ -7,7 +7,7 @@
 
 import React from "react";
 import styles from "./AnnouncementCard.module.css";
-import { Announcement } from "@/backend/models/announcement_mod";
+import { Announcement } from "@/types/announcement_mod";
 
 interface AnnouncementCardProps {
   announcement: Announcement;

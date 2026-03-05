@@ -1,6 +1,6 @@
 
 
-import type {Rule, RuleImage} from "../models/rule_mod"
+import type {Rule, RuleImage} from "../../types/rule_mod"
 import * as repo from "../repo/rules_repo"
 
 //==============================================================================

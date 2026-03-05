@@ -1,4 +1,4 @@
-import { Team } from "../models/team_mod";
+import { Team } from "../../types/team_mod";
 import * as repo from "../repo/teams_repo"
 
 

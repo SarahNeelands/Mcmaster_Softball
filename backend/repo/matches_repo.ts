@@ -18,7 +18,7 @@
 */
 
 import { pool } from "../database/db";
-import { Match } from "../models/match_mod";
+import { Match } from "../../types/match_mod";
 
 //==============================================================================
 // Matches GET functions

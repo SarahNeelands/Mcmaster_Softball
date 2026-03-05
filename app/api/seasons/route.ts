@@ -38,8 +38,17 @@ export async function POST(request: Request) {
     const body = await request.json();
     const created = await service.CreateNewSeason(body);
     return NextResponse.json(created, { status: 201 });
-  } catch {
-    return NextResponse.json({ error: "Failed to create season" }, { status: 500 });
+  } catch (err: any) {
+    console.error("POST /api/seasons failed:", err);
+
+    return NextResponse.json(
+      {
+        error: "Failed to create season",
+        details: err?.message ?? String(err),
+        stack: err?.stack ?? null,
+      },
+      { status: 500 }
+    );
   }
 }
 

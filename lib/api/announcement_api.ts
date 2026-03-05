@@ -1,5 +1,5 @@
 
-import { Announcement } from "@/backend/models/announcement_mod";
+import { Announcement } from "@/types/announcement_mod";
 
 export async function GetAnnouncements(season_id: string, status: "active" | "archived"): Promise<Announcement[]> {
   const url = `/api/announcements?season_id=${encodeURIComponent(season_id)}&status=${encodeURIComponent(status)}`;

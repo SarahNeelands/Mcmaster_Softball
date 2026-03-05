@@ -1,4 +1,4 @@
-import { Match } from "../models/match_mod";
+import { Match } from "../../types/match_mod";
 import * as repo from "../repo/matches_repo"
 
 //==============================================================================
@@ -7,6 +7,7 @@ import * as repo from "../repo/matches_repo"
 
 export async function GetAllSeasonMatches(season_id: string): Promise<Match[]> {
     const data = await repo.GetAllSeasonMatches(season_id);
+    if (!data){return []}
     return data;
 }
 

@@ -1,5 +1,5 @@
 
-import { Season } from "@/backend/models/season_mod";
+import { Season } from "@/types/season_mod";
 
 export async function GetSeasons(season_id: string, type: "current" | "specific" | "all"): Promise<Season[]> {
   const url = `/api/seasons?season_id=${encodeURIComponent(season_id)}&type=${encodeURIComponent(type)}`;
