@@ -1,0 +1,86 @@
+.seasonEditor {
+  padding: 24px;
+  display: flex;
+  justify-content: center;
+}
+
+.seasonEditorCard {
+  width: 100%;
+  max-width: 620px;
+  border: 1px solid rgba(0,0,0,0.14);
+  border-radius: 16px;
+  background: white;
+  padding: 18px;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.08);
+}
+
+.seasonEditorHeader {
+  margin-bottom: 12px;
+}
+
+.seasonEditorTitle {
+  margin: 0;
+  font-size: 20px;
+}
+
+.seasonEditorBody {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.seasonEditorRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.seasonEditorLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+}
+
+.seasonEditorInput,
+.seasonEditorSelect {
+  padding: 10px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(0,0,0,0.18);
+  font-size: 14px;
+}
+
+.seasonEditorActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.seasonEditorBtnPrimary,
+.seasonEditorBtnSecondary {
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  cursor: pointer;
+  border: 1px solid rgba(0,0,0,0.18);
+  background: white;
+}
+
+.seasonEditorBtnPrimary {
+  background: rgba(0,0,0,0.06);
+}
+
+.seasonEditorBtnPrimary:disabled,
+.seasonEditorBtnSecondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.seasonEditorError {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(255, 0, 0, 0.08);
+  border: 1px solid rgba(255, 0, 0, 0.2);
+  font-size: 13px;
+}
