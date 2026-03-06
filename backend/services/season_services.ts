@@ -84,6 +84,7 @@ export async function CreateNewSeason(newSeas: Season): Promise<Season> {
 //==============================================================================
 
 export async function UpdateSeason(season: Season): Promise<Season> {
+  console.log("service UpdateSeason received:", season);
   const seasonRow = await repo.UpdateSeason(season);
 
   if (!seasonRow || seasonRow.length === 0) {

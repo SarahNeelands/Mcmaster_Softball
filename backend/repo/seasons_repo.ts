@@ -62,15 +62,18 @@ export async function GetSeasonById(id: string):Promise<SeasonRow[]> {
 //==============================================================================
 
 export async function UpdateSeason(season: Season): Promise<SeasonRow[]> {
+  console.log("repo UpdateSeason received:", season);
+
   const {rows} = await pool.query<SeasonRow>(
     `UPDATE seasons
     SET
-      name =$1
-      start_date = $2
-      end_date =$3
-    WHERE id = $4
+      name =$1,
+      start_date = $2,
+      end_date =$3,
+      editing_status =$4
+    WHERE id = $5
     RETURNING *`,
-  [season.name, season.start_date, season.end_date, season.id]);
+  [season.name, season.start_date, season.end_date, season.editing_status, season.id]);
   if (rows.length ===0){throw new Error (`repo failed to update ${season.id}`);}
   return rows;
 }

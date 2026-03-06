@@ -9,7 +9,7 @@ import React from "react";
 import UpcomingMatches from "./UpcomingMatches";
 import PreviousResults from "./PreviousResults";
 import styles from "./MatchesSection.module.css";
-import { Match } from "../../../types/matches";
+import { Match } from "@/types/match_mod";
 
 interface MatchesSectionProps {
   upcoming: Match[];

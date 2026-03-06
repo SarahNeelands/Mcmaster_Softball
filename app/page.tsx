@@ -65,6 +65,9 @@ export default function Home() {
         ...payload,
         id,
       });
+        console.log("handleSaveSeason payload:", payload);
+        console.log("handleSaveSeason id:", id);
+        console.log("seasonToEdit:", seasonToEdit);
     } else {
       saved = await apiS.CreateSeason({
         id: "",
@@ -188,7 +191,10 @@ export default function Home() {
 
       {screen === "seasonEditor" && (
         <main className="main">
-          <SeasonEditor initialSeason={seasonToEdit} onCancel={closeSeasonEditor} onSave={handleSaveSeason} />
+          <SeasonEditor 
+            initialSeason={seasonToEdit} 
+            onCancel={closeSeasonEditor} 
+            onSave={handleSaveSeason} />
         </main>
       )}
 

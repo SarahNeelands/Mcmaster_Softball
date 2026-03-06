@@ -55,11 +55,20 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   try {
     const body = await request.json();
-    const { data } = body;
-    const updated = await service.UpdateSeason(data);
+    console.log("PUT body:", body);
+
+    const updated = await service.UpdateSeason(body.data);
     return NextResponse.json(updated, { status: 200 });
-  } catch {
-    return NextResponse.json({ error: "Failed to update season" }, { status: 500 });
+  } catch (err: any) {
+    console.error("PUT /api/seasons failed:", err);
+    return NextResponse.json(
+      {
+        error: "Failed to update season",
+        details: err?.message ?? String(err),
+        stack: err?.stack ?? null,
+      },
+      { status: 500 }
+    );
   }
 }
 
