@@ -20,12 +20,16 @@ export async function GetTeamById(id: string): Promise<Team>
 //==============================================================================
 
 
-export async function AddNewTeam(team: Team, season_id: string): Promise<Team> 
-{
+export async function AddNewTeam(team: Team, season_id: string): Promise<Team> {
+  const slug = makeSlug(team.name);
+  team.slug = slug;
 
-    return await repo.AddNewTeam(team, season_id);
+
+  console.log("++++++++got it++++++++++++++++");
+  console.log(season_id);
+
+  return await repo.AddNewTeam(team, season_id);
 }
-
 
 //==============================================================================
 // Team UPDATE functions
@@ -46,4 +50,15 @@ export async function DeleteTeam(team: Team)
     team.editing_status = "deleted";
     const data = await UpdateTeam(team);
     return data;
+}
+//==============================================================================
+// Team Helper functions
+//==============================================================================
+function makeSlug(name: string): string {
+  return name
+    .toLowerCase()
+    .trim()
+    .replace(/['"]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 }

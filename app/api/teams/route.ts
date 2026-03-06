@@ -5,7 +5,7 @@ import * as service from "@/backend/services/team_services";
 export async function GET(request: Request) {
   try {
     const url = new URL(request.url);
-    const id = url.searchParams.get("season_id");
+    const id = url.searchParams.get("id");
     const search = url.searchParams.get("type"); //  "specific" | "all"
 
     if (search === "specific") {
@@ -31,7 +31,7 @@ export async function POST(request: Request) {
     if (!season_id) return NextResponse.json({ error: "Missing season_id" }, { status: 400 });
     if (!team) return NextResponse.json({ error: "Missing team" }, { status: 400 });
 
-    const created = await service.AddNewTeam(season_id, team);
+    const created = await service.AddNewTeam(team, season_id);
     return NextResponse.json(created, { status: 201 });
   } catch {
     return NextResponse.json({ error: "Failed to create team" }, { status: 500 });

@@ -8,80 +8,83 @@ import { useEffect, useState } from "react";
 import Header from "@/components/layout/Header/Header";
 import Footer from "@/components/layout/Footer/Footer";
 import TeamTable from "@/components/teams/TeamTable";
-import type { Team } from "@/types/teams";
+import type { Team } from "@/types/team_mod";
+import type { Season } from "@/types/season_mod";
 import styles from "./page.module.css";
 
-import { fetchAllTeams } from "@/lib/api/public/p_teams";
-import { updateTeam, addNewTeam, deleteTeam } from "@/lib/api/admin/a_teams";
-import { publish } from "@/lib/api/admin/publish";
+import * as apiP from "@/lib/api/publish_api";
+import * as apiS from "@/lib/api/season_api";
+import * as apiT from "@/lib/api/team_api";
+import { useSeasonEditor } from "@/components/layout/Header/header_functions";
 
-type NewTeamForm = {
-  name: string;
-  slug: string;
-  captainName: string;
-  coCaptainName: string;
-  captainEmail: string;
-  coCaptainEmail: string;
-};
+
 
 export default function TeamsPage() {
   const [isAdmin, setIsAdmin] = useState(true);
   const [teams, setTeams] = useState<Team[]>([]);
 
+  const [screen, setScreen] = useState<"home" | "seasonEditor">("home");
+  const [selectedSeason, setSelectedSeason] = useState<Season>();
+  const [allSeasons, setAllSeasons] = useState<Season[]>([]);
+  const {seasonToEdit, openCreateSeason, openEditSeason, closeSeasonEditor, handleSaveSeason,} = useSeasonEditor(
+    {selectedSeason, setSelectedSeason, setAllSeasons, setScreen,});
+  
+  
+
+
   // Add-team form state (main page)
-  const [newTeam, setNewTeam] = useState<NewTeamForm>({
+  const [newTeam, setNewTeam] = useState<Team>({
+    id: "",
     name: "",
     slug: "",
-    captainName: "",
-    coCaptainName: "",
-    captainEmail: "",
-    coCaptainEmail: "",
+    captain_name: "",
+    co_captain_name: "",
+    captain_email: "",
+    co_captain_email: "",
+    editing_status: "draft"
   });
 
   const refreshTeams = async () => {
-    const latest = await fetchAllTeams();
+    if (!selectedSeason) {return;}
+    const latest = await  apiT.GetSeasonTeams(selectedSeason.id);
     setTeams(latest);
   };
 
   const handleUpdateTeam = async (updatedTeam: Team) => {
-    const savedTeam = await updateTeam(updatedTeam);
-    setTeams((prev) =>
-      prev.map((team) => (team.id === savedTeam.id ? savedTeam : team))
-    );
+    await apiT.UpdateTeam(updatedTeam);
+    refreshTeams();
   };
 
-  const handleDeleteTeam = async (id: string) => {
-    await deleteTeam(id);
-    setTeams((prev) => prev.filter((t) => t.id !== id));
+  const handleDeleteTeam = async (team: Team) => {
+    await apiT.DeleteTeam(team);
+    refreshTeams();
   };
 
   const handleAddNewTeam = async () => {
-    if (!newTeam.name.trim() || !newTeam.slug.trim()) {
-      alert("Team name and slug are required.");
+    if (!newTeam.name.trim()) {
+      alert("Team name are required.");
       return;
     }
-
-    // If your backend generates id, it should return the created Team.
-    // We cast here because we don't know your exact Team shape.
-    const created = await addNewTeam(newTeam as unknown as Team);
-
-    setTeams((prev) => prev.concat(created));
+    if (!selectedSeason) {return;}
+    await apiT.CreateTeam(newTeam, selectedSeason.id);
+    refreshTeams();
 
     // reset form
     setNewTeam({
+      id: "",
       name: "",
       slug: "",
-      captainName: "",
-      coCaptainName: "",
-      captainEmail: "",
-      coCaptainEmail: "",
+      captain_name: "",
+      co_captain_name: "",
+      captain_email: "",
+      co_captain_email: "",
+      editing_status: "draft"
     });
   };
 
-  const publishHandler = async () => {
+  const handlePublish = async () => {
     try {
-      await publish();
-      await refreshTeams();
+      await apiP.Publish();
       alert("Teams published");
     } catch (err) {
       console.error(err);
@@ -90,15 +93,45 @@ export default function TeamsPage() {
   };
 
   useEffect(() => {
-    refreshTeams().catch(console.error);
-  }, []);
+    const load = async () => {
+      const currentData = await apiS.GetSeasons("", "current");
+      const currentSeason = Array.isArray(currentData) ? currentData[0] : currentData;
 
+      if (!currentSeason) {
+        console.error("No current season returned.");
+        return;
+      }
+
+      setSelectedSeason(currentSeason);
+
+      const all = await apiS.GetSeasons("", "all");
+      setAllSeasons(Array.isArray(all) ? all : [all]);
+    };
+
+    load().catch((err) => console.error("Error fetching seasons:", err));
+  }, []);
+  useEffect(() => {
+    if (!selectedSeason) return;
+    const loadSeasonData = async () => {
+      const [teams] = await Promise.all([
+        apiT.GetSeasonTeams(selectedSeason.id),
+      ]);
+      setTeams(teams);
+    };
+
+    loadSeasonData().catch((err) => console.error("Error fetching season data:", err));
+  }, [selectedSeason?.id]);
   return (
     <div className={styles.page}>
       <Header
         isAdmin={isAdmin}
         onToggleAdmin={() => setIsAdmin((prev) => !prev)}
-        onPublish={publishHandler}
+        onPublish={handlePublish}
+        seasons={allSeasons}
+        selectedSeason={selectedSeason}
+        onSelect={(s) => setSelectedSeason(s)}
+        onOpenCreateSeason={openCreateSeason}
+        onOpenEditSeason={openEditSeason}
       />
 
       <main className={styles.main}>
@@ -116,31 +149,23 @@ export default function TeamsPage() {
                   setNewTeam((p) => ({ ...p, name: e.target.value }))
                 }
               />
-              <input
-                className={styles.input}
-                placeholder="Slug (e.g. red-dragons) *"
-                value={newTeam.slug}
-                onChange={(e) =>
-                  setNewTeam((p) => ({ ...p, slug: e.target.value }))
-                }
-              />
             </div>
 
             <div className={styles.formRow}>
               <input
                 className={styles.input}
                 placeholder="Captain name"
-                value={newTeam.captainName}
+                value={newTeam.captain_name}
                 onChange={(e) =>
-                  setNewTeam((p) => ({ ...p, captainName: e.target.value }))
+                  setNewTeam((p) => ({ ...p, captain_name: e.target.value }))
                 }
               />
               <input
                 className={styles.input}
                 placeholder="Co-captain name"
-                value={newTeam.coCaptainName}
+                value={newTeam.co_captain_name}
                 onChange={(e) =>
-                  setNewTeam((p) => ({ ...p, coCaptainName: e.target.value }))
+                  setNewTeam((p) => ({ ...p, co_captain_name: e.target.value }))
                 }
               />
             </div>
@@ -149,17 +174,17 @@ export default function TeamsPage() {
               <input
                 className={styles.input}
                 placeholder="Captain email"
-                value={newTeam.captainEmail}
+                value={newTeam.captain_email}
                 onChange={(e) =>
-                  setNewTeam((p) => ({ ...p, captainEmail: e.target.value }))
+                  setNewTeam((p) => ({ ...p, captain_email: e.target.value }))
                 }
               />
               <input
                 className={styles.input}
                 placeholder="Co-captain email"
-                value={newTeam.coCaptainEmail}
+                value={newTeam.co_captain_email}
                 onChange={(e) =>
-                  setNewTeam((p) => ({ ...p, coCaptainEmail: e.target.value }))
+                  setNewTeam((p) => ({ ...p, co_captain_email: e.target.value }))
                 }
               />
             </div>

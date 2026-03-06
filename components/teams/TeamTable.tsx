@@ -7,13 +7,13 @@
 
 import React, { useMemo, useState } from "react";
 import styles from "./TeamTable.module.css";
-import type { Team } from "@/types/teams";
+import type { Team } from "@/types/team_mod";
 
 interface Props {
   teams: Team[];
   isAdmin: boolean;
   onTeamUpdate?: (updatedTeam: Team) => Promise<void>;
-  onTeamDelete?: (id: string) => Promise<void>;
+  onTeamDelete?: (team: Team) => Promise<void>;
 }
 
 const TeamTable: React.FC<Props> = ({ teams, isAdmin, onTeamUpdate, onTeamDelete }) => {
@@ -62,19 +62,16 @@ const TeamTable: React.FC<Props> = ({ teams, isAdmin, onTeamUpdate, onTeamDelete
                   {team.name}
                 </a>
               </td>
-              <td data-label="Captain">{team.captainName}</td>
-              <td data-label="Co-Captain">{team.coCaptainName}</td>
-              <td data-label="Ranking">
-                {team.currentRanking ? `#${team.currentRanking}` : "—"}
-              </td>
+              <td data-label="Captain">{team.captain_name}</td>
+              <td data-label="Co-Captain">{team.co_captain_name}</td>
               {isAdmin && (
                 <td data-label="Captain Email" className={styles.muted}>
-                  {team.captainEmail}
+                  {team.captain_email}
                 </td>
               )}
               {isAdmin && (
                 <td data-label="Co-Captain Email" className={styles.muted}>
-                  {team.coCaptainEmail}
+                  {team.co_captain_email}
                 </td>
               )}
               {isAdmin && (
@@ -93,7 +90,7 @@ const TeamTable: React.FC<Props> = ({ teams, isAdmin, onTeamUpdate, onTeamDelete
                       className={styles.actionButton}
                       onClick={() => {
                         if (confirm(`Delete ${team.name}? This can't be undone.`)) {
-                          onTeamDelete?.(team.id);
+                          onTeamDelete?.(team);
                         }
                       }}
                     >

@@ -19,6 +19,7 @@ import SeasonEditor from "@/components/editors/SeasonEditor";
 import * as apiA from "@/lib/api/announcement_api";
 import * as apiS from "@/lib/api/season_api";
 import * as apiM from "@/lib/api/match_api";
+import { useSeasonEditor } from "@/components/layout/Header/header_functions";
 
 export default function Home() {
   const [isAdmin, setIsAdmin] = useState(true);
@@ -33,55 +34,22 @@ export default function Home() {
   const [allSeasons, setAllSeasons] = useState<Season[]>([]);
 
   const [screen, setScreen] = useState<"home" | "seasonEditor">("home");
-  const [seasonToEdit, setSeasonToEdit] = useState<Season | undefined>(undefined);
+
+  const {
+    seasonToEdit,
+    openCreateSeason,
+    openEditSeason,
+    closeSeasonEditor,
+    handleSaveSeason,
+  } = useSeasonEditor({
+    selectedSeason,
+    setSelectedSeason,
+    setAllSeasons,
+    setScreen,
+  });
 
   const handlePublish = () => {
     alert("Changes published for public view.");
-  };
-
-  const openCreateSeason = () => {
-    setSeasonToEdit(undefined);
-    setScreen("seasonEditor");
-  };
-
-  const openEditSeason = () => {
-    if (!selectedSeason) return;
-    setSeasonToEdit(selectedSeason);
-    setScreen("seasonEditor");
-  };
-
-  const closeSeasonEditor = () => {
-    setSeasonToEdit(undefined);
-    setScreen("home");
-  };
-
-  const handleSaveSeason = async (payload: Omit<Season, "id" | "series_ids">, id?: string) => {
-    let saved: Season;
-
-    if (id) {
-      if (!seasonToEdit) throw new Error("No season loaded to edit.");
-      saved = await apiS.UpdateSeason({
-        ...seasonToEdit,
-        ...payload,
-        id,
-      });
-        console.log("handleSaveSeason payload:", payload);
-        console.log("handleSaveSeason id:", id);
-        console.log("seasonToEdit:", seasonToEdit);
-    } else {
-      saved = await apiS.CreateSeason({
-        id: "",
-        series_ids: [],
-        ...payload,
-      } as Season);
-    }
-
-    setSelectedSeason(saved);
-
-    const all = await apiS.GetSeasons("", "all");
-    setAllSeasons(Array.isArray(all) ? all : [all]);
-
-    closeSeasonEditor();
   };
 
   const handleAnnouncementChange = async (announcement: Announcement, change: string) => {
@@ -191,10 +159,11 @@ export default function Home() {
 
       {screen === "seasonEditor" && (
         <main className="main">
-          <SeasonEditor 
-            initialSeason={seasonToEdit} 
-            onCancel={closeSeasonEditor} 
-            onSave={handleSaveSeason} />
+          <SeasonEditor
+            initialSeason={seasonToEdit}
+            onCancel={closeSeasonEditor}
+            onSave={handleSaveSeason}
+          />
         </main>
       )}
 
