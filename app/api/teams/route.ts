@@ -28,12 +28,18 @@ export async function POST(request: Request) {
   try {
     const { season_id, team } = await request.json();
 
+    console.log("POST season_id:", season_id);
+    console.log("POST team:", team);
+
     if (!season_id) return NextResponse.json({ error: "Missing season_id" }, { status: 400 });
     if (!team) return NextResponse.json({ error: "Missing team" }, { status: 400 });
 
     const created = await service.AddNewTeam(team, season_id);
+    console.log("POST created:", created);
+
     return NextResponse.json(created, { status: 201 });
-  } catch {
+  } catch (err) {
+    console.error("POST /api/teams error:", err);
     return NextResponse.json({ error: "Failed to create team" }, { status: 500 });
   }
 }
@@ -53,9 +59,18 @@ export async function PUT(request: Request) {
 export async function DELETE(request: Request) {
   try {
     const body = await request.json();
-    const result = await service.DeleteTeam(body);
+    console.log("DELETE body:", body);
+
+    const team = body.data;
+
+    if (!team) {
+      return NextResponse.json({ error: "Missing team data" }, { status: 400 });
+    }
+
+    const result = await service.DeleteTeam(team);
     return NextResponse.json(result ?? { ok: true }, { status: 200 });
-  } catch {
+  } catch (err) {
+    console.error("DELETE /api/teams error:", err);
     return NextResponse.json({ error: "Failed to delete Team" }, { status: 500 });
   }
 }

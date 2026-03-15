@@ -22,7 +22,7 @@ const TeamTable: React.FC<Props> = ({ teams, isAdmin, onTeamUpdate, onTeamDelete
   const filtered = useMemo(
     () =>
       teams.filter((team) =>
-        team.name.toLowerCase().includes(query.trim().toLowerCase())
+        (team?.name ?? "").toLowerCase().includes(query.trim().toLowerCase())
       ),
     [teams, query]
   );
@@ -48,7 +48,6 @@ const TeamTable: React.FC<Props> = ({ teams, isAdmin, onTeamUpdate, onTeamDelete
             <th>Team Name</th>
             <th>Captain</th>
             <th>Co-Captain</th>
-            <th>Ranking</th>
             {isAdmin && <th>Captain Email</th>}
             {isAdmin && <th>Co-Captain Email</th>}
             {isAdmin && <th>Actions</th>}

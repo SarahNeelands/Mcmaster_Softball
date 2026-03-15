@@ -6,9 +6,10 @@ import * as repo from "../repo/teams_repo"
 // Team GET functions
 //==============================================================================
 
-export async function GetAllTeamsOfSeason(season_id: string): Promise<string[]> {
+export async function GetAllTeamsOfSeason(season_id: string): Promise<Team[]> {
     const data = await repo.GetAllTeamsOfSeason(season_id);
-    return data;
+    const teams = Promise.all(data.map((id) => repo.GetTeamById(id)));
+    return teams;
 }
 
 export async function GetTeamById(id: string): Promise<Team> 

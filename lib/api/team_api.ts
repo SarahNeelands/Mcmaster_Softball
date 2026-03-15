@@ -18,12 +18,12 @@ export async function GetTeam(id: string): Promise<Team[]> {
 }
 
 
-export async function CreateTeam(data: Team, season_id: string) {
+export async function CreateTeam(team: Team, season_id: string) {
   const res = await fetch("/api/teams", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      ...data,
+      team,
       season_id,
     }),
   });
@@ -43,11 +43,11 @@ export async function UpdateTeam(data: Team) {
   return res.json();
 }
 
-export async function DeleteTeam(data: Team) {
+export async function DeleteTeam(team: Team) {
   const res = await fetch("/api/teams", {
     method: "DELETE",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ data }),
+    body: JSON.stringify(team),
   });
 
   if (!res.ok) throw new Error(await res.text());
