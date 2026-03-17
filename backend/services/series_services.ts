@@ -10,5 +10,4 @@ export async function GetSeasonSeriesIds(season_id: string)
 {
     const ids = await repo.GetSeasonSeriesIds(season_id);
     return ids;
-
 }

@@ -80,7 +80,7 @@ const TeamTable: React.FC<Props> = ({ teams, isAdmin, onTeamUpdate, onTeamDelete
                       type="button"
                       className={styles.actionButton}
                       onClick={() => 
-                        window.location.href = `/teams/${team.slug}/edit`}
+                        window.location.href = `/teams/${team.slug}`}
                     >
                       Edit
                     </button>

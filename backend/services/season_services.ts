@@ -72,7 +72,7 @@ export async function CreateNewSeason(newSeas: Season): Promise<Season> {
   if (existing.length > 0) {
     const teams = (await GetAllTeamsOfSeason(existing[0].id)) ?? [];
     if (teams.length > 0) {
-      await Promise.all(teams.map((t) => repo.AddNewSeasonTeams(t, created.id)));
+      await Promise.all(teams.map((t) => repo.AddNewSeasonTeams(t.id, created.id)));
     }
   }
 

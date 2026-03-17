@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import styles from "./UpcomingMatches.module.css";
-import { Match } from "../../../types/matches";
+import { Match } from "@/types/match_mod";
 
 interface UpcomingMatchesProps {
   matches: Match[];
@@ -183,9 +183,9 @@ export default function UpcomingMatches({
                       {isEditing ? (
                         <>
                           <input
-                            value={formState[g.id]?.homeTeam ?? ""}
+                            value={formState[g.id]?.home_team_id ?? ""}
                             onChange={(e) =>
-                              updateField(g.id, { homeTeam: e.target.value })
+                              updateField(g.id, { home_team_id: e.target.value })
                             }
                           />
                           <span className={styles.fieldInfo}>
@@ -197,17 +197,17 @@ export default function UpcomingMatches({
                             />
                           </span>
                           <input
-                            value={formState[g.id]?.awayTeam ?? ""}
+                            value={formState[g.id]?.away_team_id ?? ""}
                             onChange={(e) =>
-                              updateField(g.id, { awayTeam: e.target.value })
+                              updateField(g.id, { away_team_id: e.target.value })
                             }
                           />
                         </>
                       ) : (
                         <>
-                          <span className={styles.team}>{g.homeTeam}</span>
+                          <span className={styles.team}>{g.home_team_id}</span>
                           <span className={styles.fieldInfo}>{g.field}</span>
-                          <span className={styles.team}>{g.awayTeam}</span>
+                          <span className={styles.team}>{g.away_team_id}</span>
                         </>
                       )}
                     </div>

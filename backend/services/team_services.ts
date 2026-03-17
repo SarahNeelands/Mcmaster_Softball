@@ -16,6 +16,11 @@ export async function GetTeamById(id: string): Promise<Team>
 {
     return await repo.GetTeamById(id);
 }
+
+export async function GetTeamBySlug(slug: string): Promise<Team> 
+{
+    return await repo.GetTeamBySlug(slug);
+}
 //==============================================================================
 // Team ADD functions
 //==============================================================================

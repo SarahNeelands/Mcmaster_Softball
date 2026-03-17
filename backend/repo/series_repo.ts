@@ -1,5 +1,5 @@
 
-import { Series} from "../../types/series_mod";
+import { Series} from "@/types/series_mod";
 import { pool } from "../database/db";
 /* 
   Repo Functions' for Series
@@ -31,7 +31,7 @@ export async function GetAllSeasonsSeries(season_id: string)
 
 export async function GetSeasonSeriesIds(season_id: string): Promise<string[]>
 {
-  const {rows} = await pool.query<string>(
+  const {rows} = await pool.query(
     `SELECT id
     FROM series
     WHERE season_id = $1`,
@@ -49,12 +49,16 @@ export async function GetSeriesById(series_id: string)  {
   return rows;
 }
 
-export async function GetCurrentSeries() {
-  const {rows} = await pool.query(
+export async function GetCurrentSeason():Promise<Series> {
+  console.log("DB host:", process.env.PGHOST ?? process.env.DB_HOST ?? process.env.HOST);
+  const { rows } = await pool.query<Series>(
     `SELECT *
-    FROM series
-    WHERE is_active = true`);
-  return rows;
+     FROM series
+     WHERE CURRENT_DATE BETWEEN start_date::date AND end_date::date
+     ORDER BY start_date::date DESC
+     LIMIT 1`
+  );
+  return rows[0] ?? null;
 }
 //==============================================================================
 // Series ADD functions
@@ -98,9 +102,7 @@ export async function UpdateSeriesById(series: Series){
       series.start_date,
       series.end_date, 
       series.advance_amount, 
-      series.demote_amount, 
-      series.is_active,
-    series.editing_status]);
+      series.demote_amount]);
   if (rows.length ===0){throw new Error(`Repo failed to update series ${series.id}`)}
   return;
 }

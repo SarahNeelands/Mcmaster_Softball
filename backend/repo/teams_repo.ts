@@ -27,6 +27,19 @@ export async function GetTeamById(team_id: string): Promise<Team> {
   if (rows.length === 0) throw new Error(`Team not found: ${team_id}`);
   return rows[0];
 }
+
+
+export async function GetTeamBySlug(slug: string): Promise<Team> {
+  const { rows } = await pool.query<Team>(
+    `SELECT *
+     FROM teams
+     WHERE slug = $1`,
+    [slug]
+  );
+
+  if (rows.length === 0) throw new Error(`Team not found: ${slug}`);
+  return rows[0];
+}
 //==============================================================================
 // Team CREATE functions
 //==============================================================================

@@ -73,7 +73,26 @@ export async function GetMatchesByDate(date: string) {
   return rows;
 }
 
+export async function GetTeamsSeasonsMatches(
+  team_id: string,
+  season_id: string
+): Promise<Match[]> {
+  const { rows } = await pool.query<Match>(
+    `
+    SELECT m.*
+    FROM matches m
+    JOIN divisions d ON d.id = m.division_id
+    JOIN series s ON s.id = d.series_id
+    WHERE s.season_id = $1
+      AND m.editing_status <> 'deleted'
+      AND (m.home_team = $2 OR m.away_team = $2)
+    ORDER BY m.date, m.time;
+    `,
+    [season_id, team_id]
+  );
 
+  return rows;
+}
 //==============================================================================
 // Matches ADD functions
 //==============================================================================

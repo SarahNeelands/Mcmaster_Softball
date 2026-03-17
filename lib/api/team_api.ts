@@ -10,12 +10,21 @@ export async function GetSeasonTeams(season_id: string): Promise<Team[]> {
 }
 
 export async function GetTeam(id: string): Promise<Team[]> {
-  const url = `/api/teams?id=${encodeURIComponent(id)}&type=specific`;
+  const url = `/api/teams?id=${encodeURIComponent(id)}&type=id`;
 
   const res = await fetch(url); 
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
+
+export async function GetTeamBySlug(slug: string): Promise<Team[]> {
+  const url = `/api/teams?id=${encodeURIComponent(slug)}&type=slug`;
+
+  const res = await fetch(url); 
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
 
 
 export async function CreateTeam(team: Team, season_id: string) {

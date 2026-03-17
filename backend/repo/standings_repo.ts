@@ -14,27 +14,42 @@ import { pool } from "../database/db";
     - deletes all standings with editing_status = 'deleted'
 */
 
+export type StandingRow = {
+  id: string,
+  division_id: string,
+  team_id: string,
+  wins: number,
+  losses: number,
+  ties: number,
+  points: number,
+  series_id: string,
+  editing_status: string
+}
+
+
+
+
 //==============================================================================
 // Standings GET functions
 //==============================================================================
-export async function GetStandingsByDivision(division_id: string) {
-  const {rows} = await pool.query(
+export async function GetStandingsBySeries(series_id: string): Promise<StandingRow[]> {
+  const {rows} = await pool.query<StandingRow>(
     `SELECT *
     FROM standings
-    WHERE division_id = $1`,
-    [division_id]
+    WHERE series_id = $1`,
+    [series_id]
   );
   return rows;
 }
 
-export async function GetStandingsByTeam(team_id: string) {
-  const {rows} = await pool.query(
+export async function GetStandingsByTeam(team_id: string, series_id: string): Promise<StandingRow>  {
+  const {rows} = await pool.query<StandingRow>(
     `SELECT *
     FROM standings
-    WHERE team_id = $1`,
-    [team_id]
+    WHERE team_id = $1 AND series_id = $2`,
+    [team_id, series_id]
     );
-  return rows;
+  return rows[0];
 }
 
 //==============================================================================
@@ -48,7 +63,7 @@ export async function AddNewStandings(standing: Standing, division_id: string) {
     RETURNING *`,
     [
       division_id,
-      standing.team_id,
+      standing.team.id,
       standing.wins,
       standing.losses,
       standing.ties,
@@ -73,12 +88,12 @@ export async function UpdateStandings(update: Standing) {
     WHERE team_id = $1
     RETURNING *`,
     [
-      update.team_id,
+      update.team.id,
       update.wins,
       update.losses,
       update.ties,
       update.points]);
-    if (rows.length === 0) {throw new Error(`Standings not found: ${update.team_id}`);}
+    if (rows.length === 0) {throw new Error(`Standings not found: ${update.team.id}`);}
     return rows;
 }
 

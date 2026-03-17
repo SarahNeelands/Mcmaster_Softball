@@ -2,13 +2,30 @@
 import { Match } from "@/types/match_mod";
 
 export async function GetSeasonMatches(season_id: string): Promise<Match[]> {
-  const url = `/api/matches?season_id=${encodeURIComponent(season_id)}`;
+  const params = new URLSearchParams({
+    type: "all",
+    season_id,
+  });
 
-  const res = await fetch(url); 
+  const res = await fetch(`/api/matches?${params.toString()}`);
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
 
+export async function GetTeamsSeasonMatches(
+  team_id: string,
+  season_id: string
+): Promise<Match[]> {
+  const params = new URLSearchParams({
+    type: "team",
+    season_id,
+    team_id,
+  });
+
+  const res = await fetch(`/api/matches?${params.toString()}`);
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
 export async function CreateMatch(data: Match) {
   const res = await fetch("/api/matches", {
     method: "POST",

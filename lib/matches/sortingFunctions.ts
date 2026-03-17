@@ -1,4 +1,4 @@
-import { Match } from "../../types/matches";
+import { Match } from "../../types/match_mod";
 
 export interface MatchesByMonth {
   year: number;

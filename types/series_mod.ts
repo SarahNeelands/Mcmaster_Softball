@@ -8,6 +8,5 @@ export type Series = {
   divisions_ids: string[],
   advance_amount: number,
   demote_amount: number,
-  is_active: boolean,
   editing_status: string
 }

@@ -6,9 +6,9 @@ export async function GET(request: Request) {
   try {
     const url = new URL(request.url);
     const id = url.searchParams.get("id");
-    const search = url.searchParams.get("type"); //  "specific" | "all"
+    const search = url.searchParams.get("type"); //  "id" | "all" | "slug"
 
-    if (search === "specific") {
+    if (search === "id") {
         if (id === null) {return NextResponse.json({ error: "Failed to get team" }, { status: 500 });}
         const items = await service.GetTeamById(id);
         return NextResponse.json(items, { status: 200 });
@@ -16,6 +16,11 @@ export async function GET(request: Request) {
     if (search === "all") {
         if (id === null) {return NextResponse.json({ error: "Failed to get teams" }, { status: 500 });}
         const items = await service.GetAllTeamsOfSeason(id);
+        return NextResponse.json(items, { status: 200 });
+    }
+    if (search === "slug") {
+        if (id === null) {return NextResponse.json({ error: "Failed to get team" }, { status: 500 });}
+        const items = await service.GetTeamBySlug(id);
         return NextResponse.json(items, { status: 200 });
     }
     return NextResponse.json({ error: "Missing or invalid search" }, { status: 400 });
