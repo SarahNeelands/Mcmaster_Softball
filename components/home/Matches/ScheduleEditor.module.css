@@ -61,10 +61,81 @@
 .timeHeader {
   display: flex;
   gap: 0.5rem;
+  margin-bottom: 0.5rem;
 }
+
+.gameCard {
+  margin-top: 0.5rem;
+}
+
 .gameRow {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr auto;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) auto;
   gap: 0.25rem;
-  margin-top: 0.25rem;
+  align-items: start;
+}
+
+.fieldBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.fieldBlock span {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.selectWrap {
+  position: relative;
+}
+
+.selectMenu {
+  position: absolute;
+  top: calc(100% + 0.25rem);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+  max-height: 14rem;
+  overflow-y: auto;
+}
+
+.selectOption,
+.selectCreate {
+  width: 100%;
+  text-align: left;
+  padding: 0.55rem 0.7rem;
+  border: none;
+  background: #fff;
+  cursor: pointer;
+}
+
+.selectOption:hover,
+.selectCreate:hover {
+  background: #f9fafb;
+}
+
+.selectCreate {
+  font-weight: 600;
+  color: var(--color-maroon);
+}
+
+.selectEmpty {
+  padding: 0.55rem 0.7rem;
+  color: #6b7280;
+}
+
+.removeButton {
+  align-self: end;
+}
+
+@media (max-width: 900px) {
+  .gameRow {
+    grid-template-columns: 1fr;
+  }
 }

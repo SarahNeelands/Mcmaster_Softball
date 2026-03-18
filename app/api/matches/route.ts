@@ -50,14 +50,14 @@ export async function GET(req: Request) {
       { error: "invalid type. Use 'all' or 'team'" },
       { status: 400 }
     );
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("GET /api/matches failed:", err);
 
     return NextResponse.json(
       {
         error: "Failed to fetch matches",
-        details: err?.message ?? String(err),
-        stack: err?.stack ?? null,
+        details: err instanceof Error ? err.message : String(err),
+        stack: err instanceof Error ? err.stack ?? null : null,
       },
       { status: 500 }
     );
@@ -89,7 +89,7 @@ export async function PUT(request: Request) {
 export async function DELETE(request: Request) {
   try {
     const body = await request.json();
-    const result = await service.DeleteMatch(body);
+    const result = await service.DeleteMatch(body.data);
     return NextResponse.json(result ?? { ok: true }, { status: 200 });
   } catch {
     return NextResponse.json({ error: "Failed to delete match" }, { status: 500 });

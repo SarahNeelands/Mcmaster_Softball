@@ -2,7 +2,7 @@ import { NextResponse} from "next/server";
 import * as service from "@/backend/services/rule_services";
 
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
     const rules = await service.GetAllRules()
     return NextResponse.json(rules, {status: 200})
@@ -38,7 +38,7 @@ export async function PUT(request: Request) {
 export async function DELETE(request: Request) {
   try {
     const body = await request.json();
-    const result = await service.DeleteRule(body);
+    const result = await service.DeleteRule(body.data);
     return NextResponse.json(result ?? { ok: true }, { status: 200 });
   } catch {
     return NextResponse.json({ error: "Failed to delete Rule" }, { status: 500 });

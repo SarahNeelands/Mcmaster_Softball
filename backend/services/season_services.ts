@@ -14,6 +14,12 @@ export async function GetCurrentSeason(): Promise<Season> {
     return await FormatSeason(current);
   }
 
+  const previous = await repo.GetPreviousSeason();
+
+  if (previous) {
+    return await FormatSeason(previous);
+  }
+
   const all = await repo.GetAllSeasons();
 
   if (all.length > 0) {

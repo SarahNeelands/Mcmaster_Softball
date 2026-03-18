@@ -1,0 +1,92 @@
+.seriesEditor {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 1000;
+}
+
+.seriesEditorCard {
+  width: min(640px, 100%);
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+.seriesEditorHeader {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.seriesEditorTitle {
+  margin: 0;
+}
+
+.seriesEditorBody {
+  display: grid;
+  gap: 1rem;
+  padding: 1.25rem;
+}
+
+.seriesEditorRow {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.seriesEditorLabel {
+  display: grid;
+  gap: 0.45rem;
+  font-weight: 600;
+}
+
+.seriesEditorInput,
+.seriesEditorSelect {
+  width: 100%;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid rgba(0, 0, 0, 0.16);
+  border-radius: 10px;
+  font: inherit;
+  background: #fff;
+}
+
+.seriesEditorError {
+  color: #b42318;
+  font-size: 0.95rem;
+}
+
+.seriesEditorActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem 1.25rem;
+}
+
+.seriesEditorBtnPrimary,
+.seriesEditorBtnSecondary {
+  border-radius: 10px;
+  padding: 0.7rem 1rem;
+  font: inherit;
+  cursor: pointer;
+}
+
+.seriesEditorBtnPrimary {
+  border: 1px solid var(--color-maroon);
+  background: var(--color-maroon);
+  color: #fff;
+}
+
+.seriesEditorBtnSecondary {
+  border: 1px solid rgba(0, 0, 0, 0.16);
+  background: #fff;
+  color: inherit;
+}
+
+@media (max-width: 640px) {
+  .seriesEditorRow {
+    grid-template-columns: 1fr;
+  }
+}

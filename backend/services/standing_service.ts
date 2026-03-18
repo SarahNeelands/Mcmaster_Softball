@@ -16,6 +16,16 @@ export async function GetAllSeriesRankings(series_id: string): Promise<Standing[
   return Promise.all(data.map((m) => FormatStanding(m)));
 }
 
+export async function GetAllDivisionRankings(division_id: string): Promise<Standing[]> {
+  const data = await repo.GetStandingsByDivision(division_id);
+
+  if (!data || data.length === 0) {
+    return [];
+  }
+
+  return Promise.all(data.map((m) => FormatStanding(m)));
+}
+
 export async function GetTeamsStanding(
   team_id: string,
   series_id: string

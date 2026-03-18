@@ -7,6 +7,7 @@ import { Match } from "@/types/match_mod";
 interface UpcomingMatchesProps {
   matches: Match[];
   isAdmin: boolean;
+  teamNamesById?: Record<string, string>;
   updateMatch?: (updated: Match) => Promise<Match>;
   onAddGames?: () => void;
   useCardGroups?: boolean;
@@ -23,6 +24,7 @@ interface GroupedDay {
 export default function UpcomingMatches({
   matches,
   isAdmin,
+  teamNamesById = {},
   updateMatch,
   onAddGames,
   useCardGroups = false,
@@ -95,6 +97,10 @@ export default function UpcomingMatches({
       "July","August","September","October","November","December",
     ];
     return `${months[month - 1]} ${day}`;
+  };
+
+  const getTeamName = (teamId: string) => {
+    return teamNamesById[teamId] ?? teamId;
   };
 
   /* ---------------- render ---------------- */
@@ -205,9 +211,13 @@ export default function UpcomingMatches({
                         </>
                       ) : (
                         <>
-                          <span className={styles.team}>{g.home_team_id}</span>
+                          <span className={styles.team}>
+                            {getTeamName(g.home_team_id)}
+                          </span>
                           <span className={styles.fieldInfo}>{g.field}</span>
-                          <span className={styles.team}>{g.away_team_id}</span>
+                          <span className={styles.team}>
+                            {getTeamName(g.away_team_id)}
+                          </span>
                         </>
                       )}
                     </div>

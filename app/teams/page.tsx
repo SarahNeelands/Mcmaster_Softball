@@ -1,38 +1,61 @@
 /**
- * Teams listing page: renders the teams table with roster/record data fetched via `fetchAllTeams`.
- * Interactions: admin toggle, add team (admin), update team (admin), delete team (admin), publish (admin).
+ * Teams listing page: renders the teams table with roster data fetched via the current API.
  */
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Header from "@/components/layout/Header/Header";
 import Footer from "@/components/layout/Footer/Footer";
+import SeriesEditor from "@/components/editors/SeriesEditor";
 import TeamTable from "@/components/teams/TeamTable";
+import SeriesDropdownButton from "@/components/dropDowns/SeriesDropdownButton";
 import type { Team } from "@/types/team_mod";
 import type { Season } from "@/types/season_mod";
+import type { Series } from "@/types/series_mod";
 import styles from "./page.module.css";
-
 import * as apiP from "@/lib/api/publish_api";
 import * as apiS from "@/lib/api/season_api";
 import * as apiT from "@/lib/api/team_api";
+import * as apiSeries from "@/lib/api/series_api";
 import { useSeasonEditor } from "@/components/layout/Header/header_functions";
-
-
+import { filterVisibleByEditingStatus } from "@/lib/data/editing_status";
 
 export default function TeamsPage() {
   const [isAdmin, setIsAdmin] = useState(true);
+  const [isPreviewing, setIsPreviewing] = useState(false);
   const [teams, setTeams] = useState<Team[]>([]);
-
-  const [screen, setScreen] = useState<"home" | "seasonEditor">("home");
+  const [, setScreen] = useState<"home" | "seasonEditor">("home");
   const [selectedSeason, setSelectedSeason] = useState<Season>();
   const [allSeasons, setAllSeasons] = useState<Season[]>([]);
-  const {seasonToEdit, openCreateSeason, openEditSeason, closeSeasonEditor, handleSaveSeason,} = useSeasonEditor(
-    {selectedSeason, setSelectedSeason, setAllSeasons, setScreen,});
-  
-  
+  const [selectedSeries, setSelectedSeries] = useState<Series>();
+  const [allSeries, setAllSeries] = useState<Series[]>([]);
+  const [editingSeries, setEditingSeries] = useState<Series>();
+  const [creatingSeries, setCreatingSeries] = useState(false);
 
+  const canManageContent = isAdmin && !isPreviewing;
 
-  // Add-team form state (main page)
+  const visibleTeams = useMemo(
+    () => filterVisibleByEditingStatus(teams, canManageContent),
+    [teams, canManageContent]
+  );
+
+  const visibleSeasons = useMemo(
+    () => filterVisibleByEditingStatus(allSeasons, canManageContent),
+    [allSeasons, canManageContent]
+  );
+
+  const visibleSeries = useMemo(
+    () => filterVisibleByEditingStatus(allSeries, canManageContent),
+    [allSeries, canManageContent]
+  );
+
+  const { openCreateSeason, openEditSeason } = useSeasonEditor({
+    selectedSeason,
+    setSelectedSeason,
+    setAllSeasons,
+    setScreen,
+  });
+
   const [newTeam, setNewTeam] = useState<Team>({
     id: "",
     name: "",
@@ -45,19 +68,37 @@ export default function TeamsPage() {
   });
 
   const refreshTeams = async () => {
-    if (!selectedSeason) {return;}
-    const latest = await  apiT.GetSeasonTeams(selectedSeason.id);
+    if (!selectedSeason) return;
+    const latest = await apiT.GetSeasonTeams(selectedSeason.id);
     setTeams(latest);
+  };
+
+  const reloadSeries = async (season?: Season) => {
+    if (!season) return;
+
+    const [currentSeriesData, allSeriesData] = await Promise.all([
+      apiSeries.GetSeries("", season.id, "current"),
+      apiSeries.GetSeries("", season.id, "all"),
+    ]);
+
+    const currentSeries = Array.isArray(currentSeriesData) ? currentSeriesData[0] : currentSeriesData;
+    const seasonSeries = Array.isArray(allSeriesData) ? allSeriesData : [allSeriesData];
+    const filteredSeries = seasonSeries.filter(Boolean);
+    const nextSelectedSeries =
+      filteredSeries.find((series) => series.id === selectedSeries?.id) ?? currentSeries;
+
+    setSelectedSeries(nextSelectedSeries);
+    setAllSeries(filteredSeries);
   };
 
   const handleUpdateTeam = async (updatedTeam: Team) => {
     await apiT.UpdateTeam(updatedTeam);
-    refreshTeams();
+    await refreshTeams();
   };
 
   const handleDeleteTeam = async (team: Team) => {
     await apiT.DeleteTeam(team);
-    refreshTeams();
+    await refreshTeams();
   };
 
   const handleAddNewTeam = async () => {
@@ -65,11 +106,11 @@ export default function TeamsPage() {
       alert("Team name are required.");
       return;
     }
-    if (!selectedSeason) {return;}
-    await apiT.CreateTeam(newTeam, selectedSeason.id);
-    refreshTeams();
+    if (!selectedSeason) return;
 
-    // reset form
+    await apiT.CreateTeam(newTeam, selectedSeason.id);
+    await refreshTeams();
+
     setNewTeam({
       id: "",
       name: "",
@@ -85,6 +126,7 @@ export default function TeamsPage() {
   const handlePublish = async () => {
     try {
       await apiP.Publish();
+      await refreshTeams();
       alert("Teams published");
     } catch (err) {
       console.error(err);
@@ -110,33 +152,121 @@ export default function TeamsPage() {
 
     load().catch((err) => console.error("Error fetching seasons:", err));
   }, []);
+
+  useEffect(() => {
+    if (canManageContent) return;
+
+    const resetToPublicSeason = async () => {
+      try {
+        const currentData = await apiS.GetSeasons("", "current");
+        const currentSeason = Array.isArray(currentData) ? currentData[0] : currentData;
+        if (currentSeason) {
+          setSelectedSeason(currentSeason);
+        }
+      } catch (err) {
+        console.error("Error resetting teams season:", err);
+      }
+    };
+
+    resetToPublicSeason();
+  }, [canManageContent]);
+
   useEffect(() => {
     if (!selectedSeason) return;
+
     const loadSeasonData = async () => {
-      const [teams] = await Promise.all([
+      const [teamsData, currentSeriesData, allSeriesData] = await Promise.all([
         apiT.GetSeasonTeams(selectedSeason.id),
+        apiSeries.GetSeries("", selectedSeason.id, "current"),
+        apiSeries.GetSeries("", selectedSeason.id, "all"),
       ]);
-      setTeams(teams);
+
+      setTeams(teamsData);
+      const currentSeries = Array.isArray(currentSeriesData) ? currentSeriesData[0] : currentSeriesData;
+      const seasonSeries = Array.isArray(allSeriesData) ? allSeriesData : [allSeriesData];
+      setSelectedSeries(currentSeries);
+      setAllSeries(seasonSeries.filter(Boolean));
     };
 
     loadSeasonData().catch((err) => console.error("Error fetching season data:", err));
-  }, [selectedSeason?.id]);
+  }, [selectedSeason]);
+
+  const handleSaveSeries = async (
+    payload: Omit<Series, "id" | "divisions_ids">,
+    id?: string
+  ) => {
+    if (!id || !editingSeries || !selectedSeason) return;
+
+    await apiSeries.UpdateSeries({
+      ...editingSeries,
+      ...payload,
+      id,
+    });
+
+    setEditingSeries(undefined);
+    await reloadSeries(selectedSeason);
+  };
+
   return (
     <div className={styles.page}>
       <Header
         isAdmin={isAdmin}
+        isPreviewing={isPreviewing}
         onToggleAdmin={() => setIsAdmin((prev) => !prev)}
+        onTogglePreview={() => setIsPreviewing((prev) => !prev)}
         onPublish={handlePublish}
-        seasons={allSeasons}
+        seasons={visibleSeasons}
         selectedSeason={selectedSeason}
         onSelect={(s) => setSelectedSeason(s)}
         onOpenCreateSeason={openCreateSeason}
         onOpenEditSeason={openEditSeason}
       />
 
+      {canManageContent && (creatingSeries || editingSeries) && (
+        <SeriesEditor
+          initialSeries={editingSeries}
+          onCancel={() => {
+            setEditingSeries(undefined);
+            setCreatingSeries(false);
+          }}
+          onSave={async (payload, id) => {
+            if (creatingSeries && selectedSeason) {
+              await apiSeries.CreateSeries(
+                {
+                  id: "",
+                  divisions_ids: [],
+                  ...payload,
+                },
+                selectedSeason.id
+              );
+              setCreatingSeries(false);
+              await reloadSeries(selectedSeason);
+              return;
+            }
+
+            await handleSaveSeries(payload, id);
+          }}
+        />
+      )}
+
       <main className={styles.main}>
-        {/* Add team form on main page (admin only) */}
-        {isAdmin && (
+        {canManageContent && (
+          <div className={styles.seriesBar}>
+            <SeriesDropdownButton
+              series={visibleSeries}
+              selectedSeries={selectedSeries}
+              onSelect={(series) => setSelectedSeries(series)}
+              onOpenCreateSeries={() => {
+                setEditingSeries(undefined);
+                setCreatingSeries(true);
+              }}
+              onOpenEditSeries={() => setEditingSeries(selectedSeries)}
+              isAdmin={canManageContent}
+            />
+          </div>
+        )}
+
+        {canManageContent && (
           <section className={styles.adminPanel}>
             <h2 className={styles.adminTitle}>Add Team</h2>
 
@@ -200,8 +330,8 @@ export default function TeamsPage() {
         )}
 
         <TeamTable
-          teams={teams}
-          isAdmin={isAdmin}
+          teams={visibleTeams}
+          isAdmin={canManageContent}
           onTeamUpdate={handleUpdateTeam}
           onTeamDelete={handleDeleteTeam}
         />

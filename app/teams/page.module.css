@@ -13,3 +13,13 @@
 .main {
   flex: 1;
 }
+
+.seriesBar {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.adminPanel {
+  padding: 1rem;
+  padding-top: 0rem;
+}

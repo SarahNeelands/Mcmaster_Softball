@@ -24,7 +24,7 @@ export async function GetTeamsSeasonsMatches(team_id: string, season_id: string)
 export async function UpdateMatch(update: Match)
 {
     const data = await repo.UpdateMatch(update);
-    return ;
+    return data;
 }
 
 //==============================================================================

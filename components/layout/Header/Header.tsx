@@ -7,8 +7,10 @@ import { Season } from "@/types/season_mod";
 
 interface HeaderProps {
   isAdmin: boolean;
+  isPreviewing?: boolean;
   onPublish: () => void;
   onToggleAdmin: () => void;
+  onTogglePreview?: () => void;
   seasons: Season[];
   selectedSeason?: Season;
   onSelect: (season: Season) => void;
@@ -18,8 +20,10 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({
   isAdmin,
+  isPreviewing = false,
   onPublish,
   onToggleAdmin,
+  onTogglePreview,
   seasons,
   selectedSeason,
   onSelect,
@@ -36,25 +40,39 @@ const Header: React.FC<HeaderProps> = ({
       <div className={styles.actions}>
         {isAdmin && (
           <>
-            <SeasonDropdownButton
-              seasons={seasons}
-              selectedSeason={selectedSeason}
-              onSelect={onSelect}
-              onOpenCreateSeason={onOpenCreateSeason}
-            />
-            {isAdmin && selectedSeason && (
-              <button type="button" onClick={onOpenEditSeason}>
-                Edit
-              </button>
+            {!isPreviewing && (
+              <>
+                <SeasonDropdownButton
+                  seasons={seasons}
+                  selectedSeason={selectedSeason}
+                  onSelect={onSelect}
+                  onOpenCreateSeason={onOpenCreateSeason}
+                />
+                {selectedSeason && (
+                  <button type="button" onClick={onOpenEditSeason}>
+                    Edit
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  className={styles.publishButton}
+                  onClick={onPublish}
+                >
+                  Publish
+                </button>
+              </>
             )}
 
-            <button
-              type="button"
-              className={styles.publishButton}
-              onClick={onPublish}
-            >
-              Publish
-            </button>
+            {onTogglePreview && (
+              <button
+                type="button"
+                className={styles.previewButton}
+                onClick={onTogglePreview}
+              >
+                {isPreviewing ? "Exit Preview" : "Preview"}
+              </button>
+            )}
 
           </>
         )}

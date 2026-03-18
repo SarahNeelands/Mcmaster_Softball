@@ -1,6 +1,6 @@
 
 
-import type {Rule, RuleImage} from "../../types/rule_mod"
+import type {Rule} from "../../types/rule_mod"
 import * as repo from "../repo/rules_repo"
 
 //==============================================================================
@@ -8,8 +8,7 @@ import * as repo from "../repo/rules_repo"
 //==============================================================================
 export async function AddNewRule(rule: Rule) {
     const newrule = await repo.AddNewRule(rule)
-    rule.id = newrule.id
-    return rule;
+    return await GetRuleByID(newrule.id);
 }
 
 
@@ -37,7 +36,7 @@ export async function GetRuleByID(rule_id: string)
 // Rules Editing functions
 //==============================================================================
 
-export async function UpdateRule(rule: Rule): Promise<void> {
+export async function UpdateRule(rule: Rule): Promise<Rule> {
   rule.editing_status ="draft";
   await repo.UpdateRuleInfo(rule);
   
@@ -52,11 +51,15 @@ export async function UpdateRule(rule: Rule): Promise<void> {
 
   // images to delete: in DB but not in rule.images
   const imagesToDelete = currentImages.filter((img) => !newIds.has(img.id));
+  const imagesToUpdate = rule.images.filter((img) => currentIds.has(img.id));
 
   await Promise.all([
     ...imagesToAdd.map((img) => repo.AddNewRuleImage(img, rule.id )),
+    ...imagesToUpdate.map((img) => repo.UpdateRuleImage(img)),
     ...imagesToDelete.map((img) => repo.DeleteRuleImage(img.id)),
   ]);
+
+  return await GetRuleByID(rule.id);
 }
 
 //==============================================================================
@@ -85,6 +88,5 @@ async function FormatRule(rule_id: string, rule_title: string, rule_content: str
 export async function DeleteRule(rule: Rule) 
 {
     rule.editing_status = "deleted";
-    const data = await UpdateRule(rule);
-    return data;
+    return await UpdateRule(rule);
 }

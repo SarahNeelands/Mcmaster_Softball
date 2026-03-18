@@ -36,12 +36,22 @@ export async function GetAllSeasons():Promise<SeasonRow[]>{
 }
 
 export async function GetCurrentSeason():Promise<SeasonRow> {
-  console.log("DB host:", process.env.PGHOST ?? process.env.DB_HOST ?? process.env.HOST);
   const { rows } = await pool.query<SeasonRow>(
     `SELECT *
      FROM seasons
      WHERE CURRENT_DATE BETWEEN start_date::date AND end_date::date
      ORDER BY start_date::date DESC
+     LIMIT 1`
+  );
+  return rows[0] ?? null;
+}
+
+export async function GetPreviousSeason(): Promise<SeasonRow> {
+  const { rows } = await pool.query<SeasonRow>(
+    `SELECT *
+     FROM seasons
+     WHERE end_date::date < CURRENT_DATE
+     ORDER BY end_date::date DESC
      LIMIT 1`
   );
   return rows[0] ?? null;
@@ -109,7 +119,7 @@ export async function AddNewSeasonTeams(team_id: string, season_id: string): Pro
 //==============================================================================
 
 export async function DeleteSeason() {
-  const {rows} = await pool.query(
+  await pool.query(
     `DELETE FROM seasons
     WHERE editing_status = 'deleted'
     RETURNING *`  

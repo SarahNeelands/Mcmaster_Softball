@@ -54,14 +54,15 @@ CREATE TABLE series (
   start_date DATE NOT NULL,
   end_date DATE,
   advance_amount INT NOT NULL DEFAULT 1,
-  demote_amount INT NOT NULL DEFAULT 1
+  demote_amount INT NOT NULL DEFAULT 1,
+  editing_status TEXT NOT NULL DEFAULT 'draft' CHECK (editing_status IN ('draft','published','deleted'))
 );
 
 CREATE TABLE divisions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
   series_id UUID NOT NULL REFERENCES series(id) ON DELETE CASCADE,
-  edit_status TEXT NOT NULL CHECK (edit_status IN ('draft','published','deleted')),
+  editing_status TEXT NOT NULL CHECK (editing_status IN ('draft','published','deleted')),
   win_points INT NOT NULL DEFAULT 2,
   loss_points INT NOT NULL DEFAULT 0,
   tie_points INT NOT NULL DEFAULT 1

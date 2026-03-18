@@ -52,7 +52,8 @@ export async function GetAllSeasonMatches(seasonId: string): Promise<Match[]> {
 
 export async function GetMatchById(id: string) {
   const {rows} = await pool.query (
-    `SELECT * FROM matches WHERE id = id`
+    `SELECT * FROM matches WHERE id = $1`,
+    [id]
   );
   return rows;
 }
@@ -85,7 +86,7 @@ export async function GetTeamsSeasonsMatches(
     JOIN series s ON s.id = d.series_id
     WHERE s.season_id = $1
       AND m.editing_status <> 'deleted'
-      AND (m.home_team = $2 OR m.away_team = $2)
+      AND (m.home_team_id = $2 OR m.away_team_id = $2)
     ORDER BY m.date, m.time;
     `,
     [season_id, team_id]
@@ -114,7 +115,7 @@ export async function AddNewMatch(match: Match) {
       match.editing_status
     ]);
   if (rows.length === 0) {throw new Error(`Match not added: ${match.date} ${match.time}`);}
-  return;
+  return rows[0];
 }
 
 //==============================================================================
@@ -151,7 +152,7 @@ export async function UpdateMatch(update: Match) {
     ]
   );
   if (rows.length === 0) {throw new Error(`Match not found: ${update.id}`);}
-  return;
+  return rows[0];
 }
 
 //==============================================================================
@@ -159,7 +160,7 @@ export async function UpdateMatch(update: Match) {
 //==============================================================================
 
 export async function DeleteMatches() {
-  const {rows} = await pool.query(
+  await pool.query(
     `DELETE FROM matches WHERE editing_status = 'deleted'`
   );
   return;

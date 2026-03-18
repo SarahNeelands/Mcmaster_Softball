@@ -7,4 +7,6 @@ export type Team = {
   co_captain_name: string,
   co_captain_email: string,
   editing_status: string,
+  division?: string,
+  current_ranking?: number,
 }

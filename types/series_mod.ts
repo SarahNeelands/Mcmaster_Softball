@@ -1,5 +1,3 @@
-import { Division } from "./division_mod";
-
 export type Series = {
   id: string,
   name: string,

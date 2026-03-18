@@ -31,7 +31,10 @@ import { Rule, RuleImage } from "../../types/rule_mod";
 export async function GetAllRules() 
 {
   const {rows} = await pool.query(
-    ` SELECT * FROM rules`);
+    `SELECT *
+     FROM rules
+     WHERE editing_status <> 'deleted'
+     ORDER BY id DESC`);
   return rows;
 }
 
@@ -40,9 +43,10 @@ export async function GetRuleByID(id: string)
   const {rows} = await pool.query(
     `SELECT * 
     FROM rules
-    WHERE  id = $1`);
+    WHERE id = $1`,
+    [id]);
     if (rows.length === 0) {throw new Error(`Rule not found: ${id}`);}
-    return rows;
+    return rows[0];
 }
 
 export async function GetAllRuleImages(ruleId: string): Promise<RuleImage[]> {
@@ -64,20 +68,19 @@ export async function GetAllRuleImages(ruleId: string): Promise<RuleImage[]> {
 export async function AddNewRule(rule: Rule)
 {
   const {rows} = await pool.query(
-    `INSERT INTO rules (title, content)
-    VALUES ($1, $2)
+    `INSERT INTO rules (title, content, editing_status)
+    VALUES ($1, $2, $3)
     RETURNING *`,
     [
       rule.title,
-      rule.content
+      rule.content,
+      rule.editing_status
     ]
   );
   if (rows.length === 0) {throw new Error(`Rule not added: ${rule.title}`);}
   const ruleID = rows[0].id;
-  for (const image of rule.images) {
-    AddNewRuleImage(image, ruleID);
-  }
-  return rows;
+  await Promise.all(rule.images.map((image) => AddNewRuleImage(image, ruleID)));
+  return rows[0];
 }
 
 export async function AddNewRuleImage(ruleImage: RuleImage, ruleID: string)
@@ -92,7 +95,7 @@ export async function AddNewRuleImage(ruleImage: RuleImage, ruleID: string)
       ruleImage.alt
     ]);
     if (rows.length === 0) {throw new Error(`Rule image not added: ${ruleID}}`);}
-  return rows;
+  return rows[0];
 }
 
 
@@ -106,32 +109,34 @@ export async function UpdateRuleInfo(update: Rule)
     `UPDATE rules
     SET
       title = $1,
-      content = $2
-    WHERE id = $3
+      content = $2,
+      editing_status = $3
+    WHERE id = $4
     RETURNING *
     `,
     [
       update.title,
       update.content,
+      update.editing_status,
       update.id
     ],);
   if (rows.length === 0) {throw new Error(`Rule not found: ${update.id}`);}
-  return rows;
+  return rows[0];
 }
 
-export async function UpdateRuleImages(update: RuleImage)
+export async function UpdateRuleImage(update: RuleImage)
 {
   const {rows} = await pool.query(
-    `UPDATE rules
+    `UPDATE rule_images
     SET
-      src = $2
+      src = $2,
       alt = $3
     WHERE id = $1
     RETURNING *`,
     [update.id, update.src, update.alt]
   );
   if (rows.length ===0) {throw new Error(`Rule not found: ${update.id}`);}
-  return rows;
+  return rows[0];
 }
 
 

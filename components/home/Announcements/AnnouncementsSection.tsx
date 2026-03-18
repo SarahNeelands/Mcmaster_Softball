@@ -5,10 +5,7 @@
  * Responsible for rendering section controls, managing edit/create state, and
  * mapping announcement data into AnnouncementCard components.
  */
-
-
-
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import AnnouncementCard from "./AnnouncementCard";
 import Card from "../../common/Card/Card";
 import styles from "./AnnouncementsSection.module.css";
@@ -50,9 +47,9 @@ const AnnouncementsSection: React.FC<AnnouncementsSectionProps> = ({
   ? activeAnnouncements
   : activeAnnouncements.slice(0, DEFAULT_ANNOUNCEMENT_VISIBLE_COUNT);
 
-  const finalAnnouncements = showAllActive && isAdmin
-  ? [...visibleActiveAnnouncements, ...archivedAnnouncements]
-  : visibleActiveAnnouncements;
+  const finalAnnouncements = showAllActive
+    ? [...activeAnnouncements, ...archivedAnnouncements]
+    : visibleActiveAnnouncements;
 
   const closeEditor = () => {
     setDraft(null);
@@ -70,10 +67,12 @@ const AnnouncementsSection: React.FC<AnnouncementsSectionProps> = ({
       return;
     }
     if (isCreating) {
-      draft.season_id = currentSeason.id
-      onAnnouncementChange(draft, "add");
+      await onAnnouncementChange(
+        { ...draft, season_id: currentSeason.id },
+        "add"
+      );
     }else {
-      onAnnouncementChange(draft, "edit");
+      await onAnnouncementChange(draft, "edit");
     }
     closeEditor();
   };

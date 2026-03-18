@@ -1,6 +1,19 @@
 .seasonDropdown {
   position: relative;
   display: inline-block;
+  max-width: min(100%, calc(100vw - 24px));
+}
+
+.seasonDropdownWide {
+  width: 100%;
+  max-width: min(420px, calc(100vw - 24px));
+}
+
+.seasonDropdownTriggerRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
 }
 
 .seasonDropdownButton {
@@ -14,6 +27,27 @@
   cursor: pointer;
   font-size: 14px;
   line-height: 1;
+  max-width: 100%;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.seasonDropdownLabel {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.seasonDropdownEditButton {
+  flex: 0 0 auto;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  background: #ffffff;
+  color: inherit;
+  border-radius: 10px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 14px;
 }
 
 .seasonDropdownButton:disabled {
@@ -29,14 +63,22 @@
 .seasonDropdownMenu {
   position: absolute;
   top: calc(100% + 8px);
-  right: 0;
+  left: 0;
   min-width: 220px;
+  max-width: min(320px, calc(100vw - 24px));
   border-radius: 12px;
   border: 1px solid rgba(0, 0, 0, 0.18);
   background: #ffffff;
   padding: 6px;
   z-index: 1000;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+  overflow-x: hidden;
+}
+
+.seasonDropdownMenuClamp {
+  width: max-content;
+  max-height: min(60vh, 420px);
+  overflow-y: auto;
 }
 
 .seasonDropdownItem {
@@ -59,7 +101,8 @@
 }
 
 .seasonDropdownButton:focus,
-.seasonDropdownItem:focus {
+.seasonDropdownItem:focus,
+.seasonDropdownEditButton:focus {
   outline: 2px solid rgba(0, 0, 0, 0.25);
   outline-offset: 2px;
 }
@@ -89,4 +132,18 @@
   padding: 10px 10px;
   font-size: 13px;
   opacity: 0.7;
+}
+
+@media (max-width: 720px) {
+  .seasonDropdown,
+  .seasonDropdownWide {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .seasonDropdownMenu,
+  .seasonDropdownMenuClamp {
+    width: 100%;
+    max-width: 100%;
+  }
 }

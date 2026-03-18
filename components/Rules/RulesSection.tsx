@@ -9,23 +9,34 @@
 
 import React, { useState } from "react";
 import Card from "@/components/common/Card/Card";
-import { Rule, RuleImage } from "@/types/rules";
+import { Rule, RuleImage } from "@/types/rule_mod";
 import styles from "./RulesSection.module.css";
 
 interface RulesSectionProps {
   rules: Rule[];
   isAdmin: boolean;
-  onRulesChange: (rules: Rule[]) => void;
+  onCreateRule: (rule: Rule) => Promise<Rule>;
+  onUpdateRule: (rule: Rule) => Promise<Rule>;
+  onDeleteRule: (rule: Rule) => Promise<void>;
+  onUploadImage: (file: File) => Promise<{ src: string; alt: string }>;
 }
 
 const emptyRule: Rule = {
   id: "",
   title: "",
-  description: "",
+  content: "",
   images: [],
+  editing_status: "draft",
 };
 
-const RulesSection: React.FC<RulesSectionProps> = ({ rules, isAdmin, onRulesChange }) => {
+const RulesSection: React.FC<RulesSectionProps> = ({
+  rules,
+  isAdmin,
+  onCreateRule,
+  onUpdateRule,
+  onDeleteRule,
+  onUploadImage,
+}) => {
   const [draft, setDraft] = useState<Rule | null>(null);
   const [isCreating, setIsCreating] = useState<boolean>(false);
 
@@ -38,7 +49,6 @@ const RulesSection: React.FC<RulesSectionProps> = ({ rules, isAdmin, onRulesChan
     setDraft({
       ...rule,
       images: (rule.images ?? []).map((image) => ({ ...image })),
-
     });
     setIsCreating(false);
   };
@@ -48,7 +58,7 @@ const RulesSection: React.FC<RulesSectionProps> = ({ rules, isAdmin, onRulesChan
     setIsCreating(false);
   };
 
-  const handleDraftChange = (field: keyof Pick<Rule, "title" | "description">, value: string) => {
+  const handleDraftChange = (field: keyof Pick<Rule, "title" | "content">, value: string) => {
     setDraft((prev) => (prev ? { ...prev, [field]: value } : prev));
   };
 
@@ -83,23 +93,42 @@ const RulesSection: React.FC<RulesSectionProps> = ({ rules, isAdmin, onRulesChan
     });
   };
 
-  const assignImageIds = (ruleId: string, images: RuleImage[]) =>
-    images.map((image, index) => ({
-      ...image,
-      id: image.id.startsWith("temp-image-")
-        ? `${ruleId}-image-${index + 1}-${Date.now()}`
-        : image.id,
-    }));
+  const handleFileSelect = async (imageId: string, fileList: FileList | null) => {
+    const file = fileList?.[0];
+    if (!file) return;
 
-  const handleSave = () => {
+    try {
+      const uploaded = await onUploadImage(file);
+      setDraft((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          images: prev.images.map((image) =>
+            image.id === imageId
+              ? {
+                  ...image,
+                  src: uploaded.src,
+                  alt: image.alt || uploaded.alt,
+                }
+              : image
+          ),
+        };
+      });
+    } catch (err) {
+      console.error(err);
+      alert("Failed to upload image.");
+    }
+  };
+
+  const handleSave = async () => {
     if (!draft) {
       return;
     }
 
     const title = draft.title.trim();
-    const description = draft.description.trim();
+    const content = draft.content.trim();
 
-    if (!title || !description) {
+    if (!title || !content) {
       alert("Title and text are required before saving.");
       return;
     }
@@ -112,27 +141,32 @@ const RulesSection: React.FC<RulesSectionProps> = ({ rules, isAdmin, onRulesChan
       }))
       .filter((image) => !!image.src);
 
+    const nextRule: Rule = {
+      ...draft,
+      title,
+      content,
+      images: cleanedImages,
+      editing_status: "draft",
+    };
+
     if (isCreating) {
-      const newRuleId = `rule-${Date.now()}`;
-      const newRule: Rule = {
-        id: newRuleId,
-        title,
-        description,
-        images: assignImageIds(newRuleId, cleanedImages),
-      };
-      onRulesChange([...rules, newRule]);
+      await onCreateRule(nextRule);
     } else {
-      const updatedRule: Rule = {
-        ...draft,
-        title,
-        description,
-        images: assignImageIds(draft.id, cleanedImages),
-      };
-      const updatedRules = rules.map((rule) => (rule.id === updatedRule.id ? updatedRule : rule));
-      onRulesChange(updatedRules);
+      await onUpdateRule(nextRule);
     }
 
     closeEditor();
+  };
+
+  const handleDelete = async (rule: Rule) => {
+    const confirmed = window.confirm(`Delete "${rule.title}"?`);
+    if (!confirmed) return;
+
+    await onDeleteRule(rule);
+
+    if (draft?.id === rule.id) {
+      closeEditor();
+    }
   };
 
   return (
@@ -159,7 +193,7 @@ const RulesSection: React.FC<RulesSectionProps> = ({ rules, isAdmin, onRulesChan
                   <span className={styles.ruleUnderline} aria-hidden="true" />
                 </div>
                 <div className={styles.ruleBody}>
-                  {rule.description.split("\n").map((paragraph, index) => (
+                  {rule.content.split("\n").map((paragraph, index) => (
                     <p key={`${rule.id}-paragraph-${index}`}>{paragraph}</p>
                   ))}
                 </div>
@@ -174,7 +208,6 @@ const RulesSection: React.FC<RulesSectionProps> = ({ rules, isAdmin, onRulesChan
                   ))}
                 </div>
               )}
-
             </div>
             {isAdmin && (
               <div className={styles.ruleActions}>
@@ -184,6 +217,13 @@ const RulesSection: React.FC<RulesSectionProps> = ({ rules, isAdmin, onRulesChan
                   onClick={() => openEditorFor(rule)}
                 >
                   Edit Rule
+                </button>
+                <button
+                  type="button"
+                  className={styles.secondaryButton}
+                  onClick={() => handleDelete(rule)}
+                >
+                  Delete Rule
                 </button>
               </div>
             )}
@@ -213,8 +253,8 @@ const RulesSection: React.FC<RulesSectionProps> = ({ rules, isAdmin, onRulesChan
               <label className={styles.field}>
                 <span>Text</span>
                 <textarea
-                  value={draft.description}
-                  onChange={(event) => handleDraftChange("description", event.target.value)}
+                  value={draft.content}
+                  onChange={(event) => handleDraftChange("content", event.target.value)}
                   placeholder="Describe the policy..."
                   rows={5}
                 />
@@ -238,6 +278,16 @@ const RulesSection: React.FC<RulesSectionProps> = ({ rules, isAdmin, onRulesChan
                         value={image.src}
                         onChange={(event) => handleImageChange(image.id, "src", event.target.value)}
                         placeholder="https://example.com/photo.jpg"
+                      />
+                    </label>
+                    <label>
+                      <span>Upload file</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(event) =>
+                          handleFileSelect(image.id, event.target.files)
+                        }
                       />
                     </label>
                     <label>
@@ -276,4 +326,3 @@ const RulesSection: React.FC<RulesSectionProps> = ({ rules, isAdmin, onRulesChan
 };
 
 export default RulesSection;
-

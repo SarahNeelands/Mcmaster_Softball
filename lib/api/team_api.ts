@@ -9,7 +9,7 @@ export async function GetSeasonTeams(season_id: string): Promise<Team[]> {
   return res.json();
 }
 
-export async function GetTeam(id: string): Promise<Team[]> {
+export async function GetTeam(id: string): Promise<Team> {
   const url = `/api/teams?id=${encodeURIComponent(id)}&type=id`;
 
   const res = await fetch(url); 
@@ -17,7 +17,7 @@ export async function GetTeam(id: string): Promise<Team[]> {
   return res.json();
 }
 
-export async function GetTeamBySlug(slug: string): Promise<Team[]> {
+export async function GetTeamBySlug(slug: string): Promise<Team> {
   const url = `/api/teams?id=${encodeURIComponent(slug)}&type=slug`;
 
   const res = await fetch(url); 
@@ -56,7 +56,7 @@ export async function DeleteTeam(team: Team) {
   const res = await fetch("/api/teams", {
     method: "DELETE",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(team),
+    body: JSON.stringify({ data: team }),
   });
 
   if (!res.ok) throw new Error(await res.text());

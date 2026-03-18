@@ -42,6 +42,16 @@ export async function GetStandingsBySeries(series_id: string): Promise<StandingR
   return rows;
 }
 
+export async function GetStandingsByDivision(division_id: string): Promise<StandingRow[]> {
+  const {rows} = await pool.query<StandingRow>(
+    `SELECT *
+    FROM standings
+    WHERE division_id = $1`,
+    [division_id]
+  );
+  return rows;
+}
+
 export async function GetStandingsByTeam(team_id: string, series_id: string): Promise<StandingRow>  {
   const {rows} = await pool.query<StandingRow>(
     `SELECT *
@@ -58,8 +68,8 @@ export async function GetStandingsByTeam(team_id: string, series_id: string): Pr
 
 export async function AddNewStandings(standing: Standing, division_id: string) {
   const {rows} = await pool.query(
-    `INSERT INTO standings (division_id, team_id, wins, losses, ties, points)
-    VALUES($1,$2,$3,$4,$5,$6)
+    `INSERT INTO standings (division_id, team_id, wins, losses, ties, points, series_id, editing_status)
+    VALUES($1,$2,$3,$4,$5,$6,$7,$8)
     RETURNING *`,
     [
       division_id,
@@ -67,10 +77,45 @@ export async function AddNewStandings(standing: Standing, division_id: string) {
       standing.wins,
       standing.losses,
       standing.ties,
-      standing.points
+      standing.points,
+      standing.series_id,
+      standing.editing_status
     ]
   );
   return rows[0];
+}
+
+export async function AddDivisionTeamStanding(
+  division_id: string,
+  series_id: string,
+  team_id: string
+) {
+  const { rows } = await pool.query<StandingRow>(
+    `INSERT INTO standings (division_id, team_id, wins, losses, ties, points, series_id, editing_status)
+     VALUES($1,$2,0,0,0,0,$3,'draft')
+     ON CONFLICT (division_id, team_id) DO NOTHING
+     RETURNING *`,
+    [division_id, team_id, series_id]
+  );
+
+  return rows[0] ?? null;
+}
+
+export async function MoveTeamStandingToDivision(
+  team_id: string,
+  series_id: string,
+  division_id: string
+) {
+  const { rows } = await pool.query<StandingRow>(
+    `UPDATE standings
+     SET division_id = $3
+     WHERE team_id = $1
+       AND series_id = $2
+     RETURNING *`,
+    [team_id, series_id, division_id]
+  );
+
+  return rows[0] ?? null;
 }
 
 //==============================================================================
@@ -102,7 +147,7 @@ export async function UpdateStandings(update: Standing) {
 //==============================================================================
 
 export async function DeleteStandings() {
-  const {rows} = await pool.query(
+  await pool.query(
     `DELETE FROM standings
     WHERE editing_status = 'deleted'
     RETURNING *`  

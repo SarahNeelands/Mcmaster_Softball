@@ -7,11 +7,13 @@
 
 import React, { useMemo, useState } from "react";
 import styles from "./PreviousResults.module.css";
-import { Match } from "../../../types/matches";
+import { Match } from "@/types/match_mod";
 import { formatDateLabel } from "@/lib/matches/visibilityFunctions";
 
 interface PreviousResultsProps {
   matches: Match[];
+  teamNamesById?: Record<string, string>;
+  teamSlugsById?: Record<string, string>;
   updateMatch: (updated: Match) => Promise<void>;
 }
 
@@ -23,13 +25,14 @@ interface GroupedResults {
   }[];
 }
 
-const PreviousResults: React.FC<PreviousResultsProps> = ({ matches, updateMatch }) => {
-  
-  // creates team urls
-  const slugify = (name?: string) =>
-    typeof name === "string"
-      ? name.toLowerCase().replace(/\s+/g, "-")
-      : "tbd";
+const PreviousResults: React.FC<PreviousResultsProps> = ({
+  matches,
+  teamNamesById = {},
+  teamSlugsById = {},
+  updateMatch,
+}) => {
+  const getTeamName = (teamId: string) => teamNamesById[teamId] ?? teamId;
+  const getTeamSlug = (teamId: string) => teamSlugsById[teamId] ?? "tbd";
 
   // Tracks which match row is currently being edited
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -39,15 +42,15 @@ const PreviousResults: React.FC<PreviousResultsProps> = ({ matches, updateMatch 
 
   // Determines win / loss / tie styling for a team
   const assignTeamStyling = (game: Match, team: "home" | "away") => {
-    if (game.homeScore == null || game.awayScore == null) {
+    if (game.home_score == null || game.away_score == null) {
       return "";
     }
 
-    if (game.homeScore === game.awayScore) {
+    if (game.home_score === game.away_score) {
       return styles.neutral;
     }
 
-    const isHomeWinner = game.homeScore > game.awayScore;
+    const isHomeWinner = game.home_score > game.away_score;
     if (team === "home") {
       return isHomeWinner ? styles.win : styles.loss;
     }
@@ -73,12 +76,11 @@ const PreviousResults: React.FC<PreviousResultsProps> = ({ matches, updateMatch 
     });
     return grouped;
   };
-  const formattedGames = formatGames(matches);
+  const formattedGames = useMemo(() => formatGames(matches), [matches]);
 
   // shows - instead of null / undefined scores
   const formatScore = (score: number | undefined | null) =>
     typeof score === "number" ? score.toString() : "-";
-  console.log("PREVIOUS MATCHES PROP:", matches);
   return (
     <section className={styles.panel}>
       <div className={styles.header}>
@@ -121,74 +123,71 @@ const PreviousResults: React.FC<PreviousResultsProps> = ({ matches, updateMatch 
               {formatDateLabel(group.date)}
             </h4>
             {group.timeBlock.map((times) => (
-
-              <div key={times.time} className={styles.times}>
-                
+              <div key={times.time} className={styles.timeBlock}>
                 <span className={styles.time}>{times.time}</span>
                 <div className={styles.table} role="table">
                   {times.games.map((game) => (
-
                     <div key={game.id} className={styles.row} role="row">
-                  <span className={styles.score} role="cell">
-                    {editingId === game.id ? (
-                      <input
-                        className={styles.inlineInput}
-                        type="number"
-                        value={form.homeScore ?? game.homeScore ?? 0}
-                        onChange={(e) =>
-                          setForm((f) => ({ ...f, homeScore: Number(e.target.value) }))
-                        }
-                      />
-                    ) : (
-                      formatScore(game.homeScore)
-                    )}
-                  </span>
-                  <a
-                    href={`/teams/${slugify(game.homeTeam)}`}
-                    className={`${styles.team} ${assignTeamStyling(game, "home")}`}
-                    role="cell"
+                      <span className={styles.score} role="cell">
+                        {editingId === game.id ? (
+                          <input
+                            className={styles.inlineInput}
+                            type="number"
+                            value={form.home_score ?? game.home_score ?? 0}
+                            onChange={(e) =>
+                              setForm((f) => ({ ...f, home_score: Number(e.target.value) }))
+                            }
+                          />
+                        ) : (
+                          formatScore(game.home_score)
+                        )}
+                      </span>
+                      <a
+                        href={`/teams/${getTeamSlug(game.home_team_id)}`}
+                        className={`${styles.team} ${assignTeamStyling(game, "home")}`}
+                        role="cell"
                       >
-                        {game.homeTeam}
+                        {getTeamName(game.home_team_id)}
                       </a>
                       <span className={styles.vs} role="cell">
                         vs
                       </span>
                       <a
-                        href={`/teams/${slugify(game.awayTeam)}`}
+                        href={`/teams/${getTeamSlug(game.away_team_id)}`}
                         className={`${styles.team} ${assignTeamStyling(game, "away")}`}
                         role="cell"
                       >
-                        {game.awayTeam}
+                        {getTeamName(game.away_team_id)}
                       </a>
-                  <span className={styles.score} role="cell">
-                    {editingId === game.id ? (
-                      <input
-                        className={styles.inlineInput}
-                        type="number"
-                        value={form.awayScore ?? game.awayScore ?? 0}
-                        onChange={(e) =>
-                          setForm((f) => ({ ...f, awayScore: Number(e.target.value) }))
-                        }
-                      />
-                    ) : (
-                      formatScore(game.awayScore)
-                    )}
-                  </span>
-                  {editingId !== game.id && (
-                    <button
-                      type="button"
-                      className={styles.rowEdit}
-                      onClick={() => {
-                        setEditingId(game.id);
-                        setForm(game);
-                      }}
-                    >
-                      Edit
-                    </button>
-                  )}
+                      <span className={styles.score} role="cell">
+                        {editingId === game.id ? (
+                          <input
+                            className={styles.inlineInput}
+                            type="number"
+                            value={form.away_score ?? game.away_score ?? 0}
+                            onChange={(e) =>
+                              setForm((f) => ({ ...f, away_score: Number(e.target.value) }))
+                            }
+                          />
+                        ) : (
+                          formatScore(game.away_score)
+                        )}
+                      </span>
+                      {editingId !== game.id && (
+                        <button
+                          type="button"
+                          className={styles.rowEdit}
+                          onClick={() => {
+                            setEditingId(game.id);
+                            setForm(game);
+                          }}
+                        >
+                          Edit
+                        </button>
+                      )}
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
               </div>
             ))}
           </article>

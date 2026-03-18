@@ -8,6 +8,11 @@
 
 }
 
+.dragOver {
+  outline: 2px dashed var(--color-maroon);
+  outline-offset: 3px;
+}
+
 .header {
   display: flex;
   align-items: center;
@@ -34,10 +39,34 @@
   color: white;
 }
 
+.titleInput {
+  border: none;
+  border-radius: 6px;
+  padding: 0.4rem 0.5rem;
+}
+
 .list {
   list-style: none;
   margin: 0;
   padding: 0;
+}
+
+.editorGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  padding: 0.9rem 1rem 0;
+}
+
+.editorField {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.editorField span {
+  font-size: 0.85rem;
+  font-weight: 700;
 }
 
 .row {
@@ -57,6 +86,14 @@
 
 .row:hover {
   background: rgba(107, 35, 53, 0.06);
+}
+
+.draggableRow {
+  cursor: grab;
+}
+
+.draggableRow:active {
+  cursor: grabbing;
 }
 
 .left {
@@ -127,4 +164,44 @@
   font-size: 1.25rem;
   color: var(--color-maroon);
   flex-shrink: 0;
+}
+
+.unassignedLabel {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.emptyState {
+  padding: 1rem;
+  color: rgba(0, 0, 0, 0.6);
+  font-style: italic;
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  padding: 0.9rem 1rem 1rem;
+}
+
+.actionButton,
+.secondaryButton {
+  border-radius: 8px;
+  padding: 0.45rem 0.75rem;
+  cursor: pointer;
+}
+
+.actionButton {
+  border: 1px solid var(--color-maroon);
+  background: var(--color-maroon);
+  color: white;
+}
+
+.secondaryButton {
+  border: 1px solid #d1d5db;
+  background: white;
+  color: #111827;
 }

@@ -14,6 +14,8 @@ import { Match } from "@/types/match_mod";
 interface MatchesSectionProps {
   upcoming: Match[];
   previous: Match[];
+  teamNamesById?: Record<string, string>;
+  teamSlugsById?: Record<string, string>;
   isAdmin: boolean;
   updateMatch: (updated: Match) => Promise<void>;
 }
@@ -22,6 +24,8 @@ interface MatchesSectionProps {
 const MatchesSection: React.FC<MatchesSectionProps> = ({
   upcoming,
   previous,
+  teamNamesById = {},
+  teamSlugsById = {},
   isAdmin,
   updateMatch
 }) => {
@@ -31,8 +35,18 @@ const MatchesSection: React.FC<MatchesSectionProps> = ({
         Matches
       </h2>
       <div className={styles.column}>
-        <UpcomingMatches matches={upcoming} isAdmin={isAdmin} updateMatch={updateMatch} />
-        <PreviousResults matches={previous} updateMatch={updateMatch} />
+        <UpcomingMatches
+          matches={upcoming}
+          isAdmin={isAdmin}
+          teamNamesById={teamNamesById}
+          updateMatch={updateMatch}
+        />
+        <PreviousResults
+          matches={previous}
+          teamNamesById={teamNamesById}
+          teamSlugsById={teamSlugsById}
+          updateMatch={updateMatch}
+        />
       </div>
       <div className={styles.footerCta}>
         <button type="button" className={styles.viewScheduleButton}>
