@@ -18,6 +18,7 @@ import MatchesSection from "@/components/home/Matches/MatchesSection";
 import SeasonEditor from "@/components/editors/SeasonEditor";
 
 import * as apiA from "@/lib/api/announcement_api";
+import * as apiAdmin from "@/lib/api/admin_api";
 import * as apiP from "@/lib/api/publish_api";
 import * as apiS from "@/lib/api/season_api";
 import * as apiM from "@/lib/api/match_api";
@@ -26,7 +27,7 @@ import { useSeasonEditor } from "@/components/layout/Header/header_functions";
 import { filterVisibleByEditingStatus } from "@/lib/data/editing_status";
 
 export default function Home() {
-  const [isAdmin, setIsAdmin] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [isPreviewing, setIsPreviewing] = useState(false);
 
   const [activeAnnouncements, setActiveAnnouncements] = useState<Announcement[]>([]);
@@ -155,6 +156,9 @@ export default function Home() {
 
   useEffect(() => {
     const load = async () => {
+      const session = await apiAdmin.GetAdminSession();
+      setIsAdmin(session.isAdmin);
+
       const currentData = await apiS.GetSeasons("", "current");
       const currentSeason = Array.isArray(currentData) ? currentData[0] : currentData;
 
@@ -171,6 +175,17 @@ export default function Home() {
 
     load().catch((err) => console.error("Error fetching seasons:", err));
   }, []);
+
+  const handleAdminToggle = async () => {
+    if (isAdmin) {
+      await apiAdmin.LogoutAdmin();
+      setIsAdmin(false);
+      setIsPreviewing(false);
+      return;
+    }
+
+    window.location.href = "/msadmin";
+  };
 
   useEffect(() => {
     if (canManageContent) return;
@@ -209,7 +224,7 @@ export default function Home() {
       <Header
         isAdmin={isAdmin}
         isPreviewing={isPreviewing}
-        onToggleAdmin={() => setIsAdmin((prev) => !prev)}
+        onToggleAdmin={handleAdminToggle}
         onTogglePreview={() => setIsPreviewing((prev) => !prev)}
         onPublish={handlePublish}
         seasons={visibleSeasons}

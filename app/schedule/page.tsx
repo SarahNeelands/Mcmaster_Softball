@@ -27,6 +27,7 @@ import styles from "./page.module.css";
 import * as apiP from "@/lib/api/publish_api";
 import * as apiM from "@/lib/api/match_api";
 import * as apiS from "@/lib/api/season_api";
+import * as apiAdmin from "@/lib/api/admin_api";
 import * as apiSeries from "@/lib/api/series_api";
 import * as apiD from "@/lib/api/division_api";
 import * as apiT from "@/lib/api/team_api";
@@ -34,7 +35,7 @@ import { useSeasonEditor } from "@/components/layout/Header/header_functions";
 import { filterVisibleByEditingStatus } from "@/lib/data/editing_status";
 
 export default function SchedulePage() {
-  const [isAdmin, setIsAdmin] = useState<boolean>(true);
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [isPreviewing, setIsPreviewing] = useState(false);
   const [upcomingMatches, setUpcomingMatches] = useState<Match[]>([]);
   const [isEditing, setIsEditing] = useState<boolean>(false);
@@ -161,6 +162,9 @@ export default function SchedulePage() {
 
   useEffect(() => {
     const load = async () => {
+      const session = await apiAdmin.GetAdminSession();
+      setIsAdmin(session.isAdmin);
+
       const currentData = await apiS.GetSeasons("", "current");
       const currentSeason = Array.isArray(currentData) ? currentData[0] : currentData;
 
@@ -179,6 +183,17 @@ export default function SchedulePage() {
 
     load().catch((err) => console.error("Error fetching schedule:", err));
   }, []);
+
+  const handleAdminToggle = async () => {
+    if (isAdmin) {
+      await apiAdmin.LogoutAdmin();
+      setIsAdmin(false);
+      setIsPreviewing(false);
+      return;
+    }
+
+    window.location.href = "/msadmin";
+  };
 
   useEffect(() => {
     if (canManageContent) return;
@@ -314,7 +329,7 @@ export default function SchedulePage() {
       <Header
         isAdmin={isAdmin}
         isPreviewing={isPreviewing}
-        onToggleAdmin={() => setIsAdmin((prev) => !prev)}
+        onToggleAdmin={handleAdminToggle}
         onTogglePreview={() => setIsPreviewing((prev) => !prev)}
         onPublish={publishHandler}
         seasons={visibleSeasons}

@@ -13,6 +13,7 @@ import styles from "./page.module.css";
 import { splitMatches } from "@/lib/matches/sortingFunctions";
 import * as apiP from "@/lib/api/publish_api";
 import * as apiS from "@/lib/api/season_api";
+import * as apiAdmin from "@/lib/api/admin_api";
 import * as apiT from "@/lib/api/team_api";
 import * as apiM from "@/lib/api/match_api";
 import * as apiSeries from "@/lib/api/series_api";
@@ -27,7 +28,7 @@ import {
 export default function TeamDetailPage() {
   const params = useParams<{ slug: string }>();
 
-  const [isAdmin, setIsAdmin] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [isPreviewing, setIsPreviewing] = useState(false);
   const [team, setTeam] = useState<Team>();
   const [upcomingGames, setUpcomingGames] = useState<Match[]>([]);
@@ -117,6 +118,9 @@ export default function TeamDetailPage() {
 
   useEffect(() => {
     const load = async () => {
+      const session = await apiAdmin.GetAdminSession();
+      setIsAdmin(session.isAdmin);
+
       const currentData = await apiS.GetSeasons("", "current");
       const currentSeason = Array.isArray(currentData) ? currentData[0] : currentData;
       const teamData = await apiT.GetTeamBySlug(params.slug);
@@ -147,6 +151,17 @@ export default function TeamDetailPage() {
       setLoading(false);
     });
   }, [params.slug]);
+
+  const handleAdminToggle = async () => {
+    if (isAdmin) {
+      await apiAdmin.LogoutAdmin();
+      setIsAdmin(false);
+      setIsPreviewing(false);
+      return;
+    }
+
+    window.location.href = "/msadmin";
+  };
 
   useEffect(() => {
     if (canManageContent) return;
@@ -185,7 +200,7 @@ export default function TeamDetailPage() {
       <Header
         isAdmin={isAdmin}
         isPreviewing={isPreviewing}
-        onToggleAdmin={() => setIsAdmin((prev) => !prev)}
+        onToggleAdmin={handleAdminToggle}
         onTogglePreview={() => setIsPreviewing((prev) => !prev)}
         onPublish={handlePublish}
         seasons={visibleSeasons}

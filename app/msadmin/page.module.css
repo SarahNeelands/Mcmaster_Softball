@@ -1,0 +1,99 @@
+.page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 2rem;
+  background: linear-gradient(180deg, #f7f2f3 0%, #ffffff 100%);
+}
+
+.card {
+  width: min(420px, 100%);
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 18px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
+  padding: 2rem;
+}
+
+.title {
+  margin: 0 0 0.4rem;
+}
+
+.subtitle {
+  margin: 0 0 1.5rem;
+  color: rgba(0, 0, 0, 0.65);
+}
+
+.form {
+  display: grid;
+  gap: 1rem;
+}
+
+.field {
+  display: grid;
+  gap: 0.4rem;
+  font-weight: 600;
+}
+
+.field input {
+  border: 1px solid rgba(0, 0, 0, 0.16);
+  border-radius: 10px;
+  padding: 0.8rem 0.9rem;
+  font: inherit;
+}
+
+.passwordField {
+  position: relative;
+}
+
+.passwordField input {
+  width: 100%;
+  padding-right: 3.25rem;
+}
+
+.passwordToggle {
+  position: absolute;
+  top: 50%;
+  right: 0.55rem;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(0, 0, 0, 0.62);
+  cursor: pointer;
+}
+
+.passwordToggle:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: rgba(0, 0, 0, 0.8);
+}
+
+.passwordToggle:focus-visible {
+  outline: 2px solid var(--color-maroon);
+  outline-offset: 2px;
+}
+
+.eyeIcon {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+.error {
+  color: #b42318;
+}
+
+.button {
+  border: 1px solid var(--color-maroon);
+  background: var(--color-maroon);
+  color: #fff;
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}

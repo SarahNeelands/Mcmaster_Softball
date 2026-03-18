@@ -76,13 +76,15 @@ const Header: React.FC<HeaderProps> = ({
 
           </>
         )}
-        <button
-          type="button"
-          className={styles.toggleButton}
-          onClick={onToggleAdmin}
-        >
-          {isAdmin ? "Log out" : "Log in"}
-        </button>
+        {isAdmin && (
+          <button
+            type="button"
+            className={styles.toggleButton}
+            onClick={onToggleAdmin}
+          >
+            Log out
+          </button>
+        )}
       </div>
     </header>
   );

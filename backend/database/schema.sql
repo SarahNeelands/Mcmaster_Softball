@@ -108,3 +108,10 @@ CREATE TABLE series_team_divisions (
   division_id UUID NOT NULL REFERENCES divisions(id) ON DELETE CASCADE,
   PRIMARY KEY (series_id, team_id)
 );
+
+create table admins (
+  id uuid primary key default gen_random_uuid(),
+  email text unique not null,
+  password_hash text not null,
+  created_at timestamptz default now()
+);
