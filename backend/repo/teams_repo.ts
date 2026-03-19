@@ -107,3 +107,16 @@ export async function UpdateTeam(team: Team): Promise<Team> {
   if (rows.length === 0) throw new Error(`repo failed to update ${team.id}`);
   return rows[0];
 }
+
+export async function MarkTeamDeleted(team_id: string): Promise<Team> {
+  const { rows } = await pool.query<Team>(
+    `UPDATE teams
+     SET editing_status = 'deleted'
+     WHERE id = $1
+     RETURNING *`,
+    [team_id]
+  );
+
+  if (rows.length === 0) throw new Error(`repo failed to delete ${team_id}`);
+  return rows[0];
+}

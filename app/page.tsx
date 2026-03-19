@@ -87,6 +87,19 @@ export default function Home() {
     }
   };
 
+  const handleRevert = async () => {
+    try {
+      await apiP.Revert();
+      if (selectedSeason) {
+        await loadSeasonData(selectedSeason);
+      }
+      alert("Unpublished draft and deleted changes reverted.");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to revert unpublished changes");
+    }
+  };
+
   const handleAnnouncementChange = async (announcement: Announcement, change: string) => {
     if (!selectedSeason) return;
 
@@ -105,6 +118,17 @@ export default function Home() {
 
   const handleUpdateMatch = async (updated: Match) => {
     await apiM.UpdateMatch(updated);
+
+    if (!selectedSeason) return;
+
+    const allmatches = await apiM.GetSeasonMatches(selectedSeason.id);
+    const parts = splitMatches(allmatches);
+    setUpcoming(parts.upcoming);
+    setPrevious(parts.previous);
+  };
+
+  const handleDeleteMatch = async (match: Match) => {
+    await apiM.DeleteMatch(match);
 
     if (!selectedSeason) return;
 
@@ -227,6 +251,7 @@ export default function Home() {
         onToggleAdmin={handleAdminToggle}
         onTogglePreview={() => setIsPreviewing((prev) => !prev)}
         onPublish={handlePublish}
+        onRevert={canManageContent ? handleRevert : undefined}
         seasons={visibleSeasons}
         selectedSeason={selectedSeason}
         onSelect={(s) => setSelectedSeason(s)}
@@ -251,8 +276,10 @@ export default function Home() {
               previous={visiblePrevious}
               teamNamesById={teamNamesById}
               teamSlugsById={teamSlugsById}
+              teamOptions={seasonTeams.map((team) => ({ id: team.id, name: team.name }))}
               isAdmin={canManageContent}
               updateMatch={handleUpdateMatch}
+              deleteMatch={handleDeleteMatch}
             />
           </div>
         </main>

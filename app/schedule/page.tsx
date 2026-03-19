@@ -9,7 +9,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Header from "@/components/layout/Header/Header";
 import Footer from "@/components/layout/Footer/Footer";
-import { groupMatchesByMonth } from "@/lib/matches/sortingFunctions";
+import { groupMatchesByMonth, splitMatches } from "@/lib/matches/sortingFunctions";
 import { Calendar } from "@/components/common/calendar/calendar";
 import SeriesEditor from "@/components/editors/SeriesEditor";
 import UpcomingMatches from "@/components/home/Matches/UpcomingMatches";
@@ -85,14 +85,23 @@ export default function SchedulePage() {
     [teamOptions]
   );
 
+  const scheduleMatchesReady = useMemo(
+    () =>
+      visibleMatches.every(
+        (match) => Boolean(teamNamesById[match.home_team_id]) && Boolean(teamNamesById[match.away_team_id])
+      ),
+    [visibleMatches, teamNamesById]
+  );
+
   const fetchMatches = async (season?: Season) => {
     if (!season) return;
     const matches = await apiM.GetSeasonMatches(season.id);
-    setUpcomingMatches(matches);
+    const { upcoming } = splitMatches(matches);
+    setUpcomingMatches(upcoming);
     setFieldOptions(
       Array.from(
         new Set(
-          matches
+          upcoming
             .map((match) => match.field.trim())
             .filter((field) => field.length > 0)
         )
@@ -129,10 +138,26 @@ export default function SchedulePage() {
     }
   };
 
+  const handleRevert = async () => {
+    try {
+      await apiP.Revert();
+      await fetchMatches(selectedSeason);
+      alert("Unpublished draft and deleted changes reverted.");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to revert unpublished changes");
+    }
+  };
+
   const handleUpdateMatch = async (updated: Match): Promise<Match> => {
     const saved = await apiM.UpdateMatch(updated);
     await fetchMatches(selectedSeason);
     return saved;
+  };
+
+  const handleDeleteMatch = async (match: Match) => {
+    await apiM.DeleteMatch(match);
+    await fetchMatches(selectedSeason);
   };
 
   const handleEditorClose = async (day: ScheduleDay | null) => {
@@ -150,8 +175,15 @@ export default function SchedulePage() {
           away_team_id: game.away_team_id,
           field: game.field,
           division_id: game.division_id,
-          home_score: 0,
-          away_score: 0,
+          home_score: null,
+          away_score: null,
+          score_status: "unrequested",
+          score_request_sent_at: null,
+          first_submitted_at: null,
+          finalized_at: null,
+          founder_notified_conflict_at: null,
+          founder_notified_single_at: null,
+          founder_notified_no_submission_at: null,
           editing_status: "draft",
         });
       }
@@ -177,8 +209,6 @@ export default function SchedulePage() {
 
       const all = await apiS.GetSeasons("", "all");
       setAllSeasons(Array.isArray(all) ? all : [all]);
-
-      await fetchMatches(currentSeason);
     };
 
     load().catch((err) => console.error("Error fetching schedule:", err));
@@ -332,6 +362,7 @@ export default function SchedulePage() {
         onToggleAdmin={handleAdminToggle}
         onTogglePreview={() => setIsPreviewing((prev) => !prev)}
         onPublish={publishHandler}
+        onRevert={canManageContent ? handleRevert : undefined}
         seasons={visibleSeasons}
         selectedSeason={selectedSeason}
         onSelect={(season) => setSelectedSeason(season)}
@@ -394,10 +425,16 @@ export default function SchedulePage() {
         <div className={styles.contentGrid}>
           <div className={styles.scheduleColumn}>
             <UpcomingMatches
-              matches={visibleMatches}
+              matches={scheduleMatchesReady ? visibleMatches : []}
               isAdmin={canManageContent}
               teamNamesById={teamNamesById}
+              teamOptions={teamOptions.map((team) => ({
+                id: team.id,
+                name: team.name,
+                division_id: team.division_id,
+              }))}
               updateMatch={handleUpdateMatch}
+              deleteMatch={handleDeleteMatch}
               onAddGames={() => setIsEditing(true)}
               useCardGroups
             />

@@ -9,6 +9,7 @@ type Props = {
   selectedSeason?: Season;
   onSelect: (season: Season) => void;
   onOpenCreateSeason: () => void;
+  onOpenEditSeason?: (season: Season) => void;
 };
 
 export default function SeasonDropdownButton({
@@ -16,6 +17,7 @@ export default function SeasonDropdownButton({
   selectedSeason,
   onSelect,
   onOpenCreateSeason,
+  onOpenEditSeason,
 }: Props) {
   const [open, setOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement | null>(null);
@@ -69,21 +71,37 @@ export default function SeasonDropdownButton({
           {safeSeasons.length === 0 ? (
             <div className="seasonDropdownEmpty">No seasons yet</div>
           ) : (
-            safeSeasons.map((s) => {
-              const isSelected = selectedSeason?.id === s.id;
+            safeSeasons.map((season) => {
+              const isSelected = selectedSeason?.id === season.id;
               return (
-                <button
-                  key={s.id}
-                  type="button"
-                  role="menuitem"
-                  className={`seasonDropdownItem ${isSelected ? "isSelected" : ""}`}
-                  onClick={() => {
-                    onSelect(s);
-                    setOpen(false);
-                  }}
+                <div
+                  key={season.id}
+                  className={`seasonDropdownRow ${isSelected ? "isSelected" : ""}`}
                 >
-                  {s.name}
-                </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className={`seasonDropdownItem ${isSelected ? "isSelected" : ""}`}
+                    onClick={() => {
+                      onSelect(season);
+                      setOpen(false);
+                    }}
+                  >
+                    {season.name}
+                  </button>
+                  {onOpenEditSeason && isSelected && (
+                    <button
+                      type="button"
+                      className="seasonDropdownInlineEdit"
+                      onClick={() => {
+                        onOpenEditSeason(season);
+                        setOpen(false);
+                      }}
+                    >
+                      Edit
+                    </button>
+                  )}
+                </div>
               );
             })
           )}

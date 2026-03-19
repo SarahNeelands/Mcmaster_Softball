@@ -69,8 +69,16 @@ export async function POST(request: Request) {
     const body = await request.json();
     const created = await service.AddNewMatch(body);
     return NextResponse.json(created, { status: 201 });
-  } catch {
-    return NextResponse.json({ error: "Failed to create match" }, { status: 500 });
+  } catch (err: unknown) {
+    console.error("POST /api/matches failed:", err);
+    return NextResponse.json(
+      {
+        error: "Failed to create match",
+        details: err instanceof Error ? err.message : String(err),
+        stack: err instanceof Error ? err.stack ?? null : null,
+      },
+      { status: 500 }
+    );
   }
 }
 
@@ -80,8 +88,16 @@ export async function PUT(request: Request) {
     const { data } = body;
     const updated = await service.UpdateMatch(data);
     return NextResponse.json(updated, { status: 200 });
-  } catch {
-    return NextResponse.json({ error: "Failed to update match" }, { status: 500 });
+  } catch (err: unknown) {
+    console.error("PUT /api/matches failed:", err);
+    return NextResponse.json(
+      {
+        error: "Failed to update match",
+        details: err instanceof Error ? err.message : String(err),
+        stack: err instanceof Error ? err.stack ?? null : null,
+      },
+      { status: 500 }
+    );
   }
 }
 
@@ -91,7 +107,15 @@ export async function DELETE(request: Request) {
     const body = await request.json();
     const result = await service.DeleteMatch(body.data);
     return NextResponse.json(result ?? { ok: true }, { status: 200 });
-  } catch {
-    return NextResponse.json({ error: "Failed to delete match" }, { status: 500 });
+  } catch (err: unknown) {
+    console.error("DELETE /api/matches failed:", err);
+    return NextResponse.json(
+      {
+        error: "Failed to delete match",
+        details: err instanceof Error ? err.message : String(err),
+        stack: err instanceof Error ? err.stack ?? null : null,
+      },
+      { status: 500 }
+    );
   }
 }

@@ -6,3 +6,9 @@ export async function Publish()
     await repo.DeleteAll();
     return;
 }
+
+export async function Revert()
+{
+    await repo.RevertAll();
+    return;
+}

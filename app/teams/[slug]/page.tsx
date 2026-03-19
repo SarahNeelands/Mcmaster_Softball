@@ -32,6 +32,8 @@ export default function TeamDetailPage() {
   const [isPreviewing, setIsPreviewing] = useState(false);
   const [team, setTeam] = useState<Team>();
   const [upcomingGames, setUpcomingGames] = useState<Match[]>([]);
+  const [previousGames, setPreviousGames] = useState<Match[]>([]);
+  const [seasonTeams, setSeasonTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedSeason, setSelectedSeason] = useState<Season>();
   const [allSeasons, setAllSeasons] = useState<Season[]>([]);
@@ -59,24 +61,40 @@ export default function TeamDetailPage() {
   const visibleTeam = useMemo(() => {
     return isVisibleByEditingStatus(team, canManageContent) ? team : undefined;
   }, [team, canManageContent]);
+  const teamId = team?.id;
 
-  const loadTeamSeasonData = async (season: Season, currentTeam: Team) => {
-    const [matches, currentSeriesData] = await Promise.all([
-      apiM.GetTeamsSeasonMatches(currentTeam.id, season.id),
+  const teamNamesById = useMemo(
+    () =>
+      Object.fromEntries(seasonTeams.map((currentTeam) => [currentTeam.id, currentTeam.name])) as Record<string, string>,
+    [seasonTeams]
+  );
+
+  const teamSlugsById = useMemo(
+    () =>
+      Object.fromEntries(seasonTeams.map((currentTeam) => [currentTeam.id, currentTeam.slug])) as Record<string, string>,
+    [seasonTeams]
+  );
+
+  const loadTeamSeasonData = async (season: Season, teamId: string) => {
+    const [matches, currentSeriesData, teams] = await Promise.all([
+      apiM.GetTeamsSeasonMatches(teamId, season.id),
       apiSeries.GetSeries("", season.id, "current"),
+      apiT.GetSeasonTeams(season.id),
     ]);
 
     const currentSeries = Array.isArray(currentSeriesData)
       ? currentSeriesData[0]
       : currentSeriesData;
     const parts = splitMatches(matches);
+    setSeasonTeams(teams);
     setUpcomingGames(parts.upcoming);
+    setPreviousGames(parts.previous);
 
     if (!currentSeries) {
       return;
     }
 
-    const standing = await apiStanding.GetTeamStanding(currentTeam.id, currentSeries.id);
+    const standing = await apiStanding.GetTeamStanding(teamId, currentSeries.id);
 
     if (!standing) {
       setTeam((previous) =>
@@ -90,7 +108,7 @@ export default function TeamDetailPage() {
     const divisionData = await apiD.GetDivisions(standing.division_id, "", "specific");
     const division = (Array.isArray(divisionData) ? divisionData[0] : divisionData) as Division;
     const sortedStandings = [...division.standings].sort((a, b) => b.points - a.points);
-    const ranking = sortedStandings.findIndex((item) => item.team.id === currentTeam.id) + 1;
+    const ranking = sortedStandings.findIndex((item) => item.team.id === teamId) + 1;
 
     setTeam((previous) =>
       previous
@@ -107,12 +125,51 @@ export default function TeamDetailPage() {
     try {
       await apiP.Publish();
       if (selectedSeason && team) {
-        await loadTeamSeasonData(selectedSeason, team);
+        await loadTeamSeasonData(selectedSeason, team.id);
       }
       alert("Teams published");
     } catch (err) {
       console.error(err);
       alert("Failed to publish teams");
+    }
+  };
+
+  const handleRevert = async () => {
+    try {
+      await apiP.Revert();
+      if (selectedSeason && team) {
+        await loadTeamSeasonData(selectedSeason, team.id);
+      }
+      alert("Unpublished draft and deleted changes reverted.");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to revert unpublished changes");
+    }
+  };
+
+  const handleDeleteMatch = async (match: Match) => {
+    await apiM.DeleteMatch(match);
+    if (selectedSeason && team) {
+      await loadTeamSeasonData(selectedSeason, team.id);
+    }
+  };
+
+  const handleUpdateTeam = async (updatedTeam: Team) => {
+    await apiT.UpdateTeam(updatedTeam);
+    const refreshedTeam = await apiT.GetTeam(updatedTeam.id);
+    setTeam((previous) =>
+      previous
+        ? {
+            ...refreshedTeam,
+            division: previous.division,
+            current_ranking: previous.current_ranking,
+          }
+        : refreshedTeam
+    );
+
+    if (selectedSeason) {
+      const teams = await apiT.GetSeasonTeams(selectedSeason.id);
+      setSeasonTeams(teams);
     }
   };
 
@@ -182,18 +239,18 @@ export default function TeamDetailPage() {
   }, [canManageContent]);
 
   useEffect(() => {
-    if (!selectedSeason || !team) return;
+    if (!selectedSeason || !teamId) return;
 
     const load = async () => {
       try {
-        await loadTeamSeasonData(selectedSeason, team);
+        await loadTeamSeasonData(selectedSeason, teamId);
       } catch (err) {
         console.error("Error fetching season data:", err);
       }
     };
 
     load();
-  }, [selectedSeason, team]);
+  }, [selectedSeason, teamId]);
 
   return (
     <div className={styles.page}>
@@ -203,6 +260,7 @@ export default function TeamDetailPage() {
         onToggleAdmin={handleAdminToggle}
         onTogglePreview={() => setIsPreviewing((prev) => !prev)}
         onPublish={handlePublish}
+        onRevert={canManageContent ? handleRevert : undefined}
         seasons={visibleSeasons}
         selectedSeason={selectedSeason}
         onSelect={(season) => setSelectedSeason(season)}
@@ -213,7 +271,16 @@ export default function TeamDetailPage() {
       <main className={styles.main}>
         {loading && <p>Loading team...</p>}
         {!loading && visibleTeam && (
-          <TeamDetail team={visibleTeam} games={visibleUpcomingGames} isAdmin={canManageContent} />
+          <TeamDetail
+            team={visibleTeam}
+            upcomingGames={visibleUpcomingGames}
+            previousGames={previousGames}
+            isAdmin={canManageContent}
+            updateTeam={handleUpdateTeam}
+            teamNamesById={teamNamesById}
+            teamSlugsById={teamSlugsById}
+            deleteMatch={handleDeleteMatch}
+          />
         )}
         {!loading && !visibleTeam && <p>Team not found.</p>}
       </main>

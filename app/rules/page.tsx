@@ -81,6 +81,17 @@ export default function RulesPage() {
     }
   };
 
+  const handleRevert = async () => {
+    try {
+      await apiP.Revert();
+      await loadRules();
+      alert("Unpublished draft and deleted changes reverted.");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to revert unpublished changes");
+    }
+  };
+
   useEffect(() => {
     const load = async () => {
       const session = await apiAdmin.GetAdminSession();
@@ -123,6 +134,7 @@ export default function RulesPage() {
         onToggleAdmin={handleAdminToggle}
         onTogglePreview={() => setIsPreviewing((prev) => !prev)}
         onPublish={publishHandler}
+        onRevert={canManageContent ? handleRevert : undefined}
         seasons={visibleSeasons}
         selectedSeason={selectedSeason}
         onSelect={(season) => setSelectedSeason(season)}

@@ -1,4 +1,4 @@
-import { Match } from "@/types/matches";
+import { Match } from "@/types/match_mod";
 import styles from "./Calendar.module.css";
 
 interface CalendarMonth {

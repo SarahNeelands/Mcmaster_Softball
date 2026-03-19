@@ -92,6 +92,16 @@
   font-weight: 400;
 }
 
+.row .team:first-of-type {
+  text-align: left;
+  justify-self: start;
+}
+
+.row .team:last-of-type {
+  text-align: right;
+  justify-self: end;
+}
+
 .team:hover {
   color: var(--color-maroon);
 }
@@ -142,6 +152,17 @@
   border-radius: 6px;
   padding: 0.25rem 0.5rem;
   font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.miniDelete {
+  border: 1px solid var(--color-maroon);
+  background: transparent;
+  color: var(--color-maroon);
+  border-radius: 999px;
+  padding: 0.12rem 0.42rem;
+  font-size: 0.72rem;
+  line-height: 1.1;
   cursor: pointer;
 }
 

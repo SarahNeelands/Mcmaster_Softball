@@ -1,5 +1,8 @@
 import { Team } from "../../types/team_mod";
 import * as repo from "../repo/teams_repo"
+import { MarkTeamMatchesDeleted } from "../repo/matches_repo";
+import { MarkTeamStandingsDeleted } from "../repo/standings_repo";
+import { RecalculateDivisionStandings } from "./standing_service";
 
 
 //==============================================================================
@@ -53,9 +56,14 @@ export async function UpdateTeam(team:Team): Promise<Team>
 
 export async function DeleteTeam(team: Team) 
 {
-    team.editing_status = "deleted";
-    const data = await UpdateTeam(team);
-    return data;
+    const deletedMatches = await MarkTeamMatchesDeleted(team.id);
+    await MarkTeamStandingsDeleted(team.id);
+    await Promise.all(
+        [...new Set(deletedMatches.map((match) => match.division_id))].map((division_id) =>
+            RecalculateDivisionStandings(division_id)
+        )
+    );
+    return await repo.MarkTeamDeleted(team.id);
 }
 //==============================================================================
 // Team Helper functions

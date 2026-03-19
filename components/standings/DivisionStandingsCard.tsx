@@ -191,8 +191,6 @@ export default function DivisionStandingsCard({
               <div className={styles.left}>
                 <div className={styles.rank}>
                   <span className={styles.rankText}>{ordinal(rank)}</span>
-                  {rank === 1 && <span className={styles.medal}>1</span>}
-                  {rank === 2 && <span className={styles.medal}>2</span>}
                 </div>
 
                 <Link

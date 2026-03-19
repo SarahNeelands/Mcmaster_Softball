@@ -103,11 +103,47 @@
   color: var(--color-maroon);
 }
 
+.dateHeader {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  gap: 0.35rem;
+  align-items: end;
+}
+
+.teamColumnLabels {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(110px, max-content) minmax(0, 1fr) auto;
+  gap: 0.35rem;
+  padding-left: 0.85rem;
+  margin-left: 0.25rem;
+  color: var(--color-muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.homeLabel {
+  text-align: left;
+}
+
+.awayLabel {
+  grid-column: 3;
+  text-align: right;
+}
+
 .timeBlock {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
   margin-left: 0.2rem;
+}
+
+.listTimeBlock {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  gap: 0.35rem;
+  align-items: start;
+  margin-top: 0.1rem;
 }
 
 .time {
@@ -131,6 +167,20 @@
   align-items: center;
 }
 
+.listGameRow {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1fr)
+    minmax(110px, max-content)
+    minmax(0, 1fr)
+    auto;
+  align-items: center;
+  gap: 0.35rem;
+  border-left: 1px solid rgba(0, 0, 0, 0.15);
+  padding-left: 0.6rem;
+  margin-left: 0.25rem;
+}
+
 
 
 
@@ -148,10 +198,12 @@
 
 .homeTeam {
   text-align: left;
+  justify-self: start;
 }
 
 .awayTeam {
   text-align: right;
+  justify-self: end;
 }
 
 .fieldInfo {
@@ -186,6 +238,16 @@
   font-size: 0.95rem;
 }
 
+.inlineSelect {
+  width: 100%;
+  min-width: 0;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  font-size: 0.95rem;
+  background: #ffffff;
+}
+
 .rowEdit {
   border: 1px solid var(--color-maroon);
   background: transparent;
@@ -199,6 +261,23 @@
 .actions {
   display: flex;
   gap: 0.5rem;
+  margin-bottom: 0.4rem;
+}
+
+.miniAction {
+  justify-self: center;
+  border: 1px solid var(--color-maroon);
+  background: transparent;
+  color: var(--color-maroon);
+  border-radius: 999px;
+  padding: 0.12rem 0.42rem;
+  font-size: 0.72rem;
+  line-height: 1.1;
+  cursor: pointer;
+}
+
+.miniAction:hover {
+  background: rgba(107, 35, 53, 0.08);
 }
 
 .timeRow {
@@ -220,6 +299,25 @@
     grid-template-columns: 1fr;
   }
 
+  .listTimeBlock {
+    grid-template-columns: 1fr;
+  }
+
+  .dateHeader {
+    grid-template-columns: 1fr;
+  }
+
+  .teamColumnLabels {
+    display: none;
+  }
+
+  .listGameRow {
+    grid-template-columns: 1fr;
+    border-left: none;
+    padding-left: 0;
+    margin-left: 0;
+  }
+
   .fieldInfo {
     justify-content: flex-start;
   }
@@ -227,13 +325,4 @@
   .team {
     font-size: 0.9rem;
   }
-}
-.readOnly {
-  pointer-events: none;
-  user-select: none;
-}
-
-.readOnly * {
-  user-select: none !important;
-  cursor: default !important;
 }

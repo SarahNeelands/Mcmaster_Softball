@@ -204,6 +204,18 @@ export default function StandingsPage() {
     }
   };
 
+  const handleRevert = async () => {
+    try {
+      await apiP.Revert();
+      await reloadSeries(selectedSeason);
+      await reloadDivisions(selectedSeries);
+      alert("Unpublished draft and deleted changes reverted.");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to revert unpublished changes");
+    }
+  };
+
   const handleCreateDivision = async (division: Division) => {
     if (!selectedSeries) return;
     await apiD.CreateDivision(division, selectedSeries.id);
@@ -259,6 +271,7 @@ export default function StandingsPage() {
         onToggleAdmin={handleAdminToggle}
         onTogglePreview={() => setIsPreviewing((prev) => !prev)}
         onPublish={handlePublish}
+        onRevert={canManageContent ? handleRevert : undefined}
         seasons={visibleSeasons}
         selectedSeason={selectedSeason}
         onSelect={(season) => setSelectedSeason(season)}

@@ -2,13 +2,13 @@ import { PoolClient } from "pg";
 import { pool } from "../database/db";
 
 const publishTables = [
+  "matches",
+  "standings",
+  "divisions",
+  "series",
   "teams",
   "announcements",
-  "matches",
   "rules",
-  "series",
-  "divisions",
-  "standings",
 ] as const;
 
 type PublishTable = (typeof publishTables)[number];
@@ -73,6 +73,36 @@ export async function PublishAll() {
         `UPDATE ${tableName}
          SET ${statusColumn} = 'published'
          WHERE ${statusColumn} = 'draft'`
+      );
+    }
+
+    await client.query("COMMIT");
+  } catch (err) {
+    await client.query("ROLLBACK");
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
+export async function RevertAll() {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+
+    for (const tableName of publishTables) {
+      const statusColumn = await GetStatusColumn(client, tableName);
+      if (!statusColumn) continue;
+
+      await client.query(
+        `DELETE FROM ${tableName}
+         WHERE ${statusColumn} = 'draft'`
+      );
+
+      await client.query(
+        `UPDATE ${tableName}
+         SET ${statusColumn} = 'published'
+         WHERE ${statusColumn} = 'deleted'`
       );
     }
 

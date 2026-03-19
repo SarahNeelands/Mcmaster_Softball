@@ -38,14 +38,14 @@ export async function POST(request: Request) {
     const body = await request.json();
     const created = await service.CreateNewSeason(body);
     return NextResponse.json(created, { status: 201 });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("POST /api/seasons failed:", err);
 
     return NextResponse.json(
       {
         error: "Failed to create season",
-        details: err?.message ?? String(err),
-        stack: err?.stack ?? null,
+        details: err instanceof Error ? err.message : String(err),
+        stack: err instanceof Error ? err.stack ?? null : null,
       },
       { status: 500 }
     );
@@ -59,13 +59,13 @@ export async function PUT(request: Request) {
 
     const updated = await service.UpdateSeason(body.data);
     return NextResponse.json(updated, { status: 200 });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("PUT /api/seasons failed:", err);
     return NextResponse.json(
       {
         error: "Failed to update season",
-        details: err?.message ?? String(err),
-        stack: err?.stack ?? null,
+        details: err instanceof Error ? err.message : String(err),
+        stack: err instanceof Error ? err.stack ?? null : null,
       },
       { status: 500 }
     );

@@ -8,13 +8,15 @@
 import React, { useMemo, useState } from "react";
 import styles from "./PreviousResults.module.css";
 import { Match } from "@/types/match_mod";
-import { formatDateLabel } from "@/lib/matches/visibilityFunctions";
+import { formatDateLabel, formatTimeLabel } from "@/lib/matches/visibilityFunctions";
 
 interface PreviousResultsProps {
   matches: Match[];
   teamNamesById?: Record<string, string>;
   teamSlugsById?: Record<string, string>;
-  updateMatch: (updated: Match) => Promise<void>;
+  isAdmin: boolean;
+  updateMatch: (updated: Match) => Promise<unknown>;
+  deleteMatch?: (match: Match) => Promise<unknown>;
 }
 
 interface GroupedResults {
@@ -29,7 +31,9 @@ const PreviousResults: React.FC<PreviousResultsProps> = ({
   matches,
   teamNamesById = {},
   teamSlugsById = {},
+  isAdmin,
   updateMatch,
+  deleteMatch,
 }) => {
   const getTeamName = (teamId: string) => teamNamesById[teamId] ?? teamId;
   const getTeamSlug = (teamId: string) => teamSlugsById[teamId] ?? "tbd";
@@ -124,7 +128,7 @@ const PreviousResults: React.FC<PreviousResultsProps> = ({
             </h4>
             {group.timeBlock.map((times) => (
               <div key={times.time} className={styles.timeBlock}>
-                <span className={styles.time}>{times.time}</span>
+                <span className={styles.time}>{formatTimeLabel(times.time)}</span>
                 <div className={styles.table} role="table">
                   {times.games.map((game) => (
                     <div key={game.id} className={styles.row} role="row">
@@ -173,17 +177,37 @@ const PreviousResults: React.FC<PreviousResultsProps> = ({
                           formatScore(game.away_score)
                         )}
                       </span>
-                      {editingId !== game.id && (
-                        <button
-                          type="button"
-                          className={styles.rowEdit}
-                          onClick={() => {
-                            setEditingId(game.id);
-                            setForm(game);
-                          }}
-                        >
-                          Edit
-                        </button>
+                      {editingId !== game.id && isAdmin && (
+                        <>
+                          <button
+                            type="button"
+                            className={styles.rowEdit}
+                            onClick={() => {
+                              setEditingId(game.id);
+                              setForm(game);
+                            }}
+                          >
+                            Edit
+                          </button>
+                          {game.score_status === "conflict_pending_founder" && (
+                            <a href={`/admin/matches/${game.id}/resolve`} className={styles.rowEdit}>
+                              Resolve
+                            </a>
+                          )}
+                          {deleteMatch && (
+                            <button
+                              type="button"
+                              className={styles.miniDelete}
+                              onClick={() => {
+                                if (confirm("Delete this match?")) {
+                                  void deleteMatch(game);
+                                }
+                              }}
+                            >
+                              Delete
+                            </button>
+                          )}
+                        </>
                       )}
                     </div>
                   ))}

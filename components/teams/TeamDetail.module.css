@@ -75,6 +75,28 @@
   font-weight: 700;
 }
 
+.textInput {
+  width: 100%;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 0.45rem 0.6rem;
+  font-size: 0.95rem;
+  background: #fff;
+}
+
+.inputGroup {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.inputLabel {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-maroon);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
 .badge {
   display: inline-flex;
   align-items: center;
@@ -90,6 +112,31 @@
 .infoRows {
   display: grid;
   gap: 0.2rem;
+}
+
+.teamActions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.primaryButton {
+  border: 1px solid var(--color-maroon);
+  background: var(--color-maroon);
+  color: #fff;
+  border-radius: 999px;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.secondaryButton {
+  border: 1px solid var(--color-maroon);
+  background: transparent;
+  color: var(--color-maroon);
+  border-radius: 999px;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.85rem;
+  cursor: pointer;
 }
 
 .infoRow {

@@ -55,7 +55,7 @@ export async function GetMatchById(id: string) {
     `SELECT * FROM matches WHERE id = $1`,
     [id]
   );
-  return rows;
+  return rows[0] ?? null;
 }
 
 export async function GetMatchesByTeam(team: string) {
@@ -100,8 +100,25 @@ export async function GetTeamsSeasonsMatches(
 
 export async function AddNewMatch(match: Match) {
   const {rows} = await pool.query(
-    `INSERT INTO matches (date, time, home_team_id, away_team_id, field, division_id, home_score, away_score, editing_status)
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    `INSERT INTO matches (
+      date,
+      time,
+      home_team_id,
+      away_team_id,
+      field,
+      division_id,
+      home_score,
+      away_score,
+      score_status,
+      score_request_sent_at,
+      first_submitted_at,
+      finalized_at,
+      founder_notified_conflict_at,
+      founder_notified_single_at,
+      founder_notified_no_submission_at,
+      editing_status
+    )
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
     RETURNING *`,
     [
       match.date,
@@ -112,6 +129,13 @@ export async function AddNewMatch(match: Match) {
       match.division_id,
       match.home_score,
       match.away_score,
+      match.score_status,
+      match.score_request_sent_at,
+      match.first_submitted_at,
+      match.finalized_at,
+      match.founder_notified_conflict_at,
+      match.founder_notified_single_at,
+      match.founder_notified_no_submission_at,
       match.editing_status
     ]);
   if (rows.length === 0) {throw new Error(`Match not added: ${match.date} ${match.time}`);}
@@ -134,7 +158,14 @@ export async function UpdateMatch(update: Match) {
       division_id = $7,
       home_score = $8,
       away_score = $9,
-      editing_status = $10
+      score_status = $10,
+      score_request_sent_at = $11,
+      first_submitted_at = $12,
+      finalized_at = $13,
+      founder_notified_conflict_at = $14,
+      founder_notified_single_at = $15,
+      founder_notified_no_submission_at = $16,
+      editing_status = $17
     WHERE id = $1
     RETURNING *
     `,
@@ -148,6 +179,13 @@ export async function UpdateMatch(update: Match) {
       update.division_id,
       update.home_score,
       update.away_score,
+      update.score_status,
+      update.score_request_sent_at,
+      update.first_submitted_at,
+      update.finalized_at,
+      update.founder_notified_conflict_at,
+      update.founder_notified_single_at,
+      update.founder_notified_no_submission_at,
       update.editing_status
     ]
   );
@@ -164,4 +202,35 @@ export async function DeleteMatches() {
     `DELETE FROM matches WHERE editing_status = 'deleted'`
   );
   return;
+}
+
+export async function MarkTeamMatchesDeleted(team_id: string) {
+  const { rows } = await pool.query<Match>(
+    `UPDATE matches
+     SET editing_status = 'deleted'
+     WHERE home_team_id = $1
+        OR away_team_id = $1
+     RETURNING *`,
+    [team_id]
+  );
+
+  return rows;
+}
+
+export async function GetOfficialDivisionMatches(division_id: string): Promise<Match[]> {
+  const { rows } = await pool.query<Match>(
+    `SELECT *
+     FROM matches
+     WHERE division_id = $1
+       AND editing_status <> 'deleted'
+       AND home_score IS NOT NULL
+       AND away_score IS NOT NULL
+       AND (
+         score_status IN ('finalized', 'published_single_submission')
+         OR score_status IS NULL
+       )`,
+    [division_id]
+  );
+
+  return rows;
 }

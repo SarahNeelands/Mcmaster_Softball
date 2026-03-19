@@ -135,6 +135,17 @@ export default function TeamsPage() {
     }
   };
 
+  const handleRevert = async () => {
+    try {
+      await apiP.Revert();
+      await refreshTeams();
+      alert("Unpublished draft and deleted changes reverted.");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to revert unpublished changes");
+    }
+  };
+
   useEffect(() => {
     const load = async () => {
       const session = await apiAdmin.GetAdminSession();
@@ -230,6 +241,7 @@ export default function TeamsPage() {
         onToggleAdmin={handleAdminToggle}
         onTogglePreview={() => setIsPreviewing((prev) => !prev)}
         onPublish={handlePublish}
+        onRevert={canManageContent ? handleRevert : undefined}
         seasons={visibleSeasons}
         selectedSeason={selectedSeason}
         onSelect={(s) => setSelectedSeason(s)}

@@ -34,8 +34,15 @@ export async function GET(request: Request) {
     }
 
     return NextResponse.json({ error: "Missing or invalid type" }, { status: 400 });
-  } catch (e) {
+  } catch (e: unknown) {
     console.error("GET standings route error:", e);
-    return NextResponse.json({ error: "Failed to get standings" }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: "Failed to get standings",
+        details: e instanceof Error ? e.message : String(e),
+        stack: e instanceof Error ? e.stack ?? null : null,
+      },
+      { status: 500 }
+    );
   }
 }

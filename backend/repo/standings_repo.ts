@@ -36,7 +36,8 @@ export async function GetStandingsBySeries(series_id: string): Promise<StandingR
   const {rows} = await pool.query<StandingRow>(
     `SELECT *
     FROM standings
-    WHERE series_id = $1`,
+    WHERE series_id = $1
+      AND editing_status <> 'deleted'`,
     [series_id]
   );
   return rows;
@@ -46,7 +47,8 @@ export async function GetStandingsByDivision(division_id: string): Promise<Stand
   const {rows} = await pool.query<StandingRow>(
     `SELECT *
     FROM standings
-    WHERE division_id = $1`,
+    WHERE division_id = $1
+      AND editing_status <> 'deleted'`,
     [division_id]
   );
   return rows;
@@ -56,7 +58,8 @@ export async function GetStandingsByTeam(team_id: string, series_id: string): Pr
   const {rows} = await pool.query<StandingRow>(
     `SELECT *
     FROM standings
-    WHERE team_id = $1 AND series_id = $2`,
+    WHERE team_id = $1 AND series_id = $2
+      AND editing_status <> 'deleted'`,
     [team_id, series_id]
     );
   return rows[0];
@@ -126,13 +129,15 @@ export async function UpdateStandings(update: Standing) {
   const {rows} = await pool.query(
     `UPDATE standings
     SET
-      wins = $2,
-      losses = $3,
-      ties = $4,
-      points = $5
-    WHERE team_id = $1
+      wins = $3,
+      losses = $4,
+      ties = $5,
+      points = $6
+    WHERE division_id = $1
+      AND team_id = $2
     RETURNING *`,
     [
+      update.division_id,
       update.team.id,
       update.wins,
       update.losses,
@@ -153,4 +158,32 @@ export async function DeleteStandings() {
     RETURNING *`  
   );
   return;
+}
+
+export async function MarkTeamStandingsDeleted(team_id: string) {
+  const { rows } = await pool.query<StandingRow>(
+    `UPDATE standings
+     SET editing_status = 'deleted'
+     WHERE team_id = $1
+     RETURNING *`,
+    [team_id]
+  );
+
+  return rows;
+}
+
+export async function ResetDivisionStandings(division_id: string) {
+  const { rows } = await pool.query<StandingRow>(
+    `UPDATE standings
+     SET wins = 0,
+         losses = 0,
+         ties = 0,
+         points = 0
+     WHERE division_id = $1
+       AND editing_status <> 'deleted'
+     RETURNING *`,
+    [division_id]
+  );
+
+  return rows;
 }

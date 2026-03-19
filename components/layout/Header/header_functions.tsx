@@ -26,9 +26,11 @@ export function useSeasonEditor({
     setScreen("seasonEditor");
   };
 
-  const openEditSeason = () => {
-    if (!selectedSeason) return;
-    setSeasonToEdit(selectedSeason);
+  const openEditSeason = (season?: Season) => {
+    const nextSeason = season ?? selectedSeason;
+    if (!nextSeason) return;
+    setSelectedSeason(nextSeason);
+    setSeasonToEdit(nextSeason);
     setScreen("seasonEditor");
   };
 

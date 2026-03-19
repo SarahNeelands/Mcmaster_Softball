@@ -78,8 +78,39 @@ CREATE TABLE matches (
   field TEXT NOT NULL,
   home_score INT DEFAULT NULL,
   away_score INT DEFAULT NULL,
+  score_status TEXT NOT NULL DEFAULT 'unrequested' CHECK (
+    score_status IN (
+      'unrequested',
+      'awaiting_scores',
+      'conflict_pending_founder',
+      'published_single_submission',
+      'finalized',
+      'expired_no_submission'
+    )
+  ),
+  score_request_sent_at TIMESTAMPTZ DEFAULT NULL,
+  first_submitted_at TIMESTAMPTZ DEFAULT NULL,
+  finalized_at TIMESTAMPTZ DEFAULT NULL,
+  founder_notified_conflict_at TIMESTAMPTZ DEFAULT NULL,
+  founder_notified_single_at TIMESTAMPTZ DEFAULT NULL,
+  founder_notified_no_submission_at TIMESTAMPTZ DEFAULT NULL,
   editing_status TEXT NOT NULL CHECK (editing_status IN ('deleted','draft','published')),
   division_id UUID NOT NULL REFERENCES divisions(id) ON DELETE CASCADE
+);
+
+CREATE TABLE score_submission_links (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  match_id UUID NOT NULL REFERENCES matches(id) ON DELETE CASCADE,
+  side TEXT NOT NULL CHECK (side IN ('home', 'away')),
+  token_hash TEXT NOT NULL UNIQUE,
+  email_sent_at TIMESTAMPTZ DEFAULT NULL,
+  expires_at TIMESTAMPTZ NOT NULL,
+  submitted_home_score INT DEFAULT NULL,
+  submitted_away_score INT DEFAULT NULL,
+  submitted_at TIMESTAMPTZ DEFAULT NULL,
+  used_at TIMESTAMPTZ DEFAULT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (match_id, side)
 );
 
 CREATE TABLE standings (

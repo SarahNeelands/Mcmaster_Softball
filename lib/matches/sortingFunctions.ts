@@ -9,7 +9,8 @@ export interface MatchesByMonth {
 
 const toMinutes = (time: string) => {
   const [t, modifier] = time.split(" ");
-  let [hours, minutes] = t.split(":").map(Number);
+  const [rawHours, minutes] = t.split(":").map(Number);
+  let hours = rawHours;
 
   if (modifier === "PM" && hours !== 12) hours += 12;
   if (modifier === "AM" && hours === 12) hours = 0;

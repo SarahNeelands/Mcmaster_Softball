@@ -1,7 +1,7 @@
 
 import { NextResponse } from "next/server";
-
 import crypto from "node:crypto";
+import { getAdminSessionSecret } from "@/lib/server/adminAuth";
 
 const cookieName = "msadmin_session";
 
@@ -15,7 +15,7 @@ export async function POST(req: Request) {
 
     const adminUsername = process.env.ADMIN_USERNAME || "admin";
     const adminPassword = process.env.ADMIN_PASSWORD;
-    const cookieSecret = process.env.ADMIN_SESSION_SECRET || process.env.ADMIN_PASSWORD;
+    const cookieSecret = getAdminSessionSecret();
 
     if (!adminPassword || !cookieSecret) {
       return NextResponse.json(
