@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import styles from "./page.module.css";
 import { formatDateTimeLabel } from "@/lib/matches/visibilityFunctions";
@@ -15,7 +15,7 @@ type SubmissionPageData = {
   expiresAt: string;
 };
 
-export default function SubmitScorePage() {
+function SubmitScoreForm() {
   const searchParams = useSearchParams();
   const [token, setToken] = useState("");
   const [data, setData] = useState<SubmissionPageData | null>(null);
@@ -169,5 +169,13 @@ export default function SubmitScorePage() {
         {message && <p className={styles.message}>{message}</p>}
       </section>
     </main>
+  );
+}
+
+export default function SubmitScorePage() {
+  return (
+    <Suspense fallback={<main className={styles.page}><section className={styles.card}><h1 className={styles.title}>Submit Score</h1><p>Loading score form...</p></section></main>}>
+      <SubmitScoreForm />
+    </Suspense>
   );
 }
