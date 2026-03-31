@@ -116,6 +116,12 @@
   font-weight: 600;
 }
 
+.fieldHint {
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: var(--color-muted);
+}
+
 .field input,
 .field textarea {
   border: 1px solid #d0d0d0;

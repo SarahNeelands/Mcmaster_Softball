@@ -148,10 +148,13 @@ const AnnouncementsSection: React.FC<AnnouncementsSectionProps> = ({
 
               <label className={styles.field}>
                 <span>Body</span>
+                <span className={styles.fieldHint}>
+                  Supports Markdown for headings, bold, bullets, numbered lists, links, and more.
+                </span>
                 <textarea
                   value={draft.content}
                   onChange={(event) => handleDraftChange("content", event.target.value)}
-                  placeholder="Share announcement details..."
+                  placeholder={"## Update\n- Item one\n- Item two\n**Important** reminder"}
                 />
               </label>
               {!isCreating && (

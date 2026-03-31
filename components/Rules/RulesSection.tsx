@@ -9,6 +9,7 @@
 
 import React, { useState } from "react";
 import Card from "@/components/common/Card/Card";
+import MarkdownContent from "@/components/common/MarkdownContent/MarkdownContent";
 import { Rule, RuleImage } from "@/types/rule_mod";
 import styles from "./RulesSection.module.css";
 
@@ -192,11 +193,7 @@ const RulesSection: React.FC<RulesSectionProps> = ({
                   <h3 className={styles.ruleTitle}>{rule.title}</h3>
                   <span className={styles.ruleUnderline} aria-hidden="true" />
                 </div>
-                <div className={styles.ruleBody}>
-                  {rule.content.split("\n").map((paragraph, index) => (
-                    <p key={`${rule.id}-paragraph-${index}`}>{paragraph}</p>
-                  ))}
-                </div>
+                <MarkdownContent className={styles.ruleBody} content={rule.content} />
               </div>
               {(rule.images ?? []).length > 0 && (
                 <div className={styles.imageColumn}>
@@ -252,10 +249,13 @@ const RulesSection: React.FC<RulesSectionProps> = ({
               </label>
               <label className={styles.field}>
                 <span>Text</span>
+                <span className={styles.fieldHint}>
+                  Supports Markdown for headings, bold, bullets, numbered lists, links, and more.
+                </span>
                 <textarea
                   value={draft.content}
                   onChange={(event) => handleDraftChange("content", event.target.value)}
-                  placeholder="Describe the policy..."
+                  placeholder={"## Section heading\n- Bullet point\n**Important** detail"}
                   rows={5}
                 />
               </label>

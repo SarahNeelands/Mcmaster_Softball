@@ -37,29 +37,33 @@ export async function GetRuleByID(rule_id: string)
 //==============================================================================
 
 export async function UpdateRule(rule: Rule): Promise<Rule> {
-  rule.editing_status ="draft";
-  await repo.UpdateRuleInfo(rule);
+  const nextRule: Rule = {
+    ...rule,
+    editing_status: rule.editing_status === "deleted" ? "deleted" : "draft",
+  };
+
+  await repo.UpdateRuleInfo(nextRule);
   
 
-  const currentImages = await repo.GetAllRuleImages(rule.id);
+  const currentImages = await repo.GetAllRuleImages(nextRule.id);
 
   const currentIds = new Set(currentImages.map((img) => img.id));
-  const newIds = new Set(rule.images.map((img) => img.id));
+  const newIds = new Set(nextRule.images.map((img) => img.id));
 
   // images to add: in rule.images but not in DB
-  const imagesToAdd = rule.images.filter((img) => !currentIds.has(img.id));
+  const imagesToAdd = nextRule.images.filter((img) => !currentIds.has(img.id));
 
   // images to delete: in DB but not in rule.images
   const imagesToDelete = currentImages.filter((img) => !newIds.has(img.id));
-  const imagesToUpdate = rule.images.filter((img) => currentIds.has(img.id));
+  const imagesToUpdate = nextRule.images.filter((img) => currentIds.has(img.id));
 
   await Promise.all([
-    ...imagesToAdd.map((img) => repo.AddNewRuleImage(img, rule.id )),
+    ...imagesToAdd.map((img) => repo.AddNewRuleImage(img, nextRule.id )),
     ...imagesToUpdate.map((img) => repo.UpdateRuleImage(img)),
     ...imagesToDelete.map((img) => repo.DeleteRuleImage(img.id)),
   ]);
 
-  return await GetRuleByID(rule.id);
+  return await GetRuleByID(nextRule.id);
 }
 
 //==============================================================================

@@ -8,6 +8,7 @@
 import React from "react";
 import styles from "./AnnouncementCard.module.css";
 import { Announcement } from "@/types/announcement_mod";
+import MarkdownContent from "@/components/common/MarkdownContent/MarkdownContent";
 
 interface AnnouncementCardProps {
   announcement: Announcement;
@@ -47,7 +48,7 @@ const AnnouncementCard: React.FC<AnnouncementCardProps> = ({
           )}
         </div>
       </div>
-      <p className={styles.body}>{announcement.content}</p>
+      <MarkdownContent className={styles.body} content={announcement.content} />
     </article>
   );
 };

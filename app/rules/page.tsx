@@ -152,8 +152,20 @@ export default function RulesPage() {
             gameplay, and sportsmanship in one place.
           </p>
           <div className={styles.meta}>
-            <span className={styles.badge}>{selectedSeason?.name ?? "Current Season"}</span>
-            <span className={styles.badge}>Updated weekly</span>
+            <a
+              className={styles.badge}
+              href="/downloads/Fielding-Lineups.pdf"
+              download="Fielding-Lineups.pdf"
+            >
+              Download Fielding Lineups
+            </a>
+            <a
+              className={styles.badge}
+              href="/downloads/Score-Sheet.pdf"
+              download="Score-Sheet.pdf"
+            >
+              Download Score Sheet
+            </a>
           </div>
         </section>
         <RulesSection

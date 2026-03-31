@@ -58,6 +58,9 @@
 }
 
 .badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 999px;
   padding: 0.4rem 0.75rem;
   background: #f1dce5;
@@ -65,6 +68,19 @@
   font-weight: 700;
   font-size: 0.9rem;
   border: 1px solid #dfc2cf;
+  text-decoration: none;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.badge:hover {
+  background: #ebd1dd;
+  border-color: #d3adbd;
+  transform: translateY(-1px);
+}
+
+.badge:focus-visible {
+  outline: 2px solid var(--color-maroon);
+  outline-offset: 2px;
 }
 
 @media (max-width: 800px) {
