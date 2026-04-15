@@ -175,7 +175,7 @@ const RulesSection: React.FC<RulesSectionProps> = ({
       <div className={styles.sectionHeader}>
         <div>
           <p className={styles.eyebrow}>League Handbook</p>
-          <h2 id="rules-heading">Rules &amp; Policies</h2>
+          <h2 id="rules-heading">Rules &amp; Resources</h2>
         </div>
         {isAdmin && (
           <button type="button" className={styles.actionButton} onClick={openCreate}>

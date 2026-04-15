@@ -34,11 +34,53 @@ import * as apiT from "@/lib/api/team_api";
 import { useSeasonEditor } from "@/components/layout/Header/header_functions";
 import { filterVisibleByEditingStatus } from "@/lib/data/editing_status";
 
+function buildScheduleTeamOptions(
+  teams: Team[],
+  divisions: Division[]
+): ScheduleTeamOption[] {
+  const teamsById = new Map<string, Team>(teams.map((team) => [team.id, team]));
+  const nextTeamOptions = new Map<string, ScheduleTeamOption>();
+
+  for (const division of divisions) {
+    const divisionTeamIds = Array.isArray(division.teamIDs) && division.teamIDs.length > 0
+      ? division.teamIDs
+      : (division.standings ?? []).map((standing) => standing.team.id);
+
+    for (const teamId of divisionTeamIds) {
+      const team = teamsById.get(teamId);
+      if (!team) continue;
+
+      nextTeamOptions.set(team.id, {
+        id: team.id,
+        name: team.name,
+        division_id: division.id,
+        division_name: division.name,
+      });
+    }
+  }
+
+  if (nextTeamOptions.size === 0) {
+    for (const team of teams) {
+      nextTeamOptions.set(team.id, {
+        id: team.id,
+        name: team.name,
+        division_id: "",
+        division_name: "",
+      });
+    }
+  }
+
+  return Array.from(nextTeamOptions.values()).sort((a, b) =>
+    a.name.localeCompare(b.name)
+  );
+}
+
 export default function SchedulePage() {
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [isPreviewing, setIsPreviewing] = useState(false);
-  const [upcomingMatches, setUpcomingMatches] = useState<Match[]>([]);
+  const [seasonMatches, setSeasonMatches] = useState<Match[]>([]);
   const [isEditing, setIsEditing] = useState<boolean>(false);
+  const [showPastGames, setShowPastGames] = useState(false);
   const [selectedSeason, setSelectedSeason] = useState<Season>();
   const [allSeasons, setAllSeasons] = useState<Season[]>([]);
   const [selectedSeries, setSelectedSeries] = useState<Series>();
@@ -58,9 +100,16 @@ export default function SchedulePage() {
 
   const canManageContent = isAdmin && !isPreviewing;
 
+  const visibleSeasonMatches = useMemo(() => {
+    return filterVisibleByEditingStatus(seasonMatches, canManageContent);
+  }, [seasonMatches, canManageContent]);
+
   const visibleMatches = useMemo(() => {
-    return filterVisibleByEditingStatus(upcomingMatches, canManageContent);
-  }, [upcomingMatches, canManageContent]);
+    const { upcoming, previous } = splitMatches(visibleSeasonMatches);
+    return canManageContent && showPastGames
+      ? [...upcoming, ...previous]
+      : upcoming;
+  }, [visibleSeasonMatches, canManageContent, showPastGames]);
 
   const visibleSeasons = useMemo(
     () => filterVisibleByEditingStatus(allSeasons, canManageContent),
@@ -96,12 +145,11 @@ export default function SchedulePage() {
   const fetchMatches = async (season?: Season) => {
     if (!season) return;
     const matches = await apiM.GetSeasonMatches(season.id);
-    const { upcoming } = splitMatches(matches);
-    setUpcomingMatches(upcoming);
+    setSeasonMatches(matches);
     setFieldOptions(
       Array.from(
         new Set(
-          upcoming
+          matches
             .map((match) => match.field.trim())
             .filter((field) => field.length > 0)
         )
@@ -165,14 +213,44 @@ export default function SchedulePage() {
 
     if (!day) return;
 
+    if (!selectedSeason || !selectedSeries) {
+      alert("Select a season and series before adding games.");
+      return;
+    }
+
+    const createPlaceholderTeam = async (divisionId: string, slotLabel: "Home" | "Away") => {
+      const stamp = `${day.date || "undated"}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+      const createdTeam = await apiT.CreateTeam(
+        {
+          id: "",
+          slug: "",
+          name: `Open Slot ${slotLabel} ${stamp}`,
+          captain_name: "",
+          co_captain_name: "",
+          captain_email: "",
+          co_captain_email: "",
+          editing_status: "draft",
+        },
+        selectedSeason.id
+      );
+
+      await apiD.MoveDivisionTeam(createdTeam.id, "", divisionId, selectedSeries.id);
+      return createdTeam.id;
+    };
+
     for (const block of day.timeBlocks) {
       for (const game of block.games) {
+        const homeTeamId =
+          game.home_team_id || (game.division_id ? await createPlaceholderTeam(game.division_id, "Home") : "");
+        const awayTeamId =
+          game.away_team_id || (game.division_id ? await createPlaceholderTeam(game.division_id, "Away") : "");
+
         await apiM.CreateMatch({
           id: "",
           date: day.date,
           time: block.time,
-          home_team_id: game.home_team_id,
-          away_team_id: game.away_team_id,
+          home_team_id: homeTeamId,
+          away_team_id: awayTeamId,
           field: game.field,
           division_id: game.division_id,
           home_score: null,
@@ -189,6 +267,10 @@ export default function SchedulePage() {
       }
     }
 
+    const divisionsData = await apiD.GetDivisions("", selectedSeries.id, "all");
+    const divisions = (Array.isArray(divisionsData) ? divisionsData : [divisionsData]) as Division[];
+    const teams = await apiT.GetSeasonTeams(selectedSeason.id);
+    setTeamOptions(buildScheduleTeamOptions(teams, divisions));
     await fetchMatches(selectedSeason);
   };
 
@@ -263,32 +345,7 @@ export default function SchedulePage() {
         : [];
       const divisions = (Array.isArray(divisionsData) ? divisionsData : [divisionsData]) as Division[];
 
-      const teamsById = new Map<string, Team>(teams.map((team) => [team.id, team]));
-      const nextTeamOptions = new Map<string, ScheduleTeamOption>();
-
-      for (const division of divisions) {
-        const divisionTeamIds = division.teamIDs.length > 0
-          ? division.teamIDs
-          : division.standings.map((standing) => standing.team.id);
-
-        for (const teamId of divisionTeamIds) {
-          const team = teamsById.get(teamId);
-          if (!team) continue;
-
-          nextTeamOptions.set(team.id, {
-            id: team.id,
-            name: team.name,
-            division_id: division.id,
-            division_name: division.name,
-          });
-        }
-      }
-
-      setTeamOptions(
-        Array.from(nextTeamOptions.values()).sort((a, b) =>
-          a.name.localeCompare(b.name)
-        )
-      );
+      setTeamOptions(buildScheduleTeamOptions(teams, divisions));
 
       await fetchMatches(selectedSeason);
     };
@@ -307,32 +364,7 @@ export default function SchedulePage() {
         apiD.GetDivisions("", selectedSeries.id, "all"),
       ]);
       const divisions = (Array.isArray(divisionsData) ? divisionsData : [divisionsData]) as Division[];
-      const teamsById = new Map<string, Team>(teams.map((team) => [team.id, team]));
-      const nextTeamOptions = new Map<string, ScheduleTeamOption>();
-
-      for (const division of divisions) {
-        const divisionTeamIds = division.teamIDs.length > 0
-          ? division.teamIDs
-          : division.standings.map((standing) => standing.team.id);
-
-        for (const teamId of divisionTeamIds) {
-          const team = teamsById.get(teamId);
-          if (!team) continue;
-
-          nextTeamOptions.set(team.id, {
-            id: team.id,
-            name: team.name,
-            division_id: division.id,
-            division_name: division.name,
-          });
-        }
-      }
-
-      setTeamOptions(
-        Array.from(nextTeamOptions.values()).sort((a, b) =>
-          a.name.localeCompare(b.name)
-        )
-      );
+      setTeamOptions(buildScheduleTeamOptions(teams, divisions));
     };
 
     loadSeriesTeams().catch((err) => console.error("Error fetching series teams:", err));
@@ -418,7 +450,15 @@ export default function SchedulePage() {
               }}
               onOpenEditSeries={() => setEditingSeries(selectedSeries)}
               isAdmin={canManageContent}
+              showCaret={false}
             />
+            <button
+              type="button"
+              className={styles.togglePastButton}
+              onClick={() => setShowPastGames((prev) => !prev)}
+            >
+              {showPastGames ? "Hide Past Games" : "Show Past Games"}
+            </button>
           </div>
         )}
 

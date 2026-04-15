@@ -21,13 +21,28 @@ const AnnouncementCard: React.FC<AnnouncementCardProps> = ({
   isAdmin,
   onEdit,
 }) => {
-  const dateObject = new Date(announcement.date);
-  const formattedDate = Number.isNaN(dateObject.getTime())
-    ? announcement.date
-    : dateObject.toLocaleDateString(undefined, {
+  const formattedDate = (() => {
+    const dateMatch = announcement.date.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+
+    if (dateMatch) {
+      const [, year, month, day] = dateMatch;
+      const safeDate = new Date(Number(year), Number(month) - 1, Number(day));
+
+      return safeDate.toLocaleDateString(undefined, {
         month: "long",
         day: "numeric",
       });
+    }
+
+    const dateObject = new Date(announcement.date);
+
+    return Number.isNaN(dateObject.getTime())
+      ? announcement.date
+      : dateObject.toLocaleDateString(undefined, {
+          month: "long",
+          day: "numeric",
+        });
+  })();
 
   return (
     <article className={styles.card}>

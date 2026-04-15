@@ -1,0 +1,64 @@
+{
+  "cases": [
+    {
+      "id": "fixture-01-basic-rollover",
+      "season": {
+        "name": "2026",
+        "start_date": "2026-05-01",
+        "end_date": "2026-08-31"
+      },
+      "previousSeries": {
+        "name": "Series 1",
+        "start_date": "2026-05-01",
+        "end_date": "2026-06-15",
+        "advance_amount": 1,
+        "demote_amount": 1
+      },
+      "expectedNewSeries": {
+        "name": "Series 2",
+        "start_date": "2026-06-16",
+        "end_date": "2026-08-31",
+        "advance_amount": 1,
+        "demote_amount": 1
+      }
+    },
+    {
+      "id": "fixture-02-no-rollover-after-season-end",
+      "season": {
+        "name": "2026-short",
+        "start_date": "2026-05-01",
+        "end_date": "2026-06-15"
+      },
+      "previousSeries": {
+        "name": "Series 1",
+        "start_date": "2026-05-01",
+        "end_date": "2026-06-15",
+        "advance_amount": 1,
+        "demote_amount": 1
+      },
+      "expectedNewSeries": null
+    },
+    {
+      "id": "fixture-03-zero-movement",
+      "season": {
+        "name": "2026-zero",
+        "start_date": "2026-05-01",
+        "end_date": "2026-08-31"
+      },
+      "previousSeries": {
+        "name": "Series 3",
+        "start_date": "2026-06-01",
+        "end_date": "2026-06-30",
+        "advance_amount": 0,
+        "demote_amount": 0
+      },
+      "expectedNewSeries": {
+        "name": "Series 4",
+        "start_date": "2026-07-01",
+        "end_date": "2026-08-31",
+        "advance_amount": 0,
+        "demote_amount": 0
+      }
+    }
+  ]
+}

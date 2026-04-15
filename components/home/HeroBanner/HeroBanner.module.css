@@ -5,28 +5,60 @@
  */
 
 .hero {
-  background: linear-gradient(135deg, var(--color-maroon), var(--color-maroon-dark));
+  background:
+    linear-gradient(
+      90deg,
+      rgba(82, 26, 40, 0.98) 0%,
+      rgba(82, 26, 40, 0.95) 18%,
+      rgba(82, 26, 40, 0.56) 34%,
+      rgba(82, 26, 40, 0.56) 66%,
+      rgba(82, 26, 40, 0.95) 82%,
+      rgba(82, 26, 40, 0.98) 100%
+    ),
+    url("/red-field.png") center center / cover no-repeat,
+    linear-gradient(135deg, var(--color-maroon), var(--color-maroon-dark));
   color: var(--color-text-inverse);
-  text-align: center;
-  padding: 4rem 1.5rem;
+  padding: 5.75rem 1.5rem;
   box-shadow: var(--shadow-soft);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 24rem;
+}
+
+.content {
+  width: min(100%, 64rem);
+  margin: 0 auto;
+  text-align: center;
 }
 
 .title {
   margin: 0;
   font-size: 2.5rem;
   letter-spacing: 0.1em;
+  text-shadow:
+    0 2px 0 rgba(58, 11, 21, 0.55),
+    0 8px 24px rgba(0, 0, 0, 0.38),
+    0 0 28px rgba(0, 0, 0, 0.16);
 }
 
 .subtitle {
   margin-top: 1rem;
   font-size: 1.25rem;
   opacity: 0.9;
+  text-shadow: 0 3px 14px rgba(0, 0, 0, 0.28);
 }
 
 @media (min-width: 768px) {
+  .hero {
+    min-height: 28rem;
+    padding-block: 6.5rem;
+  }
+
   .title {
-    font-size: 3rem;
+    font-size: 3.5rem;
   }
 
   .subtitle {

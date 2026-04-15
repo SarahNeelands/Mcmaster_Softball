@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "outDir": ".test-dist",
+    "rootDir": ".",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"]
+    }
+  },
+  "include": [
+    "backend/services/series_rollover.ts",
+    "backend/services/series_seed.ts",
+    "tests/series-rollover/run-tests.ts",
+    "types/*.ts",
+    "backend/repo/seasons_repo.ts",
+    "backend/repo/series_repo.ts"
+  ]
+}

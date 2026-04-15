@@ -15,7 +15,7 @@ const NAV_ITEMS = [
   { label: "Standings", href: "/standings" },
   { label: "Playoffs", href: "#playoffs" },
   { label: "Rules", href: "/rules" },
-  { label: "Contact Us", href: "#contact" },
+  { label: "Contact Us", href: "/#contact" },
 ];
 
 const NavBar: React.FC = () => {

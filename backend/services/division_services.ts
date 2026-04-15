@@ -4,6 +4,7 @@ import { GetAllDivisionRankings } from "./standing_service";
 import * as seriesRepo from "../repo/series_repo";
 import { AddDivisionTeamStanding, MoveTeamStandingToDivision } from "../repo/standings_repo";
 import { GetAllTeamsOfSeason } from "./team_services";
+import { computeSeededAssignments } from "./series_seed";
 
 
 //==============================================================================
@@ -184,38 +185,16 @@ export async function SeedSeriesDivisionsFromPreviousSeries(
         nextDivisionIdByPreviousDivisionId.set(division.id, createdDivisions[index].id);
     });
 
-    const teamAssignments = new Map<string, string>();
-
-    for (const division of orderedPreviousDivisions) {
-        const sourceTeamIds = getOrderedDivisionTeamIds(division);
-        for (const teamId of sourceTeamIds) {
-            teamAssignments.set(teamId, division.id);
-        }
-    }
-
-    for (let index = 0; index < orderedPreviousDivisions.length; index += 1) {
-        const division = orderedPreviousDivisions[index];
-        const rankedTeamIds = getOrderedDivisionTeamIds(division);
-
-        const promotedTeamIds =
-            index > 0
-                ? rankedTeamIds.slice(0, Math.min(advance_amount, rankedTeamIds.length))
-                : [];
-
-        for (const teamId of promotedTeamIds) {
-            teamAssignments.set(teamId, orderedPreviousDivisions[index - 1].id);
-        }
-
-        const demotionPool = rankedTeamIds.filter((teamId) => !promotedTeamIds.includes(teamId));
-        const demotedTeamIds =
-            index < orderedPreviousDivisions.length - 1
-                ? demotionPool.slice(Math.max(0, demotionPool.length - demote_amount))
-                : [];
-
-        for (const teamId of demotedTeamIds) {
-            teamAssignments.set(teamId, orderedPreviousDivisions[index + 1].id);
-        }
-    }
+    const teamAssignments = computeSeededAssignments(
+        orderedPreviousDivisions.map((division) => ({
+            id: division.id,
+            name: division.name,
+            teamIds: getOrderedDivisionTeamIds(division),
+            sortKey: division.win_points,
+        })),
+        advance_amount,
+        demote_amount
+    );
 
     await Promise.all(
         Array.from(teamAssignments.entries()).map(async ([teamId, previousDivisionId]) => {

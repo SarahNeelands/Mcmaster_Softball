@@ -34,8 +34,14 @@
 }
 
 @media (max-width: 720px) {
+  .nav {
+    width: 100%;
+    justify-content: center;
+  }
+
   .navList {
     flex-wrap: wrap;
+    justify-content: center;
     row-gap: 0.5rem;
   }
 }

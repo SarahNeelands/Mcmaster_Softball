@@ -13,6 +13,11 @@ import { Announcement } from "@/types/announcement_mod";
 import { Season } from "@/types/season_mod";
 const DEFAULT_ANNOUNCEMENT_VISIBLE_COUNT = 4;
 
+const normalizeDateForInput = (value: string) => {
+  const dateMatch = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return dateMatch ? `${dateMatch[1]}-${dateMatch[2]}-${dateMatch[3]}` : value;
+};
+
 interface AnnouncementsSectionProps {
   activeAnnouncements: Announcement[];
   archivedAnnouncements: Announcement[];
@@ -68,17 +73,17 @@ const AnnouncementsSection: React.FC<AnnouncementsSectionProps> = ({
     }
     if (isCreating) {
       await onAnnouncementChange(
-        { ...draft, season_id: currentSeason.id },
+        { ...draft, date: normalizeDateForInput(draft.date), season_id: currentSeason.id },
         "add"
       );
     }else {
-      await onAnnouncementChange(draft, "edit");
+      await onAnnouncementChange({ ...draft, date: normalizeDateForInput(draft.date) }, "edit");
     }
     closeEditor();
   };
 
   const openEditorFor = (announcement: Announcement) => {
-    setDraft({ ...announcement });
+    setDraft({ ...announcement, date: normalizeDateForInput(announcement.date) });
     setIsCreating(false);
   };
 

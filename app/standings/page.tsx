@@ -17,6 +17,7 @@ import * as apiAdmin from "@/lib/api/admin_api";
 import * as apiSeries from "@/lib/api/series_api";
 import * as apiD from "@/lib/api/division_api";
 import * as apiT from "@/lib/api/team_api";
+import * as apiM from "@/lib/api/match_api";
 import { useSeasonEditor } from "@/components/layout/Header/header_functions";
 import { filterVisibleByEditingStatus } from "@/lib/data/editing_status";
 
@@ -234,7 +235,31 @@ export default function StandingsPage() {
   };
 
   const handleDropTeam = async (target_division_id: string) => {
-    if (!draggingTeam) return;
+    if (!draggingTeam || !selectedSeason) return;
+
+    const teamMatches = await apiM.GetTeamsSeasonMatches(draggingTeam.team_id, selectedSeason.id);
+    const scheduledMatches = teamMatches.filter(
+      (match) =>
+        match.division_id === draggingTeam.source_division_id &&
+        match.editing_status !== "deleted" &&
+        match.home_score === null &&
+        match.away_score === null
+    );
+
+    if (scheduledMatches.length > 0) {
+      const shouldContinue = window.confirm(
+        `This team has ${scheduledMatches.length} scheduled game(s) in its current division. Press OK to continue and delete those games, or Cancel to keep the team where it is.`
+      );
+
+      if (!shouldContinue) {
+        setDraggingTeam(null);
+        return;
+      }
+
+      for (const match of scheduledMatches) {
+        await apiM.DeleteMatch(match);
+      }
+    }
 
     await apiD.MoveDivisionTeam(
       draggingTeam.team_id,

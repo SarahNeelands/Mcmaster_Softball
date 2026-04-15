@@ -2,9 +2,14 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Mac/GSA Summer Softball League",
+  title: "McMaster GSA Softball League",
   description:
     "League dashboard prototype featuring announcements, schedule, and admin controls.",
+  icons: {
+    icon: "/msl-logo.png",
+    shortcut: "/msl-logo.png",
+    apple: "/msl-logo.png",
+  },
 };
 
 export default function RootLayout({

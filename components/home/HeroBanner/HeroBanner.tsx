@@ -11,8 +11,10 @@ import styles from "./HeroBanner.module.css";
 const HeroBanner: React.FC = () => {
   return (
     <section className={styles.hero} id="home">
-      <h1 className={styles.title}>University Softball League</h1>
-      <p className={styles.subtitle}>Welcome to the league!</p>
+      <div className={styles.content}>
+        <h1 className={styles.title}>McMaster GSA Softball League</h1>
+        <p className={styles.subtitle}>Welcome to the league!</p>
+      </div>
     </section>
   );
 };

@@ -11,6 +11,7 @@ type Props = {
   onOpenCreateSeries?: () => void;
   onOpenEditSeries?: () => void;
   isAdmin?: boolean;
+  showCaret?: boolean;
 };
 
 export default function SeriesDropdownButton({
@@ -20,6 +21,7 @@ export default function SeriesDropdownButton({
   onOpenCreateSeries,
   onOpenEditSeries,
   isAdmin = false,
+  showCaret = true,
 }: Props) {
   const [open, setOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement | null>(null);
@@ -52,7 +54,9 @@ export default function SeriesDropdownButton({
           aria-expanded={open}
         >
           <span className="seasonDropdownLabel">{label}</span>
-          <span className="seasonDropdownCaret" aria-hidden="true">v</span>
+          {showCaret && (
+            <span className="seasonDropdownCaret" aria-hidden="true">v</span>
+          )}
         </button>
         {isAdmin && selectedSeries && onOpenEditSeries && (
           <button

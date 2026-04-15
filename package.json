@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:series-rollover": "cmd /c if exist .test-dist rmdir /s /q .test-dist && tsc -p tsconfig.tests.json && node .test-dist/tests/series-rollover/run-tests.js"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
@@ -24,6 +25,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.0.1",
+    "supabase": "^2.91.1",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

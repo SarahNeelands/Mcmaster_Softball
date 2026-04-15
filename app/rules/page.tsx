@@ -145,7 +145,7 @@ export default function RulesPage() {
         <section className={styles.intro} aria-labelledby="rules-title">
           <p className={styles.eyebrow}>League Handbook</p>
           <h1 id="rules-title" className={styles.title}>
-            Rules &amp; Policies
+            Rules &amp; Resources
           </h1>
           <p className={styles.subtitle}>
             Everything captains and players need for the current season, including eligibility,
