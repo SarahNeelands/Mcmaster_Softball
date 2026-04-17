@@ -9,7 +9,11 @@
 import { useEffect, useMemo, useState } from "react";
 import Header from "@/components/layout/Header/Header";
 import Footer from "@/components/layout/Footer/Footer";
-import { groupMatchesByMonth, splitMatches } from "@/lib/matches/sortingFunctions";
+import {
+  compareFieldNames,
+  groupMatchesByMonth,
+  splitMatches,
+} from "@/lib/matches/sortingFunctions";
 import { Calendar } from "@/components/common/calendar/calendar";
 import SeriesEditor from "@/components/editors/SeriesEditor";
 import UpcomingMatches from "@/components/home/Matches/UpcomingMatches";
@@ -89,6 +93,7 @@ export default function SchedulePage() {
   const [creatingSeries, setCreatingSeries] = useState(false);
   const [teamOptions, setTeamOptions] = useState<ScheduleTeamOption[]>([]);
   const [fieldOptions, setFieldOptions] = useState<string[]>([]);
+  const [comparisonNow] = useState(() => new Date());
   const [, setScreen] = useState<"home" | "seasonEditor">("home");
 
   const { openCreateSeason, openEditSeason } = useSeasonEditor({
@@ -105,11 +110,11 @@ export default function SchedulePage() {
   }, [seasonMatches, canManageContent]);
 
   const visibleMatches = useMemo(() => {
-    const { upcoming, previous } = splitMatches(visibleSeasonMatches);
+    const { upcoming, previous } = splitMatches(visibleSeasonMatches, comparisonNow);
     return canManageContent && showPastGames
       ? [...upcoming, ...previous]
       : upcoming;
-  }, [visibleSeasonMatches, canManageContent, showPastGames]);
+  }, [visibleSeasonMatches, canManageContent, showPastGames, comparisonNow]);
 
   const visibleSeasons = useMemo(
     () => filterVisibleByEditingStatus(allSeasons, canManageContent),
@@ -153,7 +158,7 @@ export default function SchedulePage() {
             .map((match) => match.field.trim())
             .filter((field) => field.length > 0)
         )
-      ).sort((a, b) => a.localeCompare(b))
+      ).sort(compareFieldNames)
     );
   };
 

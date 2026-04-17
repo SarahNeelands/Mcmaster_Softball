@@ -69,7 +69,7 @@ export default function Home() {
     setActiveAnnouncements(active);
     setArchivedAnnouncements(archived);
 
-    const parts = splitMatches(matches);
+    const parts = splitMatches(matches, new Date());
     setUpcoming(parts.upcoming);
     setPrevious(parts.previous);
   };
@@ -122,7 +122,7 @@ export default function Home() {
     if (!selectedSeason) return;
 
     const allmatches = await apiM.GetSeasonMatches(selectedSeason.id);
-    const parts = splitMatches(allmatches);
+    const parts = splitMatches(allmatches, new Date());
     setUpcoming(parts.upcoming);
     setPrevious(parts.previous);
   };
@@ -133,7 +133,7 @@ export default function Home() {
     if (!selectedSeason) return;
 
     const allmatches = await apiM.GetSeasonMatches(selectedSeason.id);
-    const parts = splitMatches(allmatches);
+    const parts = splitMatches(allmatches, new Date());
     setUpcoming(parts.upcoming);
     setPrevious(parts.previous);
   };

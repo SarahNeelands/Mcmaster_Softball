@@ -18,11 +18,24 @@ const toMinutes = (time: string) => {
   return hours * 60 + minutes;
 };
 
+const fieldNameCollator = new Intl.Collator("en", {
+  numeric: true,
+  sensitivity: "base",
+});
+
 export function compareByDateThenTime(a: Match, b: Match) {
   if (a.date !== b.date) {
     return a.date.localeCompare(b.date);
   }
   return toMinutes(a.time) - toMinutes(b.time);
+}
+
+export function compareTimes(a: string, b: string) {
+  return toMinutes(a) - toMinutes(b);
+}
+
+export function compareFieldNames(a: string, b: string) {
+  return fieldNameCollator.compare(a.trim(), b.trim());
 }
 
 export function groupMatchesByMonth(matches: Match[]): MatchesByMonth[] {
@@ -49,7 +62,7 @@ export function groupMatchesByMonth(matches: Match[]): MatchesByMonth[] {
   );
 }
 
-export function splitMatches(matches: Match[], now = new Date()) {
+export function splitMatches(matches: Match[], now: Date) {
   const toDate = (m: Match) => new Date(`${m.date}T${m.time}:00`);
 
   const upcoming = matches

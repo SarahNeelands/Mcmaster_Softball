@@ -1,52 +1,77 @@
 /**
  * Footer.module.css
  * ------------------
- * Styles for the site footer, including maroon background treatment and layout.
+ * Styles for the site footer, reusing the hero banner's image-led maroon theme.
  */
 
 .footer {
-  background: var(--color-maroon);
+  background:
+    linear-gradient(
+      90deg,
+      rgba(82, 26, 40, 0.98) 0%,
+      rgba(82, 26, 40, 0.95) 18%,
+      rgba(82, 26, 40, 0.56) 34%,
+      rgba(82, 26, 40, 0.56) 66%,
+      rgba(82, 26, 40, 0.95) 82%,
+      rgba(82, 26, 40, 0.98) 100%
+    ),
+    url("/red-field.png") center center / cover no-repeat,
+    linear-gradient(135deg, var(--color-maroon), var(--color-maroon-dark));
   color: var(--color-text-inverse);
-  padding: 2rem 1.5rem;
+  padding: 3rem 1.5rem;
+  box-shadow: var(--shadow-soft);
 }
 
 .content {
-  max-width: 1200px;
+  width: min(100%, 64rem);
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  align-items: center;
+  gap: 0.9rem;
+  text-align: center;
 }
 
 .heading {
   margin: 0;
   font-size: 1.5rem;
   letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.contacts {
-  display: grid;
-  gap: 1.5rem;
-}
-
-.role {
-  margin: 0;
-  font-weight: 600;
-  opacity: 0.85;
+  text-shadow:
+    0 2px 0 rgba(58, 11, 21, 0.55),
+    0 8px 24px rgba(0, 0, 0, 0.38),
+    0 0 28px rgba(0, 0, 0, 0.16);
 }
 
 .link {
   color: var(--color-text-inverse);
   text-decoration: none;
+  font-size: 1.05rem;
+  text-shadow: 0 3px 14px rgba(0, 0, 0, 0.28);
 }
 
-.link:hover {
+.link:hover,
+.socialLink:hover {
   text-decoration: underline;
 }
 
 @media (min-width: 768px) {
-  .contacts {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .footer {
+    padding-block: 3.5rem;
   }
+}
+
+.socialLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  color: var(--color-text-inverse);
+  text-decoration: none;
+  font-size: 1.05rem;
+  text-shadow: 0 3px 14px rgba(0, 0, 0, 0.28);
+}
+
+.icon {
+  width: 1.2rem;
+  height: 1.2rem;
+  flex: 0 0 auto;
 }

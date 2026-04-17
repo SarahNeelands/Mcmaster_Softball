@@ -24,7 +24,7 @@ export function Calendar({ months }: CalendarProps) {
           >
             {/* Month and year label */}
             <h3 className={styles.calendarLabel}>
-              {new Date(month.year, month.month).toLocaleDateString(undefined, {
+              {new Date(month.year, month.month).toLocaleDateString("en-CA", {
                 month: "long",
                 year: "numeric",
               })}

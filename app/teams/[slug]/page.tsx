@@ -85,7 +85,7 @@ export default function TeamDetailPage() {
     const currentSeries = Array.isArray(currentSeriesData)
       ? currentSeriesData[0]
       : currentSeriesData;
-    const parts = splitMatches(matches);
+    const parts = splitMatches(matches, new Date());
     setSeasonTeams(teams);
     setUpcomingGames(parts.upcoming);
     setPreviousGames(parts.previous);

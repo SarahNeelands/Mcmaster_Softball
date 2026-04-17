@@ -4,6 +4,10 @@ import React, { useState } from "react";
 import styles from "./UpcomingMatches.module.css";
 import { Match } from "@/types/match_mod";
 import { formatDateLabel, formatTimeLabel } from "@/lib/matches/visibilityFunctions";
+import {
+  compareFieldNames,
+  compareTimes,
+} from "@/lib/matches/sortingFunctions";
 
 interface UpcomingMatchesProps {
   matches: Match[];
@@ -37,6 +41,10 @@ export default function UpcomingMatches({
   const [isEditing, setIsEditing] = useState(false);
   const [formState, setFormState] = useState<Record<string, Match>>({});
 
+  function getTeamName(teamId: string) {
+    return teamNamesById[teamId] ?? teamId;
+  }
+
   /* ---------------- grouping ---------------- */
 
   const grouped: GroupedDay[] = [];
@@ -57,6 +65,22 @@ export default function UpcomingMatches({
     }
 
     block.games.push(m);
+  });
+
+  grouped.sort((a, b) => a.date.localeCompare(b.date));
+  grouped.forEach((day) => {
+    day.blocks.sort((a, b) => compareTimes(a.time, b.time));
+    day.blocks.forEach((block) => {
+      block.games.sort((a, b) => {
+        const fieldComparison = compareFieldNames(a.field, b.field);
+        if (fieldComparison !== 0) return fieldComparison;
+
+        const homeComparison = getTeamName(a.home_team_id).localeCompare(getTeamName(b.home_team_id));
+        if (homeComparison !== 0) return homeComparison;
+
+        return getTeamName(a.away_team_id).localeCompare(getTeamName(b.away_team_id));
+      });
+    });
   });
 
   /* ---------------- editing ---------------- */
@@ -94,10 +118,6 @@ export default function UpcomingMatches({
   };
 
   /* ---------------- formatting ---------------- */
-
-  const getTeamName = (teamId: string) => {
-    return teamNamesById[teamId] ?? teamId;
-  };
 
   const selectableTeams: { id: string; name: string; division_id?: string }[] = (
     teamOptions.length > 0

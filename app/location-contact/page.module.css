@@ -1,0 +1,143 @@
+/**
+ * Layout and theming for the location and contact page.
+ */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.main {
+  flex: 1;
+  width: min(1200px, 96%);
+  margin: 0 auto;
+  padding: 1.75rem 0 2.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.intro {
+  background: linear-gradient(135deg, #f4e6ed 0%, #ffffff 45%, #f8f3f6 100%);
+  border: 1px solid #e5d6de;
+  border-radius: 16px;
+  padding: 1.75rem 1.5rem;
+  box-shadow: var(--shadow-soft);
+}
+
+.eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-muted);
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.title {
+  margin: 0.35rem 0 0.4rem;
+  font-size: 2.3rem;
+  color: var(--color-maroon);
+}
+
+.subtitle {
+  margin: 0;
+  color: #333333;
+  max-width: 760px;
+  line-height: 1.55;
+}
+
+.contentGrid {
+  display: grid;
+  grid-template-columns: minmax(18rem, 24rem) minmax(0, 1fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.infoCard,
+.mapCard {
+  background: #ffffff;
+  border: 1px solid #e5d6de;
+  border-radius: 16px;
+  box-shadow: var(--shadow-soft);
+  padding: 1.5rem;
+}
+
+.sectionTitle {
+  margin: 0 0 1rem;
+  color: var(--color-maroon);
+  font-size: 1.4rem;
+}
+
+.text {
+  margin: 0 0 0.8rem;
+  color: #333333;
+  line-height: 1.6;
+}
+
+.link {
+  color: var(--color-maroon);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+.locationNote {
+  margin-top: 1.25rem;
+  padding: 1rem 1.05rem;
+  border-radius: 14px;
+  background: #f8f1f4;
+  border: 1px solid #ead6df;
+}
+
+.noteTitle {
+  margin: 0 0 0.45rem;
+  color: var(--color-maroon-dark);
+  font-size: 1rem;
+}
+
+.noteText {
+  margin: 0;
+  line-height: 1.55;
+  color: #3a3a3a;
+}
+
+.mapFrame {
+  overflow: hidden;
+  border-radius: 14px;
+  border: 1px solid #e7d9e0;
+  background: #f8f1f4;
+}
+
+.mapImage {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+@media (max-width: 900px) {
+  .contentGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 800px) {
+  .main {
+    width: 100%;
+    padding: 1.25rem 0.75rem 2rem;
+  }
+
+  .intro,
+  .infoCard,
+  .mapCard {
+    padding: 1.25rem 1.1rem;
+  }
+
+  .title {
+    font-size: 1.9rem;
+  }
+}

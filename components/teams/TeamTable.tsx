@@ -21,9 +21,11 @@ const TeamTable: React.FC<Props> = ({ teams, isAdmin, onTeamUpdate, onTeamDelete
 
   const filtered = useMemo(
     () =>
-      teams.filter((team) =>
-        (team?.name ?? "").toLowerCase().includes(query.trim().toLowerCase())
-      ),
+      [...teams]
+        .sort((a, b) => (a?.name ?? "").localeCompare(b?.name ?? "", undefined, { sensitivity: "base" }))
+        .filter((team) =>
+          (team?.name ?? "").toLowerCase().includes(query.trim().toLowerCase())
+        ),
     [teams, query]
   );
 
