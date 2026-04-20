@@ -2,6 +2,7 @@ import { NextResponse} from "next/server";
 import * as service from "@/backend/services/team_services";
 import { isAdminRequest } from "@/lib/server/adminAuth";
 import type { Team } from "@/types/team_mod";
+import { isEmptySlotTeam } from "@/lib/teams/specialTeams";
 
 function sanitizeTeam(team: Team): Team {
   return {
@@ -26,16 +27,23 @@ export async function GET(request: Request) {
     if (search === "id") {
         if (id === null) {return NextResponse.json({ error: "Failed to get team" }, { status: 500 });}
         const items = await service.GetTeamById(id);
+        if (!isAdmin && isEmptySlotTeam(items)) {
+          return NextResponse.json({ error: "Team not found" }, { status: 404 });
+        }
         return NextResponse.json(isAdmin ? items : sanitizeTeamPayload(items), { status: 200 });
     }
     if (search === "all") {
         if (id === null) {return NextResponse.json({ error: "Failed to get teams" }, { status: 500 });}
         const items = await service.GetAllTeamsOfSeason(id);
-        return NextResponse.json(isAdmin ? items : sanitizeTeamPayload(items), { status: 200 });
+        const visibleItems = isAdmin ? items : items.filter((team) => !isEmptySlotTeam(team));
+        return NextResponse.json(isAdmin ? visibleItems : sanitizeTeamPayload(visibleItems), { status: 200 });
     }
     if (search === "slug") {
         if (id === null) {return NextResponse.json({ error: "Failed to get team" }, { status: 500 });}
         const items = await service.GetTeamBySlug(id);
+        if (!isAdmin && isEmptySlotTeam(items)) {
+          return NextResponse.json({ error: "Team not found" }, { status: 404 });
+        }
         return NextResponse.json(isAdmin ? items : sanitizeTeamPayload(items), { status: 200 });
     }
     return NextResponse.json({ error: "Missing or invalid search" }, { status: 400 });

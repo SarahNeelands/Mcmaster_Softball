@@ -24,6 +24,7 @@ import {
   filterVisibleByEditingStatus,
   isVisibleByEditingStatus,
 } from "@/lib/data/editing_status";
+import { isEmptySlotTeam, isOpenSlotMatch } from "@/lib/teams/specialTeams";
 
 export default function TeamDetailPage() {
   const params = useParams<{ slug: string }>();
@@ -49,9 +50,27 @@ export default function TeamDetailPage() {
   const canManageContent = isAdmin && !isPreviewing;
 
   const visibleUpcomingGames = useMemo(
-    () => filterVisibleByEditingStatus(upcomingGames, canManageContent),
-    [upcomingGames, canManageContent]
+    () => {
+      const emptySlotTeamIds = new Set(
+        seasonTeams.filter((currentTeam) => isEmptySlotTeam(currentTeam)).map((currentTeam) => currentTeam.id)
+      );
+
+      return filterVisibleByEditingStatus(upcomingGames, canManageContent).filter(
+        (match) => !isOpenSlotMatch(match, emptySlotTeamIds)
+      );
+    },
+    [upcomingGames, seasonTeams, canManageContent]
   );
+
+  const visiblePreviousGames = useMemo(() => {
+    const emptySlotTeamIds = new Set(
+      seasonTeams.filter((currentTeam) => isEmptySlotTeam(currentTeam)).map((currentTeam) => currentTeam.id)
+    );
+
+    return filterVisibleByEditingStatus(previousGames, canManageContent).filter(
+      (match) => !isOpenSlotMatch(match, emptySlotTeamIds)
+    );
+  }, [previousGames, seasonTeams, canManageContent]);
 
   const visibleSeasons = useMemo(
     () => filterVisibleByEditingStatus(allSeasons, canManageContent),
@@ -59,7 +78,7 @@ export default function TeamDetailPage() {
   );
 
   const visibleTeam = useMemo(() => {
-    return isVisibleByEditingStatus(team, canManageContent) ? team : undefined;
+    return isVisibleByEditingStatus(team, canManageContent) && !isEmptySlotTeam(team) ? team : undefined;
   }, [team, canManageContent]);
   const teamId = team?.id;
 
@@ -274,7 +293,7 @@ export default function TeamDetailPage() {
           <TeamDetail
             team={visibleTeam}
             upcomingGames={visibleUpcomingGames}
-            previousGames={previousGames}
+            previousGames={visiblePreviousGames}
             isAdmin={canManageContent}
             updateTeam={handleUpdateTeam}
             teamNamesById={teamNamesById}

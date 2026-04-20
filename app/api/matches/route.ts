@@ -1,8 +1,10 @@
 import { NextResponse} from "next/server";
 import * as service from "@/backend/services/match_services";
+import { isAdminRequest } from "@/lib/server/adminAuth";
 
 export async function GET(req: Request) {
   try {
+    const isAdmin = await isAdminRequest();
     const url = new URL(req.url);
 
     const type = url.searchParams.get("type");
@@ -30,7 +32,7 @@ export async function GET(req: Request) {
     }
 
     if (type === "all") {
-      const matches = await service.GetAllSeasonMatches(seasonId);
+      const matches = await service.GetAllSeasonMatches(seasonId, isAdmin);
       return NextResponse.json(matches, { status: 200 });
     }
 
@@ -42,7 +44,7 @@ export async function GET(req: Request) {
         );
       }
 
-      const matches = await service.GetTeamsSeasonsMatches(teamId, seasonId);
+      const matches = await service.GetTeamsSeasonsMatches(teamId, seasonId, isAdmin);
       return NextResponse.json(matches, { status: 200 });
     }
 

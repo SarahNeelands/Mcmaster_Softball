@@ -5,6 +5,7 @@ import * as seriesRepo from "../repo/series_repo";
 import { AddDivisionTeamStanding, MoveTeamStandingToDivision } from "../repo/standings_repo";
 import { GetAllTeamsOfSeason } from "./team_services";
 import { computeSeededAssignments } from "./series_seed";
+import { filterOutEmptySlotTeams } from "@/lib/teams/specialTeams";
 
 
 //==============================================================================
@@ -61,7 +62,7 @@ export async function CreateDefaultDivision(series_id: string): Promise<Division
         series_id
     );
 
-    const teams = await GetAllTeamsOfSeason(series.season_id);
+    const teams = filterOutEmptySlotTeams(await GetAllTeamsOfSeason(series.season_id));
 
     await Promise.all(
         teams.map(async (team) => {

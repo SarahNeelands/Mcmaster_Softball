@@ -23,8 +23,14 @@ export type ScheduleDay = {
 export type ScheduleTeamOption = {
   id: string;
   name: string;
+  slug: string;
   division_id: string;
   division_name: string;
+};
+
+type DivisionOption = {
+  id: string;
+  name: string;
 };
 
 interface ScheduleEditorProps {
@@ -147,6 +153,28 @@ export default function ScheduleEditor({
     () => new Map(teamOptions.map((team) => [team.name.toLowerCase(), team])),
     [teamOptions]
   );
+  const divisionOptions = useMemo<DivisionOption[]>(() => {
+    const uniqueDivisions = new Map<string, string>();
+
+    for (const team of teamOptions) {
+      if (!team.division_id || !team.division_name || team.name === "Empty") continue;
+      uniqueDivisions.set(team.division_id, team.division_name);
+    }
+
+    return Array.from(uniqueDivisions.entries())
+      .map(([id, name]) => ({ id, name }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [teamOptions]);
+  const divisionById = useMemo(
+    () => new Map(divisionOptions.map((division) => [division.id, division])),
+    [divisionOptions]
+  );
+
+  const emptySlotTeam = useMemo(
+    () => teamOptions.find((team) => team.name === "Empty"),
+    [teamOptions]
+  );
+  const emptySlotTeamId = emptySlotTeam?.id ?? "";
 
   const setDraftValue = (key: string, value: string) => {
     setDraftValues((prev) => ({ ...prev, [key]: value }));
@@ -208,9 +236,9 @@ export default function ScheduleEditor({
     if (side === "home") {
       const nextHomeTeamId = selectedTeam?.id ?? "";
       const nextDivisionId =
-        selectedTeam?.division_id ??
-        (game.away_team_id ? teamById.get(game.away_team_id)?.division_id : "") ??
-        "";
+        selectedTeam?.division_id ||
+        (game.away_team_id ? teamById.get(game.away_team_id)?.division_id : "") ||
+        game.division_id;
 
       if (game.home_team_id !== nextHomeTeamId || game.division_id !== nextDivisionId) {
         updateGame(blockIndex, gameIndex, {
@@ -224,9 +252,9 @@ export default function ScheduleEditor({
 
     const nextAwayTeamId = selectedTeam?.id ?? "";
     const nextDivisionId =
-      selectedTeam?.division_id ??
-      (game.home_team_id ? teamById.get(game.home_team_id)?.division_id : "") ??
-      "";
+      selectedTeam?.division_id ||
+      (game.home_team_id ? teamById.get(game.home_team_id)?.division_id : "") ||
+      game.division_id;
 
     if (game.away_team_id !== nextAwayTeamId || game.division_id !== nextDivisionId) {
       updateGame(blockIndex, gameIndex, {
@@ -328,17 +356,24 @@ export default function ScheduleEditor({
     if (!selectedTeam) return;
 
     const game = day.timeBlocks[blockIndex].games[gameIndex];
+    const nextDivisionId =
+      selectedTeam.division_id ||
+      game.division_id ||
+      (side === "home"
+        ? teamById.get(game.away_team_id)?.division_id
+        : teamById.get(game.home_team_id)?.division_id) ||
+      "";
     const nextGame: ScheduleGame =
       side === "home"
         ? {
             ...game,
             home_team_id: selectedTeam.id,
-            division_id: selectedTeam.division_id,
+            division_id: nextDivisionId,
           }
         : {
             ...game,
             away_team_id: selectedTeam.id,
-            division_id: selectedTeam.division_id,
+            division_id: nextDivisionId,
           };
 
     updateGame(blockIndex, gameIndex, nextGame);
@@ -353,6 +388,49 @@ export default function ScheduleEditor({
     const game = day.timeBlocks[blockIndex].games[gameIndex];
     updateGame(blockIndex, gameIndex, { ...game, field: fieldName });
     setDraftValue(getDraftKey(blockIndex, gameIndex, "field"), fieldName);
+  };
+
+  const selectDivision = (
+    blockIndex: number,
+    gameIndex: number,
+    divisionId: string
+  ) => {
+    const game = day.timeBlocks[blockIndex].games[gameIndex];
+    updateGame(blockIndex, gameIndex, { ...game, division_id: divisionId });
+  };
+
+  const getEffectiveDivision = (game: ScheduleGame) => {
+    const homeTeam = game.home_team_id ? teamById.get(game.home_team_id) : undefined;
+    const awayTeam = game.away_team_id ? teamById.get(game.away_team_id) : undefined;
+
+    const homeIsEmpty = homeTeam?.id === emptySlotTeamId;
+    const awayIsEmpty = awayTeam?.id === emptySlotTeamId;
+
+    if ((!homeTeam || homeIsEmpty) && (!awayTeam || awayIsEmpty)) {
+      return {
+        id: game.division_id,
+        name: game.division_id ? divisionById.get(game.division_id)?.name ?? "Empty" : "Empty",
+      };
+    }
+
+    if (homeTeam && !homeIsEmpty && homeTeam.division_id) {
+      return {
+        id: homeTeam.division_id,
+        name: homeTeam.division_name,
+      };
+    }
+
+    if (awayTeam && !awayIsEmpty && awayTeam.division_id) {
+      return {
+        id: awayTeam.division_id,
+        name: awayTeam.division_name,
+      };
+    }
+
+    return {
+      id: game.division_id,
+      name: game.division_id ? divisionById.get(game.division_id)?.name ?? "Empty" : "Empty",
+    };
   };
 
   const handleDone = () => {
@@ -372,16 +450,22 @@ export default function ScheduleEditor({
 
           const homeTeam = game.home_team_id
             ? teamById.get(game.home_team_id)
-            : teamByName.get(homeDraft.toLowerCase());
+            : teamByName.get(homeDraft.toLowerCase()) ?? emptySlotTeam;
           const awayTeam = game.away_team_id
             ? teamById.get(game.away_team_id)
-            : teamByName.get(awayDraft.toLowerCase());
+            : teamByName.get(awayDraft.toLowerCase()) ?? emptySlotTeam;
+          const resolvedDivisionId =
+            homeTeam?.division_id ||
+            awayTeam?.division_id ||
+            game.division_id ||
+            divisionOptions[0]?.id ||
+            "";
 
           return {
             ...game,
             home_team_id: homeTeam?.id ?? "",
             away_team_id: awayTeam?.id ?? "",
-            division_id: homeTeam?.division_id ?? awayTeam?.division_id ?? game.division_id,
+            division_id: resolvedDivisionId,
             field: fieldDraft || game.field.trim(),
           };
         }),
@@ -395,7 +479,14 @@ export default function ScheduleEditor({
       }
 
       for (const game of block.games) {
-        if (game.home_team_id && game.away_team_id && game.home_team_id === game.away_team_id) {
+        const homeIsEmptySlot = game.home_team_id === emptySlotTeamId;
+
+        if (
+          game.home_team_id &&
+          game.away_team_id &&
+          game.home_team_id === game.away_team_id &&
+          !homeIsEmptySlot
+        ) {
           alert("Home team and away team must be different.");
           return;
         }
@@ -470,19 +561,25 @@ export default function ScheduleEditor({
             {block.games.map((game, gameIndex) => {
               const homeTeam = teamById.get(game.home_team_id);
               const awayTeam = teamById.get(game.away_team_id);
-              const divisionId = homeTeam?.division_id ?? awayTeam?.division_id ?? game.division_id;
-              const divisionName = homeTeam?.division_name ?? awayTeam?.division_name ?? "";
+              const effectiveDivision = getEffectiveDivision(game);
+              const divisionId = effectiveDivision.id;
+              const divisionName = effectiveDivision.name;
+              const hasRealTeamDivision =
+                Boolean(homeTeam?.division_id && homeTeam.id !== emptySlotTeamId) ||
+                Boolean(awayTeam?.division_id && awayTeam.id !== emptySlotTeamId);
 
               const teamPool = divisionId
-                ? teamOptions.filter((team) => team.division_id === divisionId)
+                ? teamOptions.filter(
+                    (team) => team.division_id === divisionId || team.id === emptySlotTeam?.id
+                  )
                 : teamOptions;
 
               const homeOptions = teamPool
-                .filter((team) => team.id !== game.away_team_id)
+                .filter((team) => team.id === emptySlotTeamId || team.id !== game.away_team_id)
                 .map((team) => team.name);
 
               const awayOptions = teamPool
-                .filter((team) => team.id !== game.home_team_id)
+                .filter((team) => team.id === emptySlotTeamId || team.id !== game.home_team_id)
                 .map((team) => team.name);
 
               const homeValue =
@@ -505,7 +602,7 @@ export default function ScheduleEditor({
                       <FilterableSelect
                         value={homeValue}
                         options={homeOptions}
-                        placeholder="Start typing a team name or leave blank for open slot"
+                        placeholder="Start typing a team name or choose Empty"
                         onChange={(value) =>
                           handleTeamInputChange(blockIndex, gameIndex, "home", value)
                         }
@@ -521,8 +618,8 @@ export default function ScheduleEditor({
                         options={awayOptions}
                         placeholder={
                           divisionId
-                            ? "Choose a team or leave blank for open slot"
-                            : "Pick one team first, or leave the other as open slot later"
+                            ? "Choose a team or choose Empty"
+                            : "Pick one team first, or choose Empty for the other side"
                         }
                         onChange={(value) =>
                           handleTeamInputChange(blockIndex, gameIndex, "away", value)
@@ -534,7 +631,18 @@ export default function ScheduleEditor({
 
                     <label className={styles.fieldBlock}>
                       <span>Division</span>
-                      <input value={divisionName} readOnly placeholder="Auto-filled" />
+                      <select
+                        value={divisionId}
+                        disabled={hasRealTeamDivision}
+                        onChange={(e) => selectDivision(blockIndex, gameIndex, e.target.value)}
+                      >
+                        <option value="">{divisionName || "Empty"}</option>
+                        {divisionOptions.map((division) => (
+                          <option key={division.id} value={division.id}>
+                            {division.name}
+                          </option>
+                        ))}
+                      </select>
                     </label>
 
                     <label className={styles.fieldBlock}>

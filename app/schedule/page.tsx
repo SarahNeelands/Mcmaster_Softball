@@ -6,7 +6,7 @@
  */
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Header from "@/components/layout/Header/Header";
 import Footer from "@/components/layout/Footer/Footer";
 import {
@@ -37,6 +37,13 @@ import * as apiD from "@/lib/api/division_api";
 import * as apiT from "@/lib/api/team_api";
 import { useSeasonEditor } from "@/components/layout/Header/header_functions";
 import { filterVisibleByEditingStatus } from "@/lib/data/editing_status";
+import {
+  buildEmptySlotSlug,
+  EMPTY_SLOT_TEAM_NAME,
+  getEmptySlotTeam,
+  isEmptySlotMatch,
+  isEmptySlotTeam,
+} from "@/lib/teams/specialTeams";
 
 function buildScheduleTeamOptions(
   teams: Team[],
@@ -57,6 +64,7 @@ function buildScheduleTeamOptions(
       nextTeamOptions.set(team.id, {
         id: team.id,
         name: team.name,
+        slug: team.slug,
         division_id: division.id,
         division_name: division.name,
       });
@@ -68,10 +76,22 @@ function buildScheduleTeamOptions(
       nextTeamOptions.set(team.id, {
         id: team.id,
         name: team.name,
+        slug: team.slug,
         division_id: "",
         division_name: "",
       });
     }
+  }
+
+  const emptySlotTeam = getEmptySlotTeam(teams);
+  if (emptySlotTeam) {
+    nextTeamOptions.set(emptySlotTeam.id, {
+      id: emptySlotTeam.id,
+      name: emptySlotTeam.name,
+      slug: emptySlotTeam.slug,
+      division_id: "",
+      division_name: "Open Slot",
+    });
   }
 
   return Array.from(nextTeamOptions.values()).sort((a, b) =>
@@ -85,6 +105,8 @@ export default function SchedulePage() {
   const [seasonMatches, setSeasonMatches] = useState<Match[]>([]);
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [showPastGames, setShowPastGames] = useState(false);
+  const [showOpenSlots, setShowOpenSlots] = useState(false);
+  const [teamSearch, setTeamSearch] = useState("");
   const [selectedSeason, setSelectedSeason] = useState<Season>();
   const [allSeasons, setAllSeasons] = useState<Season[]>([]);
   const [selectedSeries, setSelectedSeries] = useState<Series>();
@@ -109,12 +131,71 @@ export default function SchedulePage() {
     return filterVisibleByEditingStatus(seasonMatches, canManageContent);
   }, [seasonMatches, canManageContent]);
 
+  const emptySlotTeamIds = useMemo(
+    () =>
+      new Set(
+        teamOptions
+          .filter((team) => isEmptySlotTeam(team))
+          .map((team) => team.id)
+      ),
+    [teamOptions]
+  );
+
+  const visibleSeriesMatches = useMemo(() => {
+    if (!selectedSeries) return [];
+
+    const divisionIds = new Set([
+      ...(selectedSeries.divisions_ids ?? []),
+      ...teamOptions
+        .map((team) => team.division_id)
+        .filter((divisionId): divisionId is string => Boolean(divisionId)),
+    ]);
+    if (divisionIds.size === 0) return visibleSeasonMatches;
+
+    return visibleSeasonMatches.filter((match) => divisionIds.has(match.division_id));
+  }, [visibleSeasonMatches, selectedSeries, teamOptions]);
+
+  const normalizedTeamSearch = teamSearch.trim().toLowerCase();
+  const searchableTeamOptions = useMemo(
+    () => teamOptions.filter((team) => !isEmptySlotTeam(team)),
+    [teamOptions]
+  );
+
+  const filteredTeamOptions = useMemo(() => {
+    if (!normalizedTeamSearch) return searchableTeamOptions;
+
+    return searchableTeamOptions.filter((team) =>
+      team.name.toLowerCase().includes(normalizedTeamSearch)
+    );
+  }, [searchableTeamOptions, normalizedTeamSearch]);
+
+  const selectedTeam = useMemo(() => {
+    if (!normalizedTeamSearch) return undefined;
+
+    return searchableTeamOptions.find(
+      (team) => team.name.toLowerCase() === normalizedTeamSearch
+    );
+  }, [searchableTeamOptions, normalizedTeamSearch]);
+
   const visibleMatches = useMemo(() => {
-    const { upcoming, previous } = splitMatches(visibleSeasonMatches, comparisonNow);
-    return canManageContent && showPastGames
+    const openSlotFilteredMatches = visibleSeriesMatches.filter((match) =>
+      canManageContent && showOpenSlots
+        ? true
+        : !isEmptySlotMatch(match, emptySlotTeamIds)
+    );
+
+    const teamFilteredMatches = selectedTeam
+      ? openSlotFilteredMatches.filter(
+          (match) =>
+            match.home_team_id === selectedTeam.id || match.away_team_id === selectedTeam.id
+        )
+      : openSlotFilteredMatches;
+
+    const { upcoming, previous } = splitMatches(teamFilteredMatches, comparisonNow);
+    return showPastGames
       ? [...upcoming, ...previous]
       : upcoming;
-  }, [visibleSeasonMatches, canManageContent, showPastGames, comparisonNow]);
+  }, [visibleSeriesMatches, canManageContent, showOpenSlots, emptySlotTeamIds, selectedTeam, showPastGames, comparisonNow]);
 
   const visibleSeasons = useMemo(
     () => filterVisibleByEditingStatus(allSeasons, canManageContent),
@@ -162,6 +243,32 @@ export default function SchedulePage() {
     );
   };
 
+  const ensureEmptySlotTeamForSeason = useCallback(
+    async (seasonId: string, teams: Team[]): Promise<Team[]> => {
+      if (!canManageContent) return teams;
+
+      const existing = getEmptySlotTeam(teams);
+      if (existing) return teams;
+
+      const created = await apiT.CreateTeam(
+        {
+          id: "",
+          slug: buildEmptySlotSlug(seasonId),
+          name: EMPTY_SLOT_TEAM_NAME,
+          captain_name: "",
+          co_captain_name: "",
+          captain_email: "",
+          co_captain_email: "",
+          editing_status: "published",
+        },
+        seasonId
+      );
+
+      return [...teams, created].sort((a, b) => a.name.localeCompare(b.name));
+    },
+    [canManageContent]
+  );
+
   const reloadSeries = async (season?: Season) => {
     if (!season) return;
 
@@ -176,6 +283,7 @@ export default function SchedulePage() {
     const nextSelectedSeries =
       filteredSeries.find((series) => series.id === selectedSeries?.id) ?? currentSeries;
 
+    setTeamSearch("");
     setSelectedSeries(nextSelectedSeries);
     setAllSeries(filteredSeries);
   };
@@ -213,6 +321,18 @@ export default function SchedulePage() {
     await fetchMatches(selectedSeason);
   };
 
+  const handleSeasonSelect = (season: Season) => {
+    setTeamSearch("");
+    setShowOpenSlots(false);
+    setSelectedSeason(season);
+  };
+
+  const handleSeriesSelect = (series: Series) => {
+    setTeamSearch("");
+    setShowOpenSlots(false);
+    setSelectedSeries(series);
+  };
+
   const handleEditorClose = async (day: ScheduleDay | null) => {
     setIsEditing(false);
 
@@ -223,32 +343,21 @@ export default function SchedulePage() {
       return;
     }
 
-    const createPlaceholderTeam = async (divisionId: string, slotLabel: "Home" | "Away") => {
-      const stamp = `${day.date || "undated"}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-      const createdTeam = await apiT.CreateTeam(
-        {
-          id: "",
-          slug: "",
-          name: `Open Slot ${slotLabel} ${stamp}`,
-          captain_name: "",
-          co_captain_name: "",
-          captain_email: "",
-          co_captain_email: "",
-          editing_status: "draft",
-        },
-        selectedSeason.id
-      );
+    const teams = await ensureEmptySlotTeamForSeason(
+      selectedSeason.id,
+      await apiT.GetSeasonTeams(selectedSeason.id)
+    );
+    const emptySlotTeam = getEmptySlotTeam(teams);
 
-      await apiD.MoveDivisionTeam(createdTeam.id, "", divisionId, selectedSeries.id);
-      return createdTeam.id;
-    };
+    if (!emptySlotTeam) {
+      alert("Failed to prepare the Empty team for open slots.");
+      return;
+    }
 
     for (const block of day.timeBlocks) {
       for (const game of block.games) {
-        const homeTeamId =
-          game.home_team_id || (game.division_id ? await createPlaceholderTeam(game.division_id, "Home") : "");
-        const awayTeamId =
-          game.away_team_id || (game.division_id ? await createPlaceholderTeam(game.division_id, "Away") : "");
+        const homeTeamId = game.home_team_id || emptySlotTeam.id;
+        const awayTeamId = game.away_team_id || emptySlotTeam.id;
 
         await apiM.CreateMatch({
           id: "",
@@ -274,7 +383,6 @@ export default function SchedulePage() {
 
     const divisionsData = await apiD.GetDivisions("", selectedSeries.id, "all");
     const divisions = (Array.isArray(divisionsData) ? divisionsData : [divisionsData]) as Division[];
-    const teams = await apiT.GetSeasonTeams(selectedSeason.id);
     setTeamOptions(buildScheduleTeamOptions(teams, divisions));
     await fetchMatches(selectedSeason);
   };
@@ -292,6 +400,8 @@ export default function SchedulePage() {
         return;
       }
 
+      setTeamSearch("");
+      setShowOpenSlots(false);
       setSelectedSeason(currentSeason);
 
       const all = await apiS.GetSeasons("", "all");
@@ -320,6 +430,8 @@ export default function SchedulePage() {
         const currentData = await apiS.GetSeasons("", "current");
         const currentSeason = Array.isArray(currentData) ? currentData[0] : currentData;
         if (currentSeason) {
+          setTeamSearch("");
+          setShowOpenSlots(false);
           setSelectedSeason(currentSeason);
         }
       } catch (err) {
@@ -334,14 +446,17 @@ export default function SchedulePage() {
     if (!selectedSeason) return;
 
     const loadSeasonData = async () => {
-      const [teams, currentSeriesData, allSeriesData] = await Promise.all([
+      const [teamsData, currentSeriesData, allSeriesData] = await Promise.all([
         apiT.GetSeasonTeams(selectedSeason.id),
         apiSeries.GetSeries("", selectedSeason.id, "current"),
         apiSeries.GetSeries("", selectedSeason.id, "all"),
       ]);
+      const teams = await ensureEmptySlotTeamForSeason(selectedSeason.id, teamsData);
 
       const currentSeries = Array.isArray(currentSeriesData) ? currentSeriesData[0] : currentSeriesData;
       const seasonSeries = Array.isArray(allSeriesData) ? allSeriesData : [allSeriesData];
+      setTeamSearch("");
+      setShowOpenSlots(false);
       setSelectedSeries(currentSeries);
       setAllSeries(seasonSeries.filter(Boolean));
 
@@ -358,7 +473,7 @@ export default function SchedulePage() {
     loadSeasonData().catch((err) =>
       console.error("Error fetching schedule data:", err)
     );
-  }, [selectedSeason]);
+  }, [selectedSeason, ensureEmptySlotTeamForSeason]);
 
   useEffect(() => {
     if (!selectedSeason || !selectedSeries) return;
@@ -368,12 +483,13 @@ export default function SchedulePage() {
         apiT.GetSeasonTeams(selectedSeason.id),
         apiD.GetDivisions("", selectedSeries.id, "all"),
       ]);
+      const seasonTeams = await ensureEmptySlotTeamForSeason(selectedSeason.id, teams);
       const divisions = (Array.isArray(divisionsData) ? divisionsData : [divisionsData]) as Division[];
-      setTeamOptions(buildScheduleTeamOptions(teams, divisions));
+      setTeamOptions(buildScheduleTeamOptions(seasonTeams, divisions));
     };
 
     loadSeriesTeams().catch((err) => console.error("Error fetching series teams:", err));
-  }, [selectedSeason, selectedSeries]);
+  }, [selectedSeason, selectedSeries, ensureEmptySlotTeamForSeason]);
 
   const handleSaveSeries = async (
     payload: Omit<Series, "id" | "divisions_ids">,
@@ -402,7 +518,7 @@ export default function SchedulePage() {
         onRevert={canManageContent ? handleRevert : undefined}
         seasons={visibleSeasons}
         selectedSeason={selectedSeason}
-        onSelect={(season) => setSelectedSeason(season)}
+        onSelect={handleSeasonSelect}
         onOpenCreateSeason={openCreateSeason}
         onOpenEditSeason={openEditSeason}
       />
@@ -443,12 +559,12 @@ export default function SchedulePage() {
       )}
 
       <main className={styles.main}>
-        {canManageContent && (
-          <div className={styles.filterBar}>
+        <div className={styles.filterBar}>
+          {canManageContent && (
             <SeriesDropdownButton
               series={visibleSeries}
               selectedSeries={selectedSeries}
-              onSelect={(series) => setSelectedSeries(series)}
+              onSelect={handleSeriesSelect}
               onOpenCreateSeries={() => {
                 setEditingSeries(undefined);
                 setCreatingSeries(true);
@@ -457,15 +573,43 @@ export default function SchedulePage() {
               isAdmin={canManageContent}
               showCaret={false}
             />
+          )}
+          <div className={styles.teamFilter}>
+            <label htmlFor="schedule-team-filter" className={styles.teamFilterLabel}>
+              Team
+            </label>
+            <input
+              id="schedule-team-filter"
+              type="text"
+              list="schedule-team-filter-options"
+              className={styles.teamFilterInput}
+              placeholder="Type a team name"
+              value={teamSearch}
+              onChange={(e) => setTeamSearch(e.target.value)}
+            />
+            <datalist id="schedule-team-filter-options">
+              {filteredTeamOptions.map((team) => (
+                <option key={team.id} value={team.name} />
+              ))}
+            </datalist>
+          </div>
+          {canManageContent && (
             <button
               type="button"
               className={styles.togglePastButton}
-              onClick={() => setShowPastGames((prev) => !prev)}
+              onClick={() => setShowOpenSlots((prev) => !prev)}
             >
-              {showPastGames ? "Hide Past Games" : "Show Past Games"}
+              {showOpenSlots ? "Hide Open Slots" : "Show Open Slots"}
             </button>
-          </div>
-        )}
+          )}
+          <button
+            type="button"
+            className={styles.togglePastButton}
+            onClick={() => setShowPastGames((prev) => !prev)}
+          >
+            {showPastGames ? "Hide Past Games" : "Show Past Games"}
+          </button>
+        </div>
 
         <div className={styles.contentGrid}>
           <div className={styles.scheduleColumn}>
@@ -476,6 +620,7 @@ export default function SchedulePage() {
               teamOptions={teamOptions.map((team) => ({
                 id: team.id,
                 name: team.name,
+                slug: team.slug,
                 division_id: team.division_id,
               }))}
               updateMatch={handleUpdateMatch}

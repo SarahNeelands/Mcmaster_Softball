@@ -25,6 +25,11 @@ import * as apiM from "@/lib/api/match_api";
 import * as apiT from "@/lib/api/team_api";
 import { useSeasonEditor } from "@/components/layout/Header/header_functions";
 import { filterVisibleByEditingStatus } from "@/lib/data/editing_status";
+import {
+  filterOutEmptySlotTeams,
+  isEmptySlotTeam,
+  isOpenSlotMatch,
+} from "@/lib/teams/specialTeams";
 
 export default function Home() {
   const [isAdmin, setIsAdmin] = useState(false);
@@ -147,11 +152,21 @@ export default function Home() {
   );
 
   const visibleMatches = useMemo(
-    () => ({
-      upcoming: filterVisibleByEditingStatus(upcoming, canManageContent),
-      previous: filterVisibleByEditingStatus(previous, canManageContent),
-    }),
-    [upcoming, previous, canManageContent]
+    () => {
+      const emptySlotTeamIds = new Set(
+        seasonTeams.filter((team) => isEmptySlotTeam(team)).map((team) => team.id)
+      );
+
+      return {
+        upcoming: filterVisibleByEditingStatus(upcoming, canManageContent).filter(
+          (match) => !isOpenSlotMatch(match, emptySlotTeamIds)
+        ),
+        previous: filterVisibleByEditingStatus(previous, canManageContent).filter(
+          (match) => !isOpenSlotMatch(match, emptySlotTeamIds)
+        ),
+      };
+    },
+    [upcoming, previous, seasonTeams, canManageContent]
   );
 
   const visibleSeasons = useMemo(
@@ -165,7 +180,7 @@ export default function Home() {
   const teamNamesById = useMemo(
     () =>
       Object.fromEntries(
-        seasonTeams.map((team) => [team.id, team.name])
+        filterOutEmptySlotTeams(seasonTeams).map((team) => [team.id, team.name])
       ) as Record<string, string>,
     [seasonTeams]
   );
@@ -173,7 +188,7 @@ export default function Home() {
   const teamSlugsById = useMemo(
     () =>
       Object.fromEntries(
-        seasonTeams.map((team) => [team.id, team.slug])
+        filterOutEmptySlotTeams(seasonTeams).map((team) => [team.id, team.slug])
       ) as Record<string, string>,
     [seasonTeams]
   );
@@ -276,7 +291,7 @@ export default function Home() {
               previous={visiblePrevious}
               teamNamesById={teamNamesById}
               teamSlugsById={teamSlugsById}
-              teamOptions={seasonTeams.map((team) => ({ id: team.id, name: team.name }))}
+              teamOptions={filterOutEmptySlotTeams(seasonTeams).map((team) => ({ id: team.id, name: team.name }))}
               isAdmin={canManageContent}
               updateMatch={handleUpdateMatch}
               deleteMatch={handleDeleteMatch}

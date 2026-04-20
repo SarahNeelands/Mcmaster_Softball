@@ -1,6 +1,7 @@
 import { pool } from "../database/db";
 import { Match } from "../../types/match_mod";
 import { ScoreSubmissionLink, ScoreSubmissionSide } from "../../types/score_submission_mod";
+import { EMPTY_SLOT_SLUG_PREFIX } from "@/lib/teams/specialTeams";
 
 export type MatchWithTeams = Match & {
   home_team_name: string;
@@ -31,7 +32,9 @@ export async function getMatchWithTeamsById(matchId: string) {
      FROM matches m
      JOIN teams ht ON ht.id = m.home_team_id
      JOIN teams at ON at.id = m.away_team_id
-     WHERE m.id = $1`,
+     WHERE m.id = $1
+       AND ht.slug NOT LIKE '${EMPTY_SLOT_SLUG_PREFIX}%'
+       AND at.slug NOT LIKE '${EMPTY_SLOT_SLUG_PREFIX}%'`,
     [matchId]
   );
 
@@ -73,7 +76,9 @@ export async function getMatchByTokenHash(tokenHash: string) {
      JOIN matches m ON m.id = l.match_id
      JOIN teams ht ON ht.id = m.home_team_id
      JOIN teams at ON at.id = m.away_team_id
-     WHERE l.token_hash = $1`,
+     WHERE l.token_hash = $1
+       AND ht.slug NOT LIKE '${EMPTY_SLOT_SLUG_PREFIX}%'
+       AND at.slug NOT LIKE '${EMPTY_SLOT_SLUG_PREFIX}%'`,
     [tokenHash]
   );
 
@@ -236,6 +241,8 @@ export async function getMatchesNeedingScoreRequests(windowEndIso: string) {
      JOIN teams ht ON ht.id = m.home_team_id
      JOIN teams at ON at.id = m.away_team_id
      WHERE m.editing_status <> 'deleted'
+       AND ht.slug NOT LIKE '${EMPTY_SLOT_SLUG_PREFIX}%'
+       AND at.slug NOT LIKE '${EMPTY_SLOT_SLUG_PREFIX}%'
        AND m.home_score IS NULL
        AND m.away_score IS NULL
        AND (m.score_status = 'unrequested' OR m.score_status = 'awaiting_scores')
@@ -285,6 +292,8 @@ export async function getMatchesReadyForSingleSidePublish() {
      JOIN teams ht ON ht.id = m.home_team_id
      JOIN teams at ON at.id = m.away_team_id
      WHERE m.score_status IN ('awaiting_scores', 'published_single_submission')
+       AND ht.slug NOT LIKE '${EMPTY_SLOT_SLUG_PREFIX}%'
+       AND at.slug NOT LIKE '${EMPTY_SLOT_SLUG_PREFIX}%'
        AND m.first_submitted_at IS NOT NULL
        AND m.first_submitted_at <= NOW() - INTERVAL '24 hours'
        AND m.founder_notified_single_at IS NULL`
@@ -305,6 +314,8 @@ export async function getMatchesReadyForNoSubmissionNotice() {
      JOIN teams ht ON ht.id = m.home_team_id
      JOIN teams at ON at.id = m.away_team_id
      WHERE m.score_request_sent_at IS NOT NULL
+       AND ht.slug NOT LIKE '${EMPTY_SLOT_SLUG_PREFIX}%'
+       AND at.slug NOT LIKE '${EMPTY_SLOT_SLUG_PREFIX}%'
        AND m.score_request_sent_at <= NOW() - INTERVAL '24 hours'
        AND m.home_score IS NULL
        AND m.away_score IS NULL
@@ -328,6 +339,8 @@ export async function getMatchesNeedingConflictNotice() {
      JOIN teams ht ON ht.id = m.home_team_id
      JOIN teams at ON at.id = m.away_team_id
      WHERE m.score_status = 'conflict_pending_founder'
+       AND ht.slug NOT LIKE '${EMPTY_SLOT_SLUG_PREFIX}%'
+       AND at.slug NOT LIKE '${EMPTY_SLOT_SLUG_PREFIX}%'
        AND m.founder_notified_conflict_at IS NULL`
   );
 

@@ -6,14 +6,21 @@ import { RecalculateDivisionStandings } from "./standing_service";
 // Matches GET functions
 //==============================================================================
 
-export async function GetAllSeasonMatches(season_id: string): Promise<Match[]> {
-    const data = await repo.GetAllSeasonMatches(season_id);
+export async function GetAllSeasonMatches(
+    season_id: string,
+    includeOpenSlotMatches = true
+): Promise<Match[]> {
+    const data = await repo.GetAllSeasonMatches(season_id, includeOpenSlotMatches);
     if (!data){return []}
     return data;
 }
 
-export async function GetTeamsSeasonsMatches(team_id: string, season_id: string): Promise<Match[]> {
-        const data = await repo.GetTeamsSeasonsMatches(team_id, season_id);
+export async function GetTeamsSeasonsMatches(
+    team_id: string,
+    season_id: string,
+    includeOpenSlotMatches = true
+): Promise<Match[]> {
+        const data = await repo.GetTeamsSeasonsMatches(team_id, season_id, includeOpenSlotMatches);
     if (!data){return []}
     return data;
 }

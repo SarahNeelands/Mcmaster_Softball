@@ -6,6 +6,7 @@
  */
 
 import React from "react";
+import Link from "next/link";
 import UpcomingMatches from "./UpcomingMatches";
 import PreviousResults from "./PreviousResults";
 import styles from "./MatchesSection.module.css";
@@ -57,9 +58,9 @@ const MatchesSection: React.FC<MatchesSectionProps> = ({
         />
       </div>
       <div className={styles.footerCta}>
-        <button type="button" className={styles.viewScheduleButton}>
+        <Link href="/schedule" className={styles.viewScheduleButton}>
           View Full Schedule
-        </button>
+        </Link>
       </div>
     </section>
   );

@@ -3,6 +3,7 @@ import * as repo from "../repo/standings_repo"
 import { GetTeamById } from "./team_services";
 import * as divisionsRepo from "../repo/divisions_repo";
 import * as matchesRepo from "../repo/matches_repo";
+import { isEmptySlotTeam } from "@/lib/teams/specialTeams";
 
 //==============================================================================
 // Standing GET functions
@@ -18,7 +19,8 @@ export async function GetAllSeriesRankings(series_id: string): Promise<Standing[
     return [];
   }
 
-  return Promise.all(data.map((m) => FormatStanding(m)));
+  const standings = await Promise.all(data.map((m) => FormatStanding(m)));
+  return standings.filter((standing): standing is Standing => Boolean(standing));
 }
 
 export async function GetAllDivisionRankings(division_id: string): Promise<Standing[]> {
@@ -30,7 +32,8 @@ export async function GetAllDivisionRankings(division_id: string): Promise<Stand
     return [];
   }
 
-  return Promise.all(data.map((m) => FormatStanding(m)));
+  const standings = await Promise.all(data.map((m) => FormatStanding(m)));
+  return standings.filter((standing): standing is Standing => Boolean(standing));
 }
 
 export async function GetTeamsStanding(
@@ -60,8 +63,11 @@ export async function GetTeamsStanding(
 // Standing Formate functions
 //==============================================================================
 
-export async function FormatStanding(stand: repo.StandingRow): Promise<Standing> {
+export async function FormatStanding(stand: repo.StandingRow): Promise<Standing | null> {
   const team = await GetTeamById(stand.team_id);
+  if (isEmptySlotTeam(team)) {
+    return null;
+  }
   const standing: Standing =
   {
   id: stand.id,
@@ -133,6 +139,9 @@ export async function RecalculateDivisionStandings(division_id: string): Promise
       if (!total) return;
 
       const team = await GetTeamById(standing.team_id);
+      if (isEmptySlotTeam(team)) {
+        return;
+      }
       await repo.UpdateStandings({
         id: standing.id,
         division_id: standing.division_id,

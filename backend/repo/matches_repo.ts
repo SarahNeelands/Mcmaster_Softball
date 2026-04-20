@@ -19,6 +19,7 @@
 
 import { pool } from "../database/db";
 import { Match } from "../../types/match_mod";
+import { EMPTY_SLOT_SLUG_PREFIX } from "@/lib/teams/specialTeams";
 
 let hasScoreWorkflowColumnsPromise: Promise<boolean> | null = null;
 
@@ -74,15 +75,22 @@ export async function GetAllMatches(): Promise<Match[]> {
   );
   return rows.map(hydrateMatch);
 }
-export async function GetAllSeasonMatches(seasonId: string): Promise<Match[]> {
+export async function GetAllSeasonMatches(
+  seasonId: string,
+  includeOpenSlotMatches = true
+): Promise<Match[]> {
   const { rows } = await pool.query<Match>(
     `
     SELECT m.*
     FROM matches m
     JOIN divisions d ON d.id = m.division_id
     JOIN series s ON s.id = d.series_id
+    JOIN teams ht ON ht.id = m.home_team_id
+    JOIN teams at ON at.id = m.away_team_id
     WHERE s.season_id = $1
       AND m.editing_status <> 'deleted'
+      ${includeOpenSlotMatches ? "" : `AND ht.slug NOT LIKE '${EMPTY_SLOT_SLUG_PREFIX}%'
+      AND at.slug NOT LIKE '${EMPTY_SLOT_SLUG_PREFIX}%'`}
     ORDER BY m.date, m.time;
     `,
     [seasonId]
@@ -118,7 +126,8 @@ export async function GetMatchesByDate(date: string) {
 
 export async function GetTeamsSeasonsMatches(
   team_id: string,
-  season_id: string
+  season_id: string,
+  includeOpenSlotMatches = true
 ): Promise<Match[]> {
   const { rows } = await pool.query<Match>(
     `
@@ -126,9 +135,13 @@ export async function GetTeamsSeasonsMatches(
     FROM matches m
     JOIN divisions d ON d.id = m.division_id
     JOIN series s ON s.id = d.series_id
+    JOIN teams ht ON ht.id = m.home_team_id
+    JOIN teams at ON at.id = m.away_team_id
     WHERE s.season_id = $1
       AND m.editing_status <> 'deleted'
       AND (m.home_team_id = $2 OR m.away_team_id = $2)
+      ${includeOpenSlotMatches ? "" : `AND ht.slug NOT LIKE '${EMPTY_SLOT_SLUG_PREFIX}%'
+      AND at.slug NOT LIKE '${EMPTY_SLOT_SLUG_PREFIX}%'`}
     ORDER BY m.date, m.time;
     `,
     [season_id, team_id]

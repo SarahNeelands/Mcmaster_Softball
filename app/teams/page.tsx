@@ -20,6 +20,7 @@ import * as apiT from "@/lib/api/team_api";
 import * as apiSeries from "@/lib/api/series_api";
 import { useSeasonEditor } from "@/components/layout/Header/header_functions";
 import { filterVisibleByEditingStatus } from "@/lib/data/editing_status";
+import { filterOutEmptySlotTeams } from "@/lib/teams/specialTeams";
 
 export default function TeamsPage() {
   const [isAdmin, setIsAdmin] = useState(false);
@@ -36,7 +37,7 @@ export default function TeamsPage() {
   const canManageContent = isAdmin && !isPreviewing;
 
   const visibleTeams = useMemo(
-    () => filterVisibleByEditingStatus(teams, canManageContent),
+    () => filterOutEmptySlotTeams(filterVisibleByEditingStatus(teams, canManageContent)),
     [teams, canManageContent]
   );
 

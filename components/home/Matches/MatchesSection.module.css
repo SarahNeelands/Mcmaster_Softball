@@ -39,6 +39,9 @@
 }
 
 .viewScheduleButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border: 1px solid var(--color-maroon);
   background: transparent;
   color: var(--color-maroon);
@@ -47,6 +50,7 @@
   font-weight: 600;
   cursor: pointer;
   transition: background 0.2s ease, color 0.2s ease;
+  text-decoration: none;
 }
 
 .viewScheduleButton:hover {

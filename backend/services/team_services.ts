@@ -3,6 +3,7 @@ import * as repo from "../repo/teams_repo"
 import { MarkTeamMatchesDeleted } from "../repo/matches_repo";
 import { MarkTeamStandingsDeleted } from "../repo/standings_repo";
 import { RecalculateDivisionStandings } from "./standing_service";
+import { buildEmptySlotSlug, EMPTY_SLOT_TEAM_NAME, getEmptySlotTeam } from "@/lib/teams/specialTeams";
 
 
 //==============================================================================
@@ -30,7 +31,7 @@ export async function GetTeamBySlug(slug: string): Promise<Team>
 
 
 export async function AddNewTeam(team: Team, season_id: string): Promise<Team> {
-  const slug = makeSlug(team.name);
+  const slug = team.slug?.trim() || makeSlug(team.name);
   team.slug = slug;
 
 
@@ -38,6 +39,29 @@ export async function AddNewTeam(team: Team, season_id: string): Promise<Team> {
   console.log(season_id);
 
   return await repo.AddNewTeam(team, season_id);
+}
+
+export async function EnsureSeasonHasEmptySlotTeam(season_id: string): Promise<Team> {
+  const teams = await GetAllTeamsOfSeason(season_id);
+  const existing = getEmptySlotTeam(teams);
+
+  if (existing) {
+    return existing;
+  }
+
+  return await repo.AddNewTeam(
+    {
+      id: "",
+      slug: buildEmptySlotSlug(season_id),
+      name: EMPTY_SLOT_TEAM_NAME,
+      captain_name: "",
+      captain_email: "",
+      co_captain_name: "",
+      co_captain_email: "",
+      editing_status: "published",
+    },
+    season_id
+  );
 }
 
 //==============================================================================

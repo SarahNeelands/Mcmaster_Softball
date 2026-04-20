@@ -20,6 +20,7 @@ import * as apiT from "@/lib/api/team_api";
 import * as apiM from "@/lib/api/match_api";
 import { useSeasonEditor } from "@/components/layout/Header/header_functions";
 import { filterVisibleByEditingStatus } from "@/lib/data/editing_status";
+import { filterOutEmptySlotTeams } from "@/lib/teams/specialTeams";
 
 export default function StandingsPage() {
   const [isAdmin, setIsAdmin] = useState(false);
@@ -64,7 +65,7 @@ export default function StandingsPage() {
   );
 
   const visibleSeasonTeams = useMemo(
-    () => filterVisibleByEditingStatus(seasonTeams, canManageContent),
+    () => filterOutEmptySlotTeams(filterVisibleByEditingStatus(seasonTeams, canManageContent)),
     [seasonTeams, canManageContent]
   );
 
