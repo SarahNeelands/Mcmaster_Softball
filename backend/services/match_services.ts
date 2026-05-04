@@ -31,6 +31,15 @@ export async function GetTeamsSeasonsMatches(
 
 export async function UpdateMatch(update: Match)
 {
+    const existing = await repo.GetMatchById(update.id);
+    if (!existing) {
+        throw new Error(`Match not found: ${update.id}`);
+    }
+
+    if (!update.division_id) {
+        update.division_id = existing.division_id;
+    }
+
     if (
         update.home_score !== null &&
         update.away_score !== null &&
@@ -41,9 +50,23 @@ export async function UpdateMatch(update: Match)
     }
 
     const data = await repo.UpdateMatch(update);
-    if (data.home_score !== null && data.away_score !== null) {
-        await RecalculateDivisionStandings(data.division_id);
+    const divisionIdsToRecalculate = new Set<string>();
+    const existingWasOfficial = existing.home_score !== null && existing.away_score !== null;
+    const updatedIsOfficial = data.home_score !== null && data.away_score !== null;
+
+    if (existingWasOfficial && existing.division_id) {
+        divisionIdsToRecalculate.add(existing.division_id);
     }
+
+    if (updatedIsOfficial && data.division_id) {
+        divisionIdsToRecalculate.add(data.division_id);
+    }
+
+    await Promise.all(
+        Array.from(divisionIdsToRecalculate).map((division_id) =>
+            RecalculateDivisionStandings(division_id)
+        )
+    );
     return data;
 }
 
@@ -54,7 +77,6 @@ export async function DeleteMatch(match: Match)
 {
     match.editing_status = "deleted";
     const data = await UpdateMatch(match);
-    await RecalculateDivisionStandings(match.division_id);
     return data;
 }
 
@@ -63,6 +85,9 @@ export async function DeleteMatch(match: Match)
 //==============================================================================
 export async function AddNewMatch(match: Match) 
 {
+    if (!match.division_id) {
+        throw new Error("Match division_id is required.");
+    }
     const data = await repo.AddNewMatch(match);
     return data;
 }

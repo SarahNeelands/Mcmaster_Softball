@@ -1,0 +1,2 @@
+ALTER TABLE seasons
+  ADD COLUMN IF NOT EXISTS score_notifications_enabled BOOLEAN NOT NULL DEFAULT FALSE;

@@ -17,6 +17,8 @@ interface HeaderProps {
   onSelect: (season: Season) => void;
   onOpenCreateSeason: () => void;
   onOpenEditSeason: (season?: Season) => void;
+  onToggleTesterNotifications?: (enabled: boolean) => void;
+  testerNotificationsBusy?: boolean;
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -31,7 +33,11 @@ const Header: React.FC<HeaderProps> = ({
   onSelect,
   onOpenCreateSeason,
   onOpenEditSeason,
+  onToggleTesterNotifications,
+  testerNotificationsBusy = false,
 }) => {
+  const showTesterNotifications = Boolean(isAdmin && selectedSeason?.admin_only && onToggleTesterNotifications);
+
   return (
     <header className={styles.header}>
       <div className={styles.leftGroup}>
@@ -81,6 +87,19 @@ const Header: React.FC<HeaderProps> = ({
                   >
                     {isPreviewing ? "Exit Preview" : "Preview"}
                   </button>
+                )}
+                {showTesterNotifications && (
+                  <label className={styles.checkboxButton}>
+                    <input
+                      type="checkbox"
+                      checked={Boolean(selectedSeason?.score_notifications_enabled)}
+                      disabled={testerNotificationsBusy}
+                      onChange={(e) => onToggleTesterNotifications?.(e.target.checked)}
+                    />
+                    <span>
+                      {testerNotificationsBusy ? "Updating..." : "Push Notifications"}
+                    </span>
+                  </label>
                 )}
                 {!isPreviewing && onRevert && (
                   <button

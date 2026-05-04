@@ -33,6 +33,7 @@ export default function TeamsPage() {
   const [allSeries, setAllSeries] = useState<Series[]>([]);
   const [editingSeries, setEditingSeries] = useState<Series>();
   const [creatingSeries, setCreatingSeries] = useState(false);
+  const [testerNotificationsBusy, setTesterNotificationsBusy] = useState(false);
 
   const canManageContent = isAdmin && !isPreviewing;
 
@@ -147,6 +148,34 @@ export default function TeamsPage() {
     }
   };
 
+  const handleToggleTesterNotifications = async (enabled: boolean) => {
+    if (!selectedSeason) return;
+
+    const previousSeason = selectedSeason;
+    const nextSeason = { ...selectedSeason, score_notifications_enabled: enabled };
+    setSelectedSeason(nextSeason);
+    setAllSeasons((prev) => prev.map((season) => (season.id === nextSeason.id ? nextSeason : season)));
+    setTesterNotificationsBusy(true);
+
+    try {
+      const saved = await apiS.UpdateSeason(nextSeason);
+      setSelectedSeason(saved);
+      setAllSeasons((prev) => prev.map((season) => (season.id === saved.id ? saved : season)));
+
+      if (enabled) {
+        const result = await apiS.PrepareSeasonScoreRequests(saved.id);
+        const prepared = Array.isArray(result.preparedMatchIds) ? result.preparedMatchIds.length : 0;
+        alert(prepared > 0 ? `Prepared score request emails for ${prepared} match(es).` : "Notifications enabled. No eligible matches were found in the next 24 hours.");
+      }
+    } catch (err) {
+      setSelectedSeason(previousSeason);
+      setAllSeasons((prev) => prev.map((season) => (season.id === previousSeason.id ? previousSeason : season)));
+      alert(err instanceof Error ? err.message : "Failed to update Tester Season notifications.");
+    } finally {
+      setTesterNotificationsBusy(false);
+    }
+  };
+
   useEffect(() => {
     const load = async () => {
       const session = await apiAdmin.GetAdminSession();
@@ -248,6 +277,8 @@ export default function TeamsPage() {
         onSelect={(s) => setSelectedSeason(s)}
         onOpenCreateSeason={openCreateSeason}
         onOpenEditSeason={openEditSeason}
+        onToggleTesterNotifications={handleToggleTesterNotifications}
+        testerNotificationsBusy={testerNotificationsBusy}
       />
 
       {canManageContent && (creatingSeries || editingSeries) && (

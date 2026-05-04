@@ -30,6 +30,7 @@ export default function SeasonEditor({ initialSeason, onCancel, onSave }: Props)
   const [startDate, setStartDate] = useState(today);
   const [endDate, setEndDate] = useState(defaultEnd);
   const [editingStatus, setEditingStatus] = useState<Season["editing_status"]>("draft");
+  const [adminOnly, setAdminOnly] = useState(false);
 
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -40,6 +41,7 @@ export default function SeasonEditor({ initialSeason, onCancel, onSave }: Props)
     setStartDate(toDateInputValue(initialSeason?.start_date) || today);
     setEndDate(toDateInputValue(initialSeason?.end_date) || defaultEnd);
     setEditingStatus(initialSeason?.editing_status ?? "draft");
+    setAdminOnly(initialSeason?.admin_only ?? false);
     setError(null);
     }, [initialSeason, today, defaultEnd]);
 
@@ -68,6 +70,7 @@ export default function SeasonEditor({ initialSeason, onCancel, onSave }: Props)
           start_date: startDate,
           end_date: endDate,
           editing_status: editingStatus,
+          admin_only: adminOnly,
         },
         initialSeason?.id
       );
@@ -129,6 +132,18 @@ export default function SeasonEditor({ initialSeason, onCancel, onSave }: Props)
               <option value="published">published</option>
               <option value="archived">archived</option>
               <option value="deleted">deleted</option>
+            </select>
+          </label>
+
+          <label className="seasonEditorLabel">
+            <span>Visibility</span>
+            <select
+              className="seasonEditorSelect"
+              value={adminOnly ? "admin_only" : "public"}
+              onChange={(e) => setAdminOnly(e.target.value === "admin_only")}
+            >
+              <option value="public">Public season</option>
+              <option value="admin_only">Admin-only Tester season</option>
             </select>
           </label>
 

@@ -41,3 +41,14 @@ export async function DeleteSeason(data: Season) {
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
+
+export async function PrepareSeasonScoreRequests(season_id: string) {
+  const res = await fetch("/api/score-requests/season", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ season_id }),
+  });
+
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}

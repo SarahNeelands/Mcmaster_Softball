@@ -35,8 +35,13 @@ export default function SeasonDropdownButton({
     (s) => typeof s?.name === "string" && s.name.trim().length > 0
   );
 
+  const getSeasonLabel = (season?: Season) => {
+    if (!season?.name?.trim()) return "";
+    return season.admin_only ? `${season.name} (Tester Season)` : season.name;
+  };
+
   const label = selectedSeason?.name?.trim()
-    ? `Season: ${selectedSeason.name}`
+    ? `Season: ${getSeasonLabel(selectedSeason)}`
     : "Season: Select";
 
   return (
@@ -87,7 +92,7 @@ export default function SeasonDropdownButton({
                       setOpen(false);
                     }}
                   >
-                    {season.name}
+                    {getSeasonLabel(season)}
                   </button>
                   {onOpenEditSeason && isSelected && (
                     <button

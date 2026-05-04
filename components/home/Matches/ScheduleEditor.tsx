@@ -33,6 +33,12 @@ type DivisionOption = {
   name: string;
 };
 
+function isUnassignedTeam(team?: ScheduleTeamOption, emptySlotTeamId?: string) {
+  if (!team) return true;
+  if (emptySlotTeamId && team.id === emptySlotTeamId) return true;
+  return !team.division_id;
+}
+
 interface ScheduleEditorProps {
   teamOptions: ScheduleTeamOption[];
   fieldOptions: string[];
@@ -61,20 +67,24 @@ function FilterableSelect({
   onKeyDown,
 }: FilterableSelectProps) {
   const [open, setOpen] = useState(false);
+  const uniqueOptions = useMemo(
+    () => Array.from(new Set(options)),
+    [options]
+  );
 
   const filtered = useMemo(() => {
     const query = value.trim().toLowerCase();
 
     if (!query) {
-      return options;
+      return uniqueOptions;
     }
 
-    return options.filter((option) =>
+    return uniqueOptions.filter((option) =>
       option.toLowerCase().includes(query)
     );
-  }, [options, value]);
+  }, [uniqueOptions, value]);
 
-  const hasExactMatch = options.some(
+  const hasExactMatch = uniqueOptions.some(
     (option) => option.toLowerCase() === value.trim().toLowerCase()
   );
 
@@ -235,10 +245,13 @@ export default function ScheduleEditor({
 
     if (side === "home") {
       const nextHomeTeamId = selectedTeam?.id ?? "";
+      const awayTeam = game.away_team_id ? teamById.get(game.away_team_id) : undefined;
       const nextDivisionId =
         selectedTeam?.division_id ||
-        (game.away_team_id ? teamById.get(game.away_team_id)?.division_id : "") ||
-        game.division_id;
+        awayTeam?.division_id ||
+        (isUnassignedTeam(selectedTeam, emptySlotTeamId) && isUnassignedTeam(awayTeam, emptySlotTeamId)
+          ? ""
+          : game.division_id);
 
       if (game.home_team_id !== nextHomeTeamId || game.division_id !== nextDivisionId) {
         updateGame(blockIndex, gameIndex, {
@@ -251,10 +264,13 @@ export default function ScheduleEditor({
     }
 
     const nextAwayTeamId = selectedTeam?.id ?? "";
+    const homeTeam = game.home_team_id ? teamById.get(game.home_team_id) : undefined;
     const nextDivisionId =
       selectedTeam?.division_id ||
-      (game.home_team_id ? teamById.get(game.home_team_id)?.division_id : "") ||
-      game.division_id;
+      homeTeam?.division_id ||
+      (isUnassignedTeam(selectedTeam, emptySlotTeamId) && isUnassignedTeam(homeTeam, emptySlotTeamId)
+        ? ""
+        : game.division_id);
 
     if (game.away_team_id !== nextAwayTeamId || game.division_id !== nextDivisionId) {
       updateGame(blockIndex, gameIndex, {
@@ -356,12 +372,17 @@ export default function ScheduleEditor({
     if (!selectedTeam) return;
 
     const game = day.timeBlocks[blockIndex].games[gameIndex];
+    const opposingTeam =
+      side === "home"
+        ? teamById.get(game.away_team_id)
+        : teamById.get(game.home_team_id);
     const nextDivisionId =
       selectedTeam.division_id ||
-      game.division_id ||
-      (side === "home"
-        ? teamById.get(game.away_team_id)?.division_id
-        : teamById.get(game.home_team_id)?.division_id) ||
+      opposingTeam?.division_id ||
+      (isUnassignedTeam(selectedTeam, emptySlotTeamId) &&
+      isUnassignedTeam(opposingTeam, emptySlotTeamId)
+        ? ""
+        : game.division_id) ||
       "";
     const nextGame: ScheduleGame =
       side === "home"
@@ -408,8 +429,8 @@ export default function ScheduleEditor({
 
     if ((!homeTeam || homeIsEmpty) && (!awayTeam || awayIsEmpty)) {
       return {
-        id: game.division_id,
-        name: game.division_id ? divisionById.get(game.division_id)?.name ?? "Empty" : "Empty",
+        id: "",
+        name: "Open Slot",
       };
     }
 
@@ -455,11 +476,14 @@ export default function ScheduleEditor({
             ? teamById.get(game.away_team_id)
             : teamByName.get(awayDraft.toLowerCase()) ?? emptySlotTeam;
           const resolvedDivisionId =
-            homeTeam?.division_id ||
-            awayTeam?.division_id ||
-            game.division_id ||
-            divisionOptions[0]?.id ||
-            "";
+            isUnassignedTeam(homeTeam, emptySlotTeamId) &&
+            isUnassignedTeam(awayTeam, emptySlotTeamId)
+              ? ""
+              : homeTeam?.division_id ||
+                awayTeam?.division_id ||
+                game.division_id ||
+                divisionOptions[0]?.id ||
+                "";
 
           return {
             ...game,
@@ -480,6 +504,12 @@ export default function ScheduleEditor({
 
       for (const game of block.games) {
         const homeIsEmptySlot = game.home_team_id === emptySlotTeamId;
+        const awayIsEmptySlot = game.away_team_id === emptySlotTeamId;
+        const homeTeam = game.home_team_id ? teamById.get(game.home_team_id) : undefined;
+        const awayTeam = game.away_team_id ? teamById.get(game.away_team_id) : undefined;
+        const canLeaveWithoutDivision =
+          isUnassignedTeam(homeTeam, emptySlotTeamId) &&
+          isUnassignedTeam(awayTeam, emptySlotTeamId);
 
         if (
           game.home_team_id &&
@@ -497,8 +527,8 @@ export default function ScheduleEditor({
         }
 
         if (
-          !game.division_id ||
-          !game.field
+          !game.field ||
+          (!game.division_id && !canLeaveWithoutDivision && !homeIsEmptySlot && !awayIsEmptySlot)
         ) {
           alert("Each game needs a division and field, plus at least one assigned team.");
           return;

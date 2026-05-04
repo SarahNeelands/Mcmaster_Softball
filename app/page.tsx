@@ -7,6 +7,7 @@ import type { Announcement } from "@/types/announcement_mod";
 import type { Match } from "@/types/match_mod";
 import type { Season } from "@/types/season_mod";
 import type { Team } from "@/types/team_mod";
+import type { Division } from "@/types/division_mod";
 
 import { splitMatches } from "@/lib/matches/sortingFunctions";
 
@@ -23,13 +24,56 @@ import * as apiP from "@/lib/api/publish_api";
 import * as apiS from "@/lib/api/season_api";
 import * as apiM from "@/lib/api/match_api";
 import * as apiT from "@/lib/api/team_api";
+import * as apiSeries from "@/lib/api/series_api";
+import * as apiD from "@/lib/api/division_api";
 import { useSeasonEditor } from "@/components/layout/Header/header_functions";
 import { filterVisibleByEditingStatus } from "@/lib/data/editing_status";
 import {
   filterOutEmptySlotTeams,
+  getEmptySlotTeam,
   isEmptySlotTeam,
   isOpenSlotMatch,
 } from "@/lib/teams/specialTeams";
+
+function buildHomeMatchTeamOptions(
+  teams: Team[],
+  divisions: Division[]
+): { id: string; name: string; division_id?: string }[] {
+  const teamsById = new Map<string, Team>(teams.map((team) => [team.id, team]));
+  const nextTeamOptions = new Map<string, { id: string; name: string; division_id?: string }>();
+
+  for (const division of divisions) {
+    const divisionTeamIds = Array.isArray(division.teamIDs) && division.teamIDs.length > 0
+      ? division.teamIDs
+      : (division.standings ?? []).map((standing) => standing.team.id);
+
+    for (const teamId of divisionTeamIds) {
+      const team = teamsById.get(teamId);
+      if (!team) continue;
+
+      nextTeamOptions.set(team.id, {
+        id: team.id,
+        name: team.name,
+        division_id: division.id,
+      });
+    }
+  }
+
+  for (const team of teams) {
+    if (nextTeamOptions.has(team.id)) continue;
+    nextTeamOptions.set(team.id, { id: team.id, name: team.name });
+  }
+
+  const emptySlotTeam = getEmptySlotTeam(teams);
+  if (emptySlotTeam) {
+    nextTeamOptions.set(emptySlotTeam.id, {
+      id: emptySlotTeam.id,
+      name: emptySlotTeam.name,
+    });
+  }
+
+  return Array.from(nextTeamOptions.values()).sort((a, b) => a.name.localeCompare(b.name));
+}
 
 export default function Home() {
   const [isAdmin, setIsAdmin] = useState(false);
@@ -44,6 +88,10 @@ export default function Home() {
   const [selectedSeason, setSelectedSeason] = useState<Season>();
   const [allSeasons, setAllSeasons] = useState<Season[]>([]);
   const [seasonTeams, setSeasonTeams] = useState<Team[]>([]);
+  const [matchTeamOptions, setMatchTeamOptions] = useState<
+    { id: string; name: string; division_id?: string }[]
+  >([]);
+  const [testerNotificationsBusy, setTesterNotificationsBusy] = useState(false);
 
   const [screen, setScreen] = useState<"home" | "seasonEditor">("home");
 
@@ -63,14 +111,21 @@ export default function Home() {
   const canManageContent = isAdmin && !isPreviewing;
 
   const loadSeasonData = async (season: Season) => {
-    const [teams, active, archived, matches] = await Promise.all([
+    const [teams, active, archived, matches, currentSeriesData] = await Promise.all([
       apiT.GetSeasonTeams(season.id),
       apiA.GetAnnouncements(season.id, "active"),
       apiA.GetAnnouncements(season.id, "archived"),
       apiM.GetSeasonMatches(season.id),
+      apiSeries.GetSeries("", season.id, "current"),
     ]);
+    const nextCurrentSeries = Array.isArray(currentSeriesData) ? currentSeriesData[0] : currentSeriesData;
+    const divisionsData = nextCurrentSeries
+      ? await apiD.GetDivisions("", nextCurrentSeries.id, "all")
+      : [];
+    const divisions = (Array.isArray(divisionsData) ? divisionsData : [divisionsData]) as Division[];
 
     setSeasonTeams(teams);
+    setMatchTeamOptions(buildHomeMatchTeamOptions(teams, divisions));
     setActiveAnnouncements(active);
     setArchivedAnnouncements(archived);
 
@@ -141,6 +196,34 @@ export default function Home() {
     const parts = splitMatches(allmatches, new Date());
     setUpcoming(parts.upcoming);
     setPrevious(parts.previous);
+  };
+
+  const handleToggleTesterNotifications = async (enabled: boolean) => {
+    if (!selectedSeason) return;
+
+    const previousSeason = selectedSeason;
+    const nextSeason = { ...selectedSeason, score_notifications_enabled: enabled };
+    setSelectedSeason(nextSeason);
+    setAllSeasons((prev) => prev.map((season) => (season.id === nextSeason.id ? nextSeason : season)));
+    setTesterNotificationsBusy(true);
+
+    try {
+      const saved = await apiS.UpdateSeason(nextSeason);
+      setSelectedSeason(saved);
+      setAllSeasons((prev) => prev.map((season) => (season.id === saved.id ? saved : season)));
+
+      if (enabled) {
+        const result = await apiS.PrepareSeasonScoreRequests(saved.id);
+        const prepared = Array.isArray(result.preparedMatchIds) ? result.preparedMatchIds.length : 0;
+        alert(prepared > 0 ? `Prepared score request emails for ${prepared} match(es).` : "Notifications enabled. No eligible matches were found in the next 24 hours.");
+      }
+    } catch (err) {
+      setSelectedSeason(previousSeason);
+      setAllSeasons((prev) => prev.map((season) => (season.id === previousSeason.id ? previousSeason : season)));
+      alert(err instanceof Error ? err.message : "Failed to update Tester Season notifications.");
+    } finally {
+      setTesterNotificationsBusy(false);
+    }
   };
 
   const visibleAnnouncements = useMemo(
@@ -272,6 +355,8 @@ export default function Home() {
         onSelect={(s) => setSelectedSeason(s)}
         onOpenCreateSeason={openCreateSeason}
         onOpenEditSeason={openEditSeason}
+        onToggleTesterNotifications={handleToggleTesterNotifications}
+        testerNotificationsBusy={testerNotificationsBusy}
       />
 
       <HeroBanner />
@@ -291,7 +376,7 @@ export default function Home() {
               previous={visiblePrevious}
               teamNamesById={teamNamesById}
               teamSlugsById={teamSlugsById}
-              teamOptions={filterOutEmptySlotTeams(seasonTeams).map((team) => ({ id: team.id, name: team.name }))}
+              teamOptions={matchTeamOptions}
               isAdmin={canManageContent}
               updateMatch={handleUpdateMatch}
               deleteMatch={handleDeleteMatch}

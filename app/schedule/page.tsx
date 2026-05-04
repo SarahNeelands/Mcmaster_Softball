@@ -71,16 +71,16 @@ function buildScheduleTeamOptions(
     }
   }
 
-  if (nextTeamOptions.size === 0) {
-    for (const team of teams) {
-      nextTeamOptions.set(team.id, {
-        id: team.id,
-        name: team.name,
-        slug: team.slug,
-        division_id: "",
-        division_name: "",
-      });
-    }
+  for (const team of teams) {
+    if (nextTeamOptions.has(team.id)) continue;
+
+    nextTeamOptions.set(team.id, {
+      id: team.id,
+      name: team.name,
+      slug: team.slug,
+      division_id: "",
+      division_name: "",
+    });
   }
 
   const emptySlotTeam = getEmptySlotTeam(teams);
@@ -116,6 +116,7 @@ export default function SchedulePage() {
   const [teamOptions, setTeamOptions] = useState<ScheduleTeamOption[]>([]);
   const [fieldOptions, setFieldOptions] = useState<string[]>([]);
   const [comparisonNow] = useState(() => new Date());
+  const [testerNotificationsBusy, setTesterNotificationsBusy] = useState(false);
   const [, setScreen] = useState<"home" | "seasonEditor">("home");
 
   const { openCreateSeason, openEditSeason } = useSeasonEditor({
@@ -152,7 +153,9 @@ export default function SchedulePage() {
     ]);
     if (divisionIds.size === 0) return visibleSeasonMatches;
 
-    return visibleSeasonMatches.filter((match) => divisionIds.has(match.division_id));
+    return visibleSeasonMatches.filter(
+      (match) => !match.division_id || divisionIds.has(match.division_id)
+    );
   }, [visibleSeasonMatches, selectedSeries, teamOptions]);
 
   const normalizedTeamSearch = teamSearch.trim().toLowerCase();
@@ -333,6 +336,34 @@ export default function SchedulePage() {
     setSelectedSeries(series);
   };
 
+  const handleToggleTesterNotifications = async (enabled: boolean) => {
+    if (!selectedSeason) return;
+
+    const previousSeason = selectedSeason;
+    const nextSeason = { ...selectedSeason, score_notifications_enabled: enabled };
+    setSelectedSeason(nextSeason);
+    setAllSeasons((prev) => prev.map((season) => (season.id === nextSeason.id ? nextSeason : season)));
+    setTesterNotificationsBusy(true);
+
+    try {
+      const saved = await apiS.UpdateSeason(nextSeason);
+      setSelectedSeason(saved);
+      setAllSeasons((prev) => prev.map((season) => (season.id === saved.id ? saved : season)));
+
+      if (enabled) {
+        const result = await apiS.PrepareSeasonScoreRequests(saved.id);
+        const prepared = Array.isArray(result.preparedMatchIds) ? result.preparedMatchIds.length : 0;
+        alert(prepared > 0 ? `Prepared score request emails for ${prepared} match(es).` : "Notifications enabled. No eligible matches were found in the next 24 hours.");
+      }
+    } catch (err) {
+      setSelectedSeason(previousSeason);
+      setAllSeasons((prev) => prev.map((season) => (season.id === previousSeason.id ? previousSeason : season)));
+      alert(err instanceof Error ? err.message : "Failed to update Tester Season notifications.");
+    } finally {
+      setTesterNotificationsBusy(false);
+    }
+  };
+
   const handleEditorClose = async (day: ScheduleDay | null) => {
     setIsEditing(false);
 
@@ -354,10 +385,18 @@ export default function SchedulePage() {
       return;
     }
 
+    const fallbackDivisionId = selectedSeries.divisions_ids?.[0] ?? "";
+
     for (const block of day.timeBlocks) {
       for (const game of block.games) {
         const homeTeamId = game.home_team_id || emptySlotTeam.id;
         const awayTeamId = game.away_team_id || emptySlotTeam.id;
+        const persistedDivisionId = game.division_id || fallbackDivisionId;
+
+        if (!persistedDivisionId) {
+          alert("Open-slot games still need at least one real division in the selected series before they can be saved.");
+          return;
+        }
 
         await apiM.CreateMatch({
           id: "",
@@ -366,7 +405,7 @@ export default function SchedulePage() {
           home_team_id: homeTeamId,
           away_team_id: awayTeamId,
           field: game.field,
-          division_id: game.division_id,
+          division_id: persistedDivisionId,
           home_score: null,
           away_score: null,
           score_status: "unrequested",
@@ -521,6 +560,8 @@ export default function SchedulePage() {
         onSelect={handleSeasonSelect}
         onOpenCreateSeason={openCreateSeason}
         onOpenEditSeason={openEditSeason}
+        onToggleTesterNotifications={handleToggleTesterNotifications}
+        testerNotificationsBusy={testerNotificationsBusy}
       />
 
       {canManageContent && (creatingSeries || editingSeries) && (

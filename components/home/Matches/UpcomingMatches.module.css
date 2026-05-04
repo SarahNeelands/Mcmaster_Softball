@@ -286,6 +286,28 @@
   align-items: center;
 }
 
+.scoreGroup {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  justify-self: end;
+}
+
+.scoreInput {
+  width: 5.5rem;
+  min-height: 2.5rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  font-size: 1.05rem;
+  text-align: center;
+}
+
+.scoreSeparator {
+  color: var(--color-muted);
+  font-weight: 600;
+}
+
 @media (max-width: 720px) {
   .panel {
     padding: 1.1rem;
@@ -324,5 +346,9 @@
 
   .team {
     font-size: 0.9rem;
+  }
+
+  .scoreGroup {
+    justify-self: start;
   }
 }

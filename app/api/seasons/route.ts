@@ -1,14 +1,16 @@
 import { NextResponse} from "next/server";
 import * as service from "@/backend/services/season_services";
+import { isAdminRequest } from "@/lib/server/adminAuth";
 
 export async function GET(request: Request) {
   try {
+    const isAdmin = await isAdminRequest();
     const url = new URL(request.url);
     const season_id = url.searchParams.get("season_id");
     const search = url.searchParams.get("type"); // "current" | "specific" | "all"
 
     if (search === "current") {
-      const items = await service.GetCurrentSeason();
+      const items = await service.GetCurrentSeason(isAdmin);
       return NextResponse.json(items, { status: 200 });
     }
 
@@ -16,12 +18,12 @@ export async function GET(request: Request) {
       if (!season_id) {
         return NextResponse.json({ error: "Missing season_id" }, { status: 400 });
       }
-      const items = await service.GetSeasonById(season_id);
+      const items = await service.GetSeasonById(season_id, isAdmin);
       return NextResponse.json(items, { status: 200 });
     }
 
     if (search === "all") {
-      const items = await service.GetAllSeasons();
+      const items = await service.GetAllSeasons(isAdmin);
       return NextResponse.json(items ?? [], { status: 200 });
     }
 

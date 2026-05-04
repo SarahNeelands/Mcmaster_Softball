@@ -34,6 +34,7 @@ export default function StandingsPage() {
   const [creatingDivision, setCreatingDivision] = useState(false);
   const [editingSeries, setEditingSeries] = useState<Series>();
   const [creatingSeries, setCreatingSeries] = useState(false);
+  const [testerNotificationsBusy, setTesterNotificationsBusy] = useState(false);
   const [draggingTeam, setDraggingTeam] = useState<{
     team_id: string;
     source_division_id: string;
@@ -218,6 +219,34 @@ export default function StandingsPage() {
     }
   };
 
+  const handleToggleTesterNotifications = async (enabled: boolean) => {
+    if (!selectedSeason) return;
+
+    const previousSeason = selectedSeason;
+    const nextSeason = { ...selectedSeason, score_notifications_enabled: enabled };
+    setSelectedSeason(nextSeason);
+    setAllSeasons((prev) => prev.map((season) => (season.id === nextSeason.id ? nextSeason : season)));
+    setTesterNotificationsBusy(true);
+
+    try {
+      const saved = await apiS.UpdateSeason(nextSeason);
+      setSelectedSeason(saved);
+      setAllSeasons((prev) => prev.map((season) => (season.id === saved.id ? saved : season)));
+
+      if (enabled) {
+        const result = await apiS.PrepareSeasonScoreRequests(saved.id);
+        const prepared = Array.isArray(result.preparedMatchIds) ? result.preparedMatchIds.length : 0;
+        alert(prepared > 0 ? `Prepared score request emails for ${prepared} match(es).` : "Notifications enabled. No eligible matches were found in the next 24 hours.");
+      }
+    } catch (err) {
+      setSelectedSeason(previousSeason);
+      setAllSeasons((prev) => prev.map((season) => (season.id === previousSeason.id ? previousSeason : season)));
+      alert(err instanceof Error ? err.message : "Failed to update Tester Season notifications.");
+    } finally {
+      setTesterNotificationsBusy(false);
+    }
+  };
+
   const handleCreateDivision = async (division: Division) => {
     if (!selectedSeries) return;
     await apiD.CreateDivision(division, selectedSeries.id);
@@ -303,6 +332,8 @@ export default function StandingsPage() {
         onSelect={(season) => setSelectedSeason(season)}
         onOpenCreateSeason={openCreateSeason}
         onOpenEditSeason={openEditSeason}
+        onToggleTesterNotifications={handleToggleTesterNotifications}
+        testerNotificationsBusy={testerNotificationsBusy}
       />
 
       {canManageContent && (creatingSeries || editingSeries) && (

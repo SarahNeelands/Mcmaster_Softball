@@ -46,7 +46,8 @@
 .publishButton,
 .previewButton,
 .toggleButton,
-.undoButton {
+.undoButton,
+.checkboxButton {
   border: 1px solid var(--color-maroon);
   background: transparent;
   color: var(--color-maroon);
@@ -62,9 +63,20 @@
 .publishButton:hover,
 .previewButton:hover,
 .toggleButton:hover,
-.undoButton:hover {
+.undoButton:hover,
+.checkboxButton:hover {
   background: var(--color-maroon);
   color: var(--color-text-inverse);
+}
+
+.checkboxButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.checkboxButton input {
+  margin: 0;
 }
 
 @media (max-width: 720px) {

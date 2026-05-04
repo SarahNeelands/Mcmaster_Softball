@@ -33,6 +33,8 @@ CREATE TABLE seasons (
   name TEXT NOT NULL,
   start_date DATE,
   end_date DATE,
+  admin_only BOOLEAN NOT NULL DEFAULT FALSE,
+  score_notifications_enabled BOOLEAN NOT NULL DEFAULT FALSE,
   editing_status TEXT NOT NULL CHECK (editing_status IN ('draft','published','deleted'))
 );
 

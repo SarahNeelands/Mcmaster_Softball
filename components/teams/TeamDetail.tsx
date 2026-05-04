@@ -15,6 +15,7 @@ interface Props {
   deleteMatch?: (match: Match) => Promise<unknown>;
   teamNamesById?: Record<string, string>;
   teamSlugsById?: Record<string, string>;
+  teamOptions?: { id: string; name: string; division_id?: string }[];
 }
 
 function buildCalendarMonths(matches: Match[]) {
@@ -48,6 +49,7 @@ export default function TeamDetail({
   deleteMatch,
   teamNamesById = {},
   teamSlugsById = {},
+  teamOptions = [],
 }: Props) {
   const [isEditingTeam, setIsEditingTeam] = useState(false);
   const [draftTeam, setDraftTeam] = useState<Team>(team);
@@ -212,6 +214,7 @@ export default function TeamDetail({
           previous={previousGames}
           teamNamesById={teamNamesById}
           teamSlugsById={teamSlugsById}
+          teamOptions={teamOptions}
           isAdmin={isAdmin}
           updateMatch={updateMatch ?? (async () => {})}
           deleteMatch={deleteMatch}

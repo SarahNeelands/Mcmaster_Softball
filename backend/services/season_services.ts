@@ -3,27 +3,36 @@ import * as repo from "../repo/seasons_repo";
 import { GetSeasonSeriesIds } from "./series_services";
 import { GetAllTeamsOfSeason } from "./team_services";
 
+function isAdminOnlySeason(season: Pick<Season, "admin_only"> | null | undefined): boolean {
+  return Boolean(season?.admin_only);
+}
+
 //==============================================================================
 // Season GET functions
 //==============================================================================
 
-export async function GetCurrentSeason(): Promise<Season> {
-  const current = await repo.GetCurrentSeason();
+export async function GetCurrentSeason(includeAdminOnly = false): Promise<Season> {
+  const all = await GetAllSeasons(includeAdminOnly);
+  const today = new Date().toISOString().slice(0, 10);
+
+  const current = all.find(
+    (season) => season.start_date <= today && season.end_date >= today
+  );
 
   if (current) {
-    return await FormatSeason(current);
+    return current;
   }
 
-  const previous = await repo.GetPreviousSeason();
+  const previous = [...all]
+    .filter((season) => season.end_date < today)
+    .sort((a, b) => b.end_date.localeCompare(a.end_date))[0];
 
   if (previous) {
-    return await FormatSeason(previous);
+    return previous;
   }
 
-  const all = await repo.GetAllSeasons();
-
   if (all.length > 0) {
-    return await FormatSeason(all[0]);
+    return all[0];
   }
 
   const date = new Date();
@@ -41,28 +50,36 @@ export async function GetCurrentSeason(): Promise<Season> {
     start_date: start,
     end_date: end,
     editing_status: "draft",
+    admin_only: false,
+    score_notifications_enabled: false,
   };
 
   const created = await CreateNewSeason(n);
   return await FormatSeason(created);
 }
 
-export async function GetAllSeasons(): Promise<Season[]> {
+export async function GetAllSeasons(includeAdminOnly = false): Promise<Season[]> {
   const data = await repo.GetAllSeasons();
-  if (data && data.length > 0) {
-    return await Promise.all(data.map((m) => FormatSeason(m)));
-  }
-  return [];
+  const seasons = data && data.length > 0
+    ? await Promise.all(data.map((m) => FormatSeason(m)))
+    : [];
+
+  return includeAdminOnly ? seasons : seasons.filter((season) => !isAdminOnlySeason(season));
 }
 
-export async function GetSeasonById(id: string): Promise<Season> {
+export async function GetSeasonById(id: string, includeAdminOnly = false): Promise<Season> {
   const rows = await repo.GetSeasonById(id);
 
   if (!rows || rows.length === 0) {
     throw new Error(`Season not found: ${id}`);
   }
 
-  return await FormatSeason(rows[0]);
+  const season = await FormatSeason(rows[0]);
+  if (!includeAdminOnly && isAdminOnlySeason(season)) {
+    throw new Error(`Season not found: ${id}`);
+  }
+
+  return season;
 }
 
 //==============================================================================
@@ -122,6 +139,8 @@ export async function FormatSeason(season: repo.SeasonRow): Promise<Season> {
     name: season.name,
     series_ids: ids,
     editing_status: season.editing_status,
+    admin_only: season.admin_only ?? false,
+    score_notifications_enabled: season.score_notifications_enabled ?? false,
     start_date: season.start_date,
     end_date: season.end_date,
   };

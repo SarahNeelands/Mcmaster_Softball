@@ -229,7 +229,7 @@ export async function updateMatchScoreState(input: {
   return rows[0] ?? null;
 }
 
-export async function getMatchesNeedingScoreRequests(windowEndIso: string) {
+export async function getMatchesNeedingScoreRequests(windowEndIso: string, seasonId?: string) {
   const { rows } = await pool.query<MatchWithTeams>(
     `SELECT
        m.*,
@@ -238,9 +238,14 @@ export async function getMatchesNeedingScoreRequests(windowEndIso: string) {
        ht.captain_email AS home_captain_email,
        at.captain_email AS away_captain_email
      FROM matches m
+     JOIN divisions d ON d.id = m.division_id
+     JOIN series sr ON sr.id = d.series_id
+     JOIN seasons s ON s.id = sr.season_id
      JOIN teams ht ON ht.id = m.home_team_id
      JOIN teams at ON at.id = m.away_team_id
      WHERE m.editing_status <> 'deleted'
+       AND ($2::uuid IS NULL OR s.id = $2)
+       AND (COALESCE(s.admin_only, FALSE) = FALSE OR COALESCE(s.score_notifications_enabled, FALSE) = TRUE)
        AND ht.slug NOT LIKE '${EMPTY_SLOT_SLUG_PREFIX}%'
        AND at.slug NOT LIKE '${EMPTY_SLOT_SLUG_PREFIX}%'
        AND m.home_score IS NULL
@@ -274,7 +279,7 @@ export async function getMatchesNeedingScoreRequests(windowEndIso: string) {
          )
        )
      ORDER BY m.date, m.time`,
-    [windowEndIso]
+    [windowEndIso, seasonId ?? null]
   );
 
   return rows;

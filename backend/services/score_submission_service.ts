@@ -240,6 +240,19 @@ export async function runDailyScoreCron() {
   };
 }
 
+export async function prepareScoreRequestsForSeason(seasonId: string) {
+  const windowEnd = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+  const matches = await repo.getMatchesNeedingScoreRequests(windowEnd, seasonId);
+  const preparedMatchIds: string[] = [];
+
+  for (const match of matches) {
+    await sendScoreRequestEmails(match.id);
+    preparedMatchIds.push(match.id);
+  }
+
+  return { preparedMatchIds };
+}
+
 async function notifyFounderConflict(match: repo.MatchWithTeams, links: ScoreSubmissionLink[]) {
   if (match.founder_notified_conflict_at) {
     return;

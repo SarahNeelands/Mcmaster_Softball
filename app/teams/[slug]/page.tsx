@@ -38,6 +38,7 @@ export default function TeamDetailPage() {
   const [loading, setLoading] = useState(true);
   const [selectedSeason, setSelectedSeason] = useState<Season>();
   const [allSeasons, setAllSeasons] = useState<Season[]>([]);
+  const [testerNotificationsBusy, setTesterNotificationsBusy] = useState(false);
   const [, setScreen] = useState<"home" | "seasonEditor">("home");
 
   const { openCreateSeason, openEditSeason } = useSeasonEditor({
@@ -173,6 +174,13 @@ export default function TeamDetailPage() {
     }
   };
 
+  const handleUpdateMatch = async (updated: Match) => {
+    await apiM.UpdateMatch(updated);
+    if (selectedSeason && team) {
+      await loadTeamSeasonData(selectedSeason, team.id);
+    }
+  };
+
   const handleUpdateTeam = async (updatedTeam: Team) => {
     await apiT.UpdateTeam(updatedTeam);
     const refreshedTeam = await apiT.GetTeam(updatedTeam.id);
@@ -189,6 +197,34 @@ export default function TeamDetailPage() {
     if (selectedSeason) {
       const teams = await apiT.GetSeasonTeams(selectedSeason.id);
       setSeasonTeams(teams);
+    }
+  };
+
+  const handleToggleTesterNotifications = async (enabled: boolean) => {
+    if (!selectedSeason) return;
+
+    const previousSeason = selectedSeason;
+    const nextSeason = { ...selectedSeason, score_notifications_enabled: enabled };
+    setSelectedSeason(nextSeason);
+    setAllSeasons((prev) => prev.map((season) => (season.id === nextSeason.id ? nextSeason : season)));
+    setTesterNotificationsBusy(true);
+
+    try {
+      const saved = await apiS.UpdateSeason(nextSeason);
+      setSelectedSeason(saved);
+      setAllSeasons((prev) => prev.map((season) => (season.id === saved.id ? saved : season)));
+
+      if (enabled) {
+        const result = await apiS.PrepareSeasonScoreRequests(saved.id);
+        const prepared = Array.isArray(result.preparedMatchIds) ? result.preparedMatchIds.length : 0;
+        alert(prepared > 0 ? `Prepared score request emails for ${prepared} match(es).` : "Notifications enabled. No eligible matches were found in the next 24 hours.");
+      }
+    } catch (err) {
+      setSelectedSeason(previousSeason);
+      setAllSeasons((prev) => prev.map((season) => (season.id === previousSeason.id ? previousSeason : season)));
+      alert(err instanceof Error ? err.message : "Failed to update Tester Season notifications.");
+    } finally {
+      setTesterNotificationsBusy(false);
     }
   };
 
@@ -285,21 +321,28 @@ export default function TeamDetailPage() {
         onSelect={(season) => setSelectedSeason(season)}
         onOpenCreateSeason={openCreateSeason}
         onOpenEditSeason={openEditSeason}
+        onToggleTesterNotifications={handleToggleTesterNotifications}
+        testerNotificationsBusy={testerNotificationsBusy}
       />
 
       <main className={styles.main}>
         {loading && <p>Loading team...</p>}
         {!loading && visibleTeam && (
-          <TeamDetail
-            team={visibleTeam}
-            upcomingGames={visibleUpcomingGames}
-            previousGames={visiblePreviousGames}
-            isAdmin={canManageContent}
-            updateTeam={handleUpdateTeam}
-            teamNamesById={teamNamesById}
-            teamSlugsById={teamSlugsById}
-            deleteMatch={handleDeleteMatch}
-          />
+        <TeamDetail
+          team={visibleTeam}
+          upcomingGames={visibleUpcomingGames}
+          previousGames={visiblePreviousGames}
+          isAdmin={canManageContent}
+          updateTeam={handleUpdateTeam}
+          updateMatch={handleUpdateMatch}
+          teamNamesById={teamNamesById}
+          teamSlugsById={teamSlugsById}
+          teamOptions={seasonTeams.map((currentTeam) => ({
+            id: currentTeam.id,
+            name: currentTeam.name,
+          }))}
+          deleteMatch={handleDeleteMatch}
+        />
         )}
         {!loading && !visibleTeam && <p>Team not found.</p>}
       </main>

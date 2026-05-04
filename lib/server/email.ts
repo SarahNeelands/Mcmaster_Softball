@@ -50,11 +50,21 @@ export function getFounderEmail() {
 }
 
 export function getAppUrl() {
-  const appUrl = process.env.APP_URL;
+  const rawAppUrl =
+    process.env.APP_URL ||
+    process.env.NEXT_PUBLIC_APP_URL ||
+    process.env.VERCEL_PROJECT_PRODUCTION_URL ||
+    process.env.VERCEL_URL;
 
-  if (!appUrl) {
-    throw new Error("APP_URL is not configured.");
+  if (!rawAppUrl) {
+    throw new Error(
+      "App URL is not configured. Set APP_URL, NEXT_PUBLIC_APP_URL, VERCEL_PROJECT_PRODUCTION_URL, or VERCEL_URL."
+    );
   }
 
-  return appUrl.replace(/\/$/, "");
+  const normalizedAppUrl = /^https?:\/\//i.test(rawAppUrl)
+    ? rawAppUrl
+    : `https://${rawAppUrl}`;
+
+  return normalizedAppUrl.replace(/\/$/, "");
 }
