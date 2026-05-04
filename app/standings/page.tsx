@@ -10,6 +10,7 @@ import styles from "./page.module.css";
 import type { Season } from "@/types/season_mod";
 import type { Series } from "@/types/series_mod";
 import type { Division } from "@/types/division_mod";
+import type { Standing } from "@/types/standing_mod";
 import type { Team } from "@/types/team_mod";
 import * as apiP from "@/lib/api/publish_api";
 import * as apiS from "@/lib/api/season_api";
@@ -31,6 +32,7 @@ export default function StandingsPage() {
   const [allSeries, setAllSeries] = useState<Series[]>([]);
   const [divisions, setDivisions] = useState<Division[]>([]);
   const [seasonTeams, setSeasonTeams] = useState<Team[]>([]);
+  const [seasonRankings, setSeasonRankings] = useState<Standing[]>([]);
   const [creatingDivision, setCreatingDivision] = useState(false);
   const [editingSeries, setEditingSeries] = useState<Series>();
   const [creatingSeries, setCreatingSeries] = useState(false);
@@ -195,6 +197,77 @@ export default function StandingsPage() {
       console.error("Error fetching divisions:", err)
     );
   }, [selectedSeries]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadSeasonRankings = async () => {
+      if (!selectedSeason || visibleSeries.length === 0) {
+        setSeasonRankings([]);
+        return;
+      }
+
+      try {
+        const divisionGroups = await Promise.all(
+          visibleSeries.map(async (series) => {
+            const data = await apiD.GetDivisions("", series.id, "all");
+            return (Array.isArray(data) ? data : [data]).filter(Boolean);
+          })
+        );
+
+        const visibleTeamIds = new Set(visibleSeasonTeams.map((team) => team.id));
+        const totals = new Map<string, Standing>();
+
+        divisionGroups.flat().forEach((division) => {
+          division.standings.forEach((standing) => {
+            if (!visibleTeamIds.has(standing.team.id)) {
+              return;
+            }
+
+            const existing = totals.get(standing.team.id);
+            if (existing) {
+              existing.wins += standing.wins;
+              existing.losses += standing.losses;
+              existing.ties += standing.ties;
+              existing.points += standing.points;
+              return;
+            }
+
+            totals.set(standing.team.id, {
+              ...standing,
+              id: `season-ranking-${standing.team.id}`,
+              division_id: "season-rankings",
+              series_id: "season-rankings",
+            });
+          });
+        });
+
+        const aggregated = [...totals.values()].sort(
+          (a, b) =>
+            b.points - a.points ||
+            b.wins - a.wins ||
+            a.losses - b.losses ||
+            b.ties - a.ties ||
+            a.team.name.localeCompare(b.team.name)
+        );
+
+        if (!cancelled) {
+          setSeasonRankings(aggregated);
+        }
+      } catch (err) {
+        console.error("Error fetching season rankings:", err);
+        if (!cancelled) {
+          setSeasonRankings([]);
+        }
+      }
+    };
+
+    loadSeasonRankings();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedSeason, visibleSeries, visibleSeasonTeams]);
 
   const handlePublish = async () => {
     try {
@@ -449,6 +522,24 @@ export default function StandingsPage() {
             />
           ))}
         </div>
+
+        {seasonRankings.length > 0 && (
+          <div className={styles.seasonRankingsSection}>
+            <DivisionStandingsCard
+              division={{
+                id: "season-rankings",
+                name: "Season Rankings",
+                win_points: 0,
+                loss_points: 0,
+                tie_points: 0,
+                teamIDs: seasonRankings.map((standing) => standing.team.id),
+                standings: seasonRankings,
+                editing_status: "published",
+              }}
+              isAdmin={false}
+            />
+          </div>
+        )}
       </main>
 
       <Footer />

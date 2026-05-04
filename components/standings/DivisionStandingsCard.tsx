@@ -64,7 +64,14 @@ export default function DivisionStandingsCard({
     setIsEditing(startInEditMode);
   }, [startInEditMode]);
 
-  const rows: Standing[] = [...division.standings].sort((a, b) => b.points - a.points);
+  const rows: Standing[] = [...division.standings].sort(
+    (a, b) =>
+      b.points - a.points ||
+      b.wins - a.wins ||
+      a.losses - b.losses ||
+      b.ties - a.ties ||
+      a.team.name.localeCompare(b.team.name)
+  );
   const showingTeamRows = isHoldingArea;
 
   const handleSave = async () => {

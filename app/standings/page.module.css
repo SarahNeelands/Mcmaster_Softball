@@ -34,6 +34,10 @@
   
 }
 
+.seasonRankingsSection {
+  margin-top: 1.25rem;
+}
+
 /* mobile */
 @media (max-width: 900px) {
   .contentGrid {
