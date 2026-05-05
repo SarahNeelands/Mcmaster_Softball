@@ -3,6 +3,8 @@ import * as service from "@/backend/services/division_services";
 import { isAdminRequest } from "@/lib/server/adminAuth";
 import { assertDivisionAccess, assertSeriesAccess } from "@/lib/server/seasonAccess";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: Request) {
   try {
     const isAdmin = await isAdminRequest();

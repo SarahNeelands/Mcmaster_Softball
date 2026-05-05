@@ -5,6 +5,8 @@ import type { Team } from "@/types/team_mod";
 import { isEmptySlotTeam } from "@/lib/teams/specialTeams";
 import { assertSeasonAccess } from "@/lib/server/seasonAccess";
 
+export const dynamic = "force-dynamic";
+
 function sanitizeTeam(team: Team): Team {
   return {
     ...team,
