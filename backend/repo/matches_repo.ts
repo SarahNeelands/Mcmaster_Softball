@@ -108,10 +108,12 @@ export async function GetMatchById(id: string) {
   return rows[0] ? hydrateMatch(rows[0]) : null;
 }
 
-export async function GetMatchesByTeam(team: string) {
+export async function GetMatchesByTeam(teamId: string) {
   const {rows} = await pool.query(
-    `SELECT * FROM matches WHERE home_team = $1 OR away_team = $1`,
-    [team]
+    `SELECT *
+     FROM matches
+     WHERE home_team_id = $1 OR away_team_id = $1`,
+    [teamId]
   );
   return rows.map(hydrateMatch);
 }

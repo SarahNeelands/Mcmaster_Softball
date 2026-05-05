@@ -1,8 +1,11 @@
 import { NextResponse} from "next/server";
 import * as service from "@/backend/services/division_services";
+import { isAdminRequest } from "@/lib/server/adminAuth";
+import { assertDivisionAccess, assertSeriesAccess } from "@/lib/server/seasonAccess";
 
 export async function GET(request: Request) {
   try {
+    const isAdmin = await isAdminRequest();
     const url = new URL(request.url);
     const division_id = url.searchParams.get("division_id");
     const series_id = url.searchParams.get("series_id");
@@ -12,6 +15,7 @@ export async function GET(request: Request) {
       if (!division_id) {
         return NextResponse.json({ error: "Missing division_id" }, { status: 400 });
       }
+      await assertDivisionAccess(division_id, isAdmin);
       const items = await service.GetDivisionById(division_id);
       return NextResponse.json(items, { status: 200 });
     }
@@ -20,6 +24,7 @@ export async function GET(request: Request) {
       if (!series_id) {
         return NextResponse.json({ error: "Missing series_id" }, { status: 400 });
       }
+      await assertSeriesAccess(series_id, isAdmin);
       const items = await service.GetAllSeriesDivisions(series_id);
       return NextResponse.json(items ?? [], { status: 200 });
     }

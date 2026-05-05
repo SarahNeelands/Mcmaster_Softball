@@ -1,8 +1,11 @@
 import { NextResponse} from "next/server";
 import * as service from "@/backend/services/series_services";
+import { isAdminRequest } from "@/lib/server/adminAuth";
+import { assertSeasonAccess, assertSeriesAccess } from "@/lib/server/seasonAccess";
 
 export async function GET(request: Request) {
   try {
+    const isAdmin = await isAdminRequest();
     const url = new URL(request.url);
     const season_id = url.searchParams.get("season_id");
     const series_id = url.searchParams.get("series_id");
@@ -12,6 +15,7 @@ export async function GET(request: Request) {
       if (!season_id) {
         return NextResponse.json({ error: "Missing season_id" }, { status: 400 });
       }
+      await assertSeasonAccess(season_id, isAdmin);
       const items = await service.GetCurrentSeries(season_id);
       return NextResponse.json(items, { status: 200 });
     }
@@ -20,6 +24,7 @@ export async function GET(request: Request) {
       if (!series_id) {
         return NextResponse.json({ error: "Missing series_id" }, { status: 400 });
       }
+      await assertSeriesAccess(series_id, isAdmin);
       const items = await service.GetSeriesById(series_id);
       return NextResponse.json(items, { status: 200 });
     }
@@ -28,6 +33,7 @@ export async function GET(request: Request) {
       if (!season_id) {
         return NextResponse.json({ error: "Missing season_id" }, { status: 400 });
       }
+      await assertSeasonAccess(season_id, isAdmin);
       const items = await service.GetAllSeasonsSeries(season_id);
       return NextResponse.json(items ?? [], { status: 200 });
     }

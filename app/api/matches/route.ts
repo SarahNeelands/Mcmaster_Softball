@@ -1,6 +1,7 @@
 import { NextResponse} from "next/server";
 import * as service from "@/backend/services/match_services";
 import { isAdminRequest } from "@/lib/server/adminAuth";
+import { assertSeasonAccess } from "@/lib/server/seasonAccess";
 
 export async function GET(req: Request) {
   try {
@@ -30,6 +31,8 @@ export async function GET(req: Request) {
         { status: 400 }
       );
     }
+
+    await assertSeasonAccess(seasonId, isAdmin);
 
     if (type === "all") {
       const matches = await service.GetAllSeasonMatches(seasonId, isAdmin);

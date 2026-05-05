@@ -3,6 +3,7 @@ import * as service from "@/backend/services/team_services";
 import { isAdminRequest } from "@/lib/server/adminAuth";
 import type { Team } from "@/types/team_mod";
 import { isEmptySlotTeam } from "@/lib/teams/specialTeams";
+import { assertSeasonAccess } from "@/lib/server/seasonAccess";
 
 function sanitizeTeam(team: Team): Team {
   return {
@@ -34,6 +35,7 @@ export async function GET(request: Request) {
     }
     if (search === "all") {
         if (id === null) {return NextResponse.json({ error: "Failed to get teams" }, { status: 500 });}
+        await assertSeasonAccess(id, isAdmin);
         const items = await service.GetAllTeamsOfSeason(id);
         const visibleItems = isAdmin ? items : items.filter((team) => !isEmptySlotTeam(team));
         return NextResponse.json(isAdmin ? visibleItems : sanitizeTeamPayload(visibleItems), { status: 200 });

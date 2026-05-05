@@ -1,8 +1,11 @@
 import { NextResponse} from "next/server";
 import * as service from "@/backend/services/standing_service";
+import { isAdminRequest } from "@/lib/server/adminAuth";
+import { assertDivisionAccess, assertSeriesAccess } from "@/lib/server/seasonAccess";
 
 export async function GET(request: Request) {
   try {
+    const isAdmin = await isAdminRequest();
     const url = new URL(request.url);
     const team_id = url.searchParams.get("team_id");
     const series_id = url.searchParams.get("series_id");
@@ -13,6 +16,7 @@ export async function GET(request: Request) {
       if (!series_id) {
         return NextResponse.json({ error: "Missing series_id" }, { status: 400 });
       }
+      await assertSeriesAccess(series_id, isAdmin);
       const items = await service.GetAllSeriesRankings(series_id);
       return NextResponse.json(items ?? [], { status: 200 });
     }
@@ -21,6 +25,7 @@ export async function GET(request: Request) {
       if (!division_id) {
         return NextResponse.json({ error: "Missing division_id" }, { status: 400 });
       }
+      await assertDivisionAccess(division_id, isAdmin);
       const items = await service.GetAllDivisionRankings(division_id);
       return NextResponse.json(items ?? [], { status: 200 });
     }
@@ -29,6 +34,7 @@ export async function GET(request: Request) {
       if (!team_id || !series_id) {
         return NextResponse.json({ error: "Missing team_id or series_id" }, { status: 400 });
       }
+      await assertSeriesAccess(series_id, isAdmin);
       const items = await service.GetTeamsStanding(team_id, series_id);
       return NextResponse.json(items, { status: 200 });
     }
