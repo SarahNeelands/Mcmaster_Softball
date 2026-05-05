@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import * as apiS from "@/lib/api/season_api";
+import { setStoredSelectedSeason } from "@/lib/seasons/selection";
 import type { Season } from "@/types/season_mod";
 
 type Screen = "home" | "seasonEditor";
@@ -62,6 +63,7 @@ export function useSeasonEditor({
     }
 
     setSelectedSeason(saved);
+    setStoredSelectedSeason(saved);
 
     const all = await apiS.GetSeasons("", "all");
     setAllSeasons(Array.isArray(all) ? all : [all]);

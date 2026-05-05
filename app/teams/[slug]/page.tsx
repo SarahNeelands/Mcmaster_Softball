@@ -24,6 +24,10 @@ import {
   filterVisibleByEditingStatus,
   isVisibleByEditingStatus,
 } from "@/lib/data/editing_status";
+import {
+  resolveSelectedSeason,
+  setStoredSelectedSeason,
+} from "@/lib/seasons/selection";
 import { isEmptySlotTeam, isOpenSlotMatch } from "@/lib/teams/specialTeams";
 
 export default function TeamDetailPage() {
@@ -251,10 +255,16 @@ export default function TeamDetailPage() {
         return;
       }
 
-      setSelectedSeason(currentSeason);
-
       const all = await apiS.GetSeasons("", "all");
-      setAllSeasons(Array.isArray(all) ? all : [all]);
+      const seasons = Array.isArray(all) ? all : [all];
+      setAllSeasons(seasons);
+      setSelectedSeason(
+        resolveSelectedSeason({
+          currentSeason,
+          seasons,
+          isAdmin: session.isAdmin,
+        })
+      );
       setLoading(false);
     };
 
@@ -276,7 +286,7 @@ export default function TeamDetailPage() {
   };
 
   useEffect(() => {
-    if (canManageContent) return;
+    if (isAdmin) return;
 
     const resetToPublicSeason = async () => {
       try {
@@ -291,7 +301,7 @@ export default function TeamDetailPage() {
     };
 
     resetToPublicSeason();
-  }, [canManageContent]);
+  }, [isAdmin]);
 
   useEffect(() => {
     if (!selectedSeason || !teamId) return;
@@ -318,7 +328,10 @@ export default function TeamDetailPage() {
         onRevert={canManageContent ? handleRevert : undefined}
         seasons={visibleSeasons}
         selectedSeason={selectedSeason}
-        onSelect={(season) => setSelectedSeason(season)}
+        onSelect={(season) => {
+          setStoredSelectedSeason(season);
+          setSelectedSeason(season);
+        }}
         onOpenCreateSeason={openCreateSeason}
         onOpenEditSeason={openEditSeason}
         onToggleTesterNotifications={handleToggleTesterNotifications}
