@@ -81,6 +81,7 @@ function buildHomeMatchTeamOptions(
 
 export default function Home() {
   const [isAdmin, setIsAdmin] = useState(false);
+  const [adminSessionChecked, setAdminSessionChecked] = useState(false);
   const [isPreviewing, setIsPreviewing] = useState(false);
 
   const [activeAnnouncements, setActiveAnnouncements] = useState<Announcement[]>([]);
@@ -287,27 +288,31 @@ export default function Home() {
 
   useEffect(() => {
     const load = async () => {
-      const session = await apiAdmin.GetAdminSession();
-      setIsAdmin(session.isAdmin);
+      try {
+        const session = await apiAdmin.GetAdminSession();
+        setIsAdmin(session.isAdmin);
 
-      const currentData = await apiS.GetSeasons("", "current");
-      const currentSeason = Array.isArray(currentData) ? currentData[0] : currentData;
+        const currentData = await apiS.GetSeasons("", "current");
+        const currentSeason = Array.isArray(currentData) ? currentData[0] : currentData;
 
-      if (!currentSeason) {
-        console.error("No current season returned.");
-        return;
+        if (!currentSeason) {
+          console.error("No current season returned.");
+          return;
+        }
+
+        const all = await apiS.GetSeasons("", "all");
+        const seasons = Array.isArray(all) ? all : [all];
+        setAllSeasons(seasons);
+        setSelectedSeason(
+          resolveSelectedSeason({
+            currentSeason,
+            seasons,
+            isAdmin: session.isAdmin,
+          })
+        );
+      } finally {
+        setAdminSessionChecked(true);
       }
-
-      const all = await apiS.GetSeasons("", "all");
-      const seasons = Array.isArray(all) ? all : [all];
-      setAllSeasons(seasons);
-      setSelectedSeason(
-        resolveSelectedSeason({
-          currentSeason,
-          seasons,
-          isAdmin: session.isAdmin,
-        })
-      );
     };
 
     load().catch((err) => console.error("Error fetching seasons:", err));
@@ -325,7 +330,7 @@ export default function Home() {
   };
 
   useEffect(() => {
-    if (isAdmin) return;
+    if (!adminSessionChecked || isAdmin) return;
 
     const resetToPublicSeason = async () => {
       try {
@@ -340,7 +345,7 @@ export default function Home() {
     };
 
     resetToPublicSeason();
-  }, [isAdmin]);
+  }, [adminSessionChecked, isAdmin]);
 
   useEffect(() => {
     if (!selectedSeason) return;
