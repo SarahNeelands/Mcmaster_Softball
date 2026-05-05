@@ -2,6 +2,8 @@ import { NextResponse} from "next/server";
 import * as service from "@/backend/services/season_services";
 import { isAdminRequest } from "@/lib/server/adminAuth";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: Request) {
   try {
     const isAdmin = await isAdminRequest();
