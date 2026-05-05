@@ -20,6 +20,10 @@ import * as apiT from "@/lib/api/team_api";
 import * as apiSeries from "@/lib/api/series_api";
 import { useSeasonEditor } from "@/components/layout/Header/header_functions";
 import { filterVisibleByEditingStatus } from "@/lib/data/editing_status";
+import {
+  resolveSelectedSeason,
+  setStoredSelectedSeason,
+} from "@/lib/seasons/selection";
 import { filterOutEmptySlotTeams } from "@/lib/teams/specialTeams";
 
 export default function TeamsPage() {
@@ -189,10 +193,16 @@ export default function TeamsPage() {
         return;
       }
 
-      setSelectedSeason(currentSeason);
-
       const all = await apiS.GetSeasons("", "all");
-      setAllSeasons(Array.isArray(all) ? all : [all]);
+      const seasons = Array.isArray(all) ? all : [all];
+      setAllSeasons(seasons);
+      setSelectedSeason(
+        resolveSelectedSeason({
+          currentSeason,
+          seasons,
+          isAdmin: session.isAdmin,
+        })
+      );
     };
 
     load().catch((err) => console.error("Error fetching seasons:", err));
@@ -210,7 +220,7 @@ export default function TeamsPage() {
   };
 
   useEffect(() => {
-    if (canManageContent) return;
+    if (isAdmin) return;
 
     const resetToPublicSeason = async () => {
       try {
@@ -225,7 +235,7 @@ export default function TeamsPage() {
     };
 
     resetToPublicSeason();
-  }, [canManageContent]);
+  }, [isAdmin]);
 
   useEffect(() => {
     if (!selectedSeason) return;
@@ -274,7 +284,10 @@ export default function TeamsPage() {
         onRevert={canManageContent ? handleRevert : undefined}
         seasons={visibleSeasons}
         selectedSeason={selectedSeason}
-        onSelect={(s) => setSelectedSeason(s)}
+        onSelect={(season) => {
+          setStoredSelectedSeason(season);
+          setSelectedSeason(season);
+        }}
         onOpenCreateSeason={openCreateSeason}
         onOpenEditSeason={openEditSeason}
         onToggleTesterNotifications={handleToggleTesterNotifications}
