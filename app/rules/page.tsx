@@ -16,6 +16,10 @@ import * as apiS from "@/lib/api/season_api";
 import * as apiAdmin from "@/lib/api/admin_api";
 import { useSeasonEditor } from "@/components/layout/Header/header_functions";
 import { filterVisibleByEditingStatus } from "@/lib/data/editing_status";
+import {
+  resolveSelectedSeason,
+  setStoredSelectedSeason,
+} from "@/lib/seasons/selection";
 
 export default function RulesPage() {
   const [isAdmin, setIsAdmin] = useState(false);
@@ -100,12 +104,16 @@ export default function RulesPage() {
       const currentData = await apiS.GetSeasons("", "current");
       const currentSeason = Array.isArray(currentData) ? currentData[0] : currentData;
 
-      if (currentSeason) {
-        setSelectedSeason(currentSeason);
-      }
-
       const all = await apiS.GetSeasons("", "all");
-      setAllSeasons(Array.isArray(all) ? all : [all]);
+      const seasons = Array.isArray(all) ? all : [all];
+      setAllSeasons(seasons);
+      setSelectedSeason(
+        resolveSelectedSeason({
+          currentSeason: currentSeason ?? undefined,
+          seasons,
+          isAdmin: session.isAdmin,
+        })
+      );
 
       await loadRules();
     };
@@ -137,7 +145,10 @@ export default function RulesPage() {
         onRevert={canManageContent ? handleRevert : undefined}
         seasons={visibleSeasons}
         selectedSeason={selectedSeason}
-        onSelect={(season) => setSelectedSeason(season)}
+        onSelect={(season) => {
+          setStoredSelectedSeason(season);
+          setSelectedSeason(season);
+        }}
         onOpenCreateSeason={openCreateSeason}
         onOpenEditSeason={openEditSeason}
       />

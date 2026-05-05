@@ -21,6 +21,10 @@ import * as apiT from "@/lib/api/team_api";
 import * as apiM from "@/lib/api/match_api";
 import { useSeasonEditor } from "@/components/layout/Header/header_functions";
 import { filterVisibleByEditingStatus } from "@/lib/data/editing_status";
+import {
+  resolveSelectedSeason,
+  setStoredSelectedSeason,
+} from "@/lib/seasons/selection";
 import { filterOutEmptySlotTeams } from "@/lib/teams/specialTeams";
 
 export default function StandingsPage() {
@@ -121,11 +125,20 @@ export default function StandingsPage() {
         return;
       }
 
-      setSelectedSeason(currentSeason);
-
       const all = await apiS.GetSeasons("", "all");
-      setAllSeasons(Array.isArray(all) ? all : [all]);
-      const teams = await apiT.GetSeasonTeams(currentSeason.id);
+      const seasons = Array.isArray(all) ? all : [all];
+      const nextSelectedSeason = resolveSelectedSeason({
+        currentSeason,
+        seasons,
+        isAdmin: session.isAdmin,
+      });
+
+      setAllSeasons(seasons);
+      setSelectedSeason(nextSelectedSeason);
+
+      const teams = nextSelectedSeason
+        ? await apiT.GetSeasonTeams(nextSelectedSeason.id)
+        : [];
       setSeasonTeams(teams);
     };
 
@@ -144,7 +157,7 @@ export default function StandingsPage() {
   };
 
   useEffect(() => {
-    if (canManageContent) return;
+    if (isAdmin) return;
 
     const resetToPublicSeason = async () => {
       try {
@@ -159,7 +172,7 @@ export default function StandingsPage() {
     };
 
     resetToPublicSeason();
-  }, [canManageContent]);
+  }, [isAdmin]);
 
   useEffect(() => {
     if (!selectedSeason) return;
@@ -402,7 +415,10 @@ export default function StandingsPage() {
         onRevert={canManageContent ? handleRevert : undefined}
         seasons={visibleSeasons}
         selectedSeason={selectedSeason}
-        onSelect={(season) => setSelectedSeason(season)}
+        onSelect={(season) => {
+          setStoredSelectedSeason(season);
+          setSelectedSeason(season);
+        }}
         onOpenCreateSeason={openCreateSeason}
         onOpenEditSeason={openEditSeason}
         onToggleTesterNotifications={handleToggleTesterNotifications}

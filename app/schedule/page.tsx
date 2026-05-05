@@ -38,6 +38,10 @@ import * as apiT from "@/lib/api/team_api";
 import { useSeasonEditor } from "@/components/layout/Header/header_functions";
 import { filterVisibleByEditingStatus } from "@/lib/data/editing_status";
 import {
+  resolveSelectedSeason,
+  setStoredSelectedSeason,
+} from "@/lib/seasons/selection";
+import {
   buildEmptySlotSlug,
   EMPTY_SLOT_TEAM_NAME,
   getEmptySlotTeam,
@@ -327,6 +331,7 @@ export default function SchedulePage() {
   const handleSeasonSelect = (season: Season) => {
     setTeamSearch("");
     setShowOpenSlots(false);
+    setStoredSelectedSeason(season);
     setSelectedSeason(season);
   };
 
@@ -439,12 +444,18 @@ export default function SchedulePage() {
         return;
       }
 
+      const all = await apiS.GetSeasons("", "all");
+      const seasons = Array.isArray(all) ? all : [all];
+      setAllSeasons(seasons);
       setTeamSearch("");
       setShowOpenSlots(false);
-      setSelectedSeason(currentSeason);
-
-      const all = await apiS.GetSeasons("", "all");
-      setAllSeasons(Array.isArray(all) ? all : [all]);
+      setSelectedSeason(
+        resolveSelectedSeason({
+          currentSeason,
+          seasons,
+          isAdmin: session.isAdmin,
+        })
+      );
     };
 
     load().catch((err) => console.error("Error fetching schedule:", err));
@@ -462,7 +473,7 @@ export default function SchedulePage() {
   };
 
   useEffect(() => {
-    if (canManageContent) return;
+    if (isAdmin) return;
 
     const resetToPublicSeason = async () => {
       try {
@@ -479,7 +490,7 @@ export default function SchedulePage() {
     };
 
     resetToPublicSeason();
-  }, [canManageContent]);
+  }, [isAdmin]);
 
   useEffect(() => {
     if (!selectedSeason) return;

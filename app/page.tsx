@@ -29,6 +29,10 @@ import * as apiD from "@/lib/api/division_api";
 import { useSeasonEditor } from "@/components/layout/Header/header_functions";
 import { filterVisibleByEditingStatus } from "@/lib/data/editing_status";
 import {
+  resolveSelectedSeason,
+  setStoredSelectedSeason,
+} from "@/lib/seasons/selection";
+import {
   filterOutEmptySlotTeams,
   getEmptySlotTeam,
   isEmptySlotTeam,
@@ -260,6 +264,11 @@ export default function Home() {
   const visibleUpcoming = getVisibleMatches(visibleMatches.upcoming, 2, "upcoming");
   const visiblePrevious = getVisibleMatches(visibleMatches.previous, 2, "previous");
 
+  const handleSeasonSelect = (season: Season) => {
+    setStoredSelectedSeason(season);
+    setSelectedSeason(season);
+  };
+
   const teamNamesById = useMemo(
     () =>
       Object.fromEntries(
@@ -289,10 +298,16 @@ export default function Home() {
         return;
       }
 
-      setSelectedSeason(currentSeason);
-
       const all = await apiS.GetSeasons("", "all");
-      setAllSeasons(Array.isArray(all) ? all : [all]);
+      const seasons = Array.isArray(all) ? all : [all];
+      setAllSeasons(seasons);
+      setSelectedSeason(
+        resolveSelectedSeason({
+          currentSeason,
+          seasons,
+          isAdmin: session.isAdmin,
+        })
+      );
     };
 
     load().catch((err) => console.error("Error fetching seasons:", err));
@@ -310,7 +325,7 @@ export default function Home() {
   };
 
   useEffect(() => {
-    if (canManageContent) return;
+    if (isAdmin) return;
 
     const resetToPublicSeason = async () => {
       try {
@@ -325,7 +340,7 @@ export default function Home() {
     };
 
     resetToPublicSeason();
-  }, [canManageContent]);
+  }, [isAdmin]);
 
   useEffect(() => {
     if (!selectedSeason) return;
@@ -352,7 +367,7 @@ export default function Home() {
         onRevert={canManageContent ? handleRevert : undefined}
         seasons={visibleSeasons}
         selectedSeason={selectedSeason}
-        onSelect={(s) => setSelectedSeason(s)}
+        onSelect={handleSeasonSelect}
         onOpenCreateSeason={openCreateSeason}
         onOpenEditSeason={openEditSeason}
         onToggleTesterNotifications={handleToggleTesterNotifications}
