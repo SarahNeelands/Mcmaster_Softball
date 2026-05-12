@@ -34,6 +34,7 @@ export default function TeamDetailPage() {
   const params = useParams<{ slug: string }>();
 
   const [isAdmin, setIsAdmin] = useState(false);
+  const [adminSessionChecked, setAdminSessionChecked] = useState(false);
   const [isPreviewing, setIsPreviewing] = useState(false);
   const [team, setTeam] = useState<Team>();
   const [upcomingGames, setUpcomingGames] = useState<Match[]>([]);
@@ -234,38 +235,42 @@ export default function TeamDetailPage() {
 
   useEffect(() => {
     const load = async () => {
-      const session = await apiAdmin.GetAdminSession();
-      setIsAdmin(session.isAdmin);
+      try {
+        const session = await apiAdmin.GetAdminSession();
+        setIsAdmin(session.isAdmin);
 
-      const currentData = await apiS.GetSeasons("", "current");
-      const currentSeason = Array.isArray(currentData) ? currentData[0] : currentData;
-      const teamData = await apiT.GetTeamBySlug(params.slug);
+        const currentData = await apiS.GetSeasons("", "current");
+        const currentSeason = Array.isArray(currentData) ? currentData[0] : currentData;
+        const teamData = await apiT.GetTeamBySlug(params.slug);
 
-      if (!teamData) {
-        console.error("No team by slug returned.");
+        if (!teamData) {
+          console.error("No team by slug returned.");
+          setLoading(false);
+          return;
+        }
+
+        setTeam(teamData);
+
+        if (!currentSeason) {
+          console.error("No current season returned.");
+          setLoading(false);
+          return;
+        }
+
+        const all = await apiS.GetSeasons("", "all");
+        const seasons = Array.isArray(all) ? all : [all];
+        setAllSeasons(seasons);
+        setSelectedSeason(
+          resolveSelectedSeason({
+            currentSeason,
+            seasons,
+            isAdmin: session.isAdmin,
+          })
+        );
         setLoading(false);
-        return;
+      } finally {
+        setAdminSessionChecked(true);
       }
-
-      setTeam(teamData);
-
-      if (!currentSeason) {
-        console.error("No current season returned.");
-        setLoading(false);
-        return;
-      }
-
-      const all = await apiS.GetSeasons("", "all");
-      const seasons = Array.isArray(all) ? all : [all];
-      setAllSeasons(seasons);
-      setSelectedSeason(
-        resolveSelectedSeason({
-          currentSeason,
-          seasons,
-          isAdmin: session.isAdmin,
-        })
-      );
-      setLoading(false);
     };
 
     load().catch((err) => {
@@ -286,7 +291,7 @@ export default function TeamDetailPage() {
   };
 
   useEffect(() => {
-    if (isAdmin) return;
+    if (!adminSessionChecked || isAdmin) return;
 
     const resetToPublicSeason = async () => {
       try {
@@ -301,7 +306,7 @@ export default function TeamDetailPage() {
     };
 
     resetToPublicSeason();
-  }, [isAdmin]);
+  }, [adminSessionChecked, isAdmin]);
 
   useEffect(() => {
     if (!selectedSeason || !teamId) return;
