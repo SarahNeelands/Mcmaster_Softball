@@ -285,6 +285,46 @@ export async function getMatchesNeedingScoreRequests(windowEndIso: string, seaso
   return rows;
 }
 
+export async function getMatchesNeedingManualSeasonScoreRequests(seasonId: string) {
+  const { rows } = await pool.query<MatchWithTeams>(
+    `SELECT
+       m.*,
+       ht.name AS home_team_name,
+       at.name AS away_team_name,
+       ht.captain_email AS home_captain_email,
+       at.captain_email AS away_captain_email
+     FROM matches m
+     JOIN divisions d ON d.id = m.division_id
+     JOIN series sr ON sr.id = d.series_id
+     JOIN seasons s ON s.id = sr.season_id
+     JOIN teams ht ON ht.id = m.home_team_id
+     JOIN teams at ON at.id = m.away_team_id
+     WHERE m.editing_status <> 'deleted'
+       AND s.id = $1
+       AND COALESCE(s.score_notifications_enabled, FALSE) = TRUE
+       AND ht.slug NOT LIKE '${EMPTY_SLOT_SLUG_PREFIX}%'
+       AND at.slug NOT LIKE '${EMPTY_SLOT_SLUG_PREFIX}%'
+       AND m.home_score IS NULL
+       AND m.away_score IS NULL
+       AND (m.score_status = 'unrequested' OR m.score_status = 'awaiting_scores')
+       AND (
+         m.score_request_sent_at IS NULL
+         OR EXISTS (
+           SELECT 1
+           FROM score_submission_links l
+           WHERE l.match_id = m.id
+             AND l.email_sent_at IS NULL
+             AND l.submitted_at IS NULL
+             AND l.used_at IS NULL
+         )
+       )
+     ORDER BY m.date, m.time`,
+    [seasonId]
+  );
+
+  return rows;
+}
+
 export async function getMatchesReadyForSingleSidePublish() {
   const { rows } = await pool.query<MatchWithTeams>(
     `SELECT

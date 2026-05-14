@@ -10,6 +10,7 @@ type EmailInput = {
 export async function sendEmail(input: EmailInput) {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.EMAIL_FROM;
+  const to = input.to.trim();
 
   if (!apiKey || !from) {
     throw new Error("Email is not configured. Set RESEND_API_KEY and EMAIL_FROM.");
@@ -24,7 +25,7 @@ export async function sendEmail(input: EmailInput) {
     },
     body: JSON.stringify({
       from,
-      to: [input.to],
+      to: [to],
       subject: input.subject,
       text: input.text,
       html: input.html,

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import * as service from "@/backend/services/score_submission_service";
 import { assertCronAuthorized } from "@/lib/server/cronAuth";
 
-export async function POST(request: Request) {
+async function handleCronRequest(request: Request) {
   try {
     assertCronAuthorized(request);
 
@@ -34,4 +34,12 @@ export async function POST(request: Request) {
       { status }
     );
   }
+}
+
+export async function GET(request: Request) {
+  return handleCronRequest(request);
+}
+
+export async function POST(request: Request) {
+  return handleCronRequest(request);
 }
