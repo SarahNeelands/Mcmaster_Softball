@@ -10,6 +10,17 @@ type SubmissionLookup = {
   match: repo.MatchWithTeams;
 };
 
+function normalizeAndValidateEmail(email: string, label: string) {
+  const normalized = email.trim();
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  if (!emailPattern.test(normalized)) {
+    throw new Error(`Invalid captain email for ${label}: "${email}"`);
+  }
+
+  return normalized;
+}
+
 function isMatchClosed(match: Match) {
   return match.score_status === "finalized" || match.score_status === "published_single_submission";
 }
@@ -188,6 +199,11 @@ export async function sendScoreRequestEmails(matchId: string) {
       throw new Error(`Missing raw token for unsent ${item.side} link.`);
     }
 
+    const recipientEmail = normalizeAndValidateEmail(
+      item.email,
+      `${item.side === "home" ? match.home_team_name : match.away_team_name} (${item.side})`
+    );
+
     const submitUrl = `${appUrl}/submit-score?token=${encodeURIComponent(item.token)}`;
     const subject = `Submit score: ${match.home_team_name} vs ${match.away_team_name}`;
     const text =
@@ -199,7 +215,7 @@ export async function sendScoreRequestEmails(matchId: string) {
       `It expires 24 hours after the scheduled match time.`;
 
     await sendEmail({
-      to: item.email,
+      to: recipientEmail,
       subject,
       text,
       scheduledAt: sendAt,
@@ -241,8 +257,7 @@ export async function runDailyScoreCron() {
 }
 
 export async function prepareScoreRequestsForSeason(seasonId: string) {
-  const windowEnd = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
-  const matches = await repo.getMatchesNeedingScoreRequests(windowEnd, seasonId);
+  const matches = await repo.getMatchesNeedingManualSeasonScoreRequests(seasonId);
   const preparedMatchIds: string[] = [];
 
   for (const match of matches) {
