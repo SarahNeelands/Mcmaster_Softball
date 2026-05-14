@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import Header from "@/components/layout/Header/Header";
 import Footer from "@/components/layout/Footer/Footer";
+import SeasonEditor from "@/components/editors/SeasonEditor";
 import TeamDetail from "@/components/teams/TeamDetail";
 import type { Team } from "@/types/team_mod";
 import type { Match } from "@/types/match_mod";
@@ -30,6 +31,37 @@ import {
 } from "@/lib/seasons/selection";
 import { isEmptySlotTeam, isOpenSlotMatch } from "@/lib/teams/specialTeams";
 
+function buildTeamSeasonStats(matches: Match[], teamId: string) {
+  return matches.reduce(
+    (totals, match) => {
+      if (match.home_score === null || match.away_score === null) {
+        return totals;
+      }
+
+      const isHomeTeam = match.home_team_id === teamId;
+      const teamScore = isHomeTeam ? match.home_score : match.away_score;
+      const opponentScore = isHomeTeam ? match.away_score : match.home_score;
+
+      totals.runs_for += teamScore;
+      totals.runs_against += opponentScore;
+
+      if (teamScore > opponentScore) {
+        totals.season_wins += 1;
+      } else if (teamScore < opponentScore) {
+        totals.season_losses += 1;
+      }
+
+      return totals;
+    },
+    {
+      season_wins: 0,
+      season_losses: 0,
+      runs_for: 0,
+      runs_against: 0,
+    }
+  );
+}
+
 export default function TeamDetailPage() {
   const params = useParams<{ slug: string }>();
 
@@ -44,13 +76,18 @@ export default function TeamDetailPage() {
   const [selectedSeason, setSelectedSeason] = useState<Season>();
   const [allSeasons, setAllSeasons] = useState<Season[]>([]);
   const [testerNotificationsBusy, setTesterNotificationsBusy] = useState(false);
-  const [, setScreen] = useState<"home" | "seasonEditor">("home");
 
-  const { openCreateSeason, openEditSeason } = useSeasonEditor({
+  const {
+    isSeasonEditorOpen,
+    seasonToEdit,
+    openCreateSeason,
+    openEditSeason,
+    closeSeasonEditor,
+    handleSaveSeason,
+  } = useSeasonEditor({
     selectedSeason,
     setSelectedSeason,
     setAllSeasons,
-    setScreen,
   });
 
   const canManageContent = isAdmin && !isPreviewing;
@@ -111,11 +148,22 @@ export default function TeamDetailPage() {
       ? currentSeriesData[0]
       : currentSeriesData;
     const parts = splitMatches(matches, new Date());
+    const stats = buildTeamSeasonStats(matches, teamId);
     setSeasonTeams(teams);
     setUpcomingGames(parts.upcoming);
     setPreviousGames(parts.previous);
 
     if (!currentSeries) {
+      setTeam((previous) =>
+        previous
+          ? {
+              ...previous,
+              ...stats,
+              division: undefined,
+              current_ranking: undefined,
+            }
+          : previous
+      );
       return;
     }
 
@@ -124,7 +172,12 @@ export default function TeamDetailPage() {
     if (!standing) {
       setTeam((previous) =>
         previous
-          ? { ...previous, division: undefined, current_ranking: undefined }
+          ? {
+              ...previous,
+              ...stats,
+              division: undefined,
+              current_ranking: undefined,
+            }
           : previous
       );
       return;
@@ -132,13 +185,21 @@ export default function TeamDetailPage() {
 
     const divisionData = await apiD.GetDivisions(standing.division_id, "", "specific");
     const division = (Array.isArray(divisionData) ? divisionData[0] : divisionData) as Division;
-    const sortedStandings = [...division.standings].sort((a, b) => b.points - a.points);
+    const sortedStandings = [...division.standings].sort(
+      (a, b) =>
+        b.points - a.points ||
+        b.wins - a.wins ||
+        a.losses - b.losses ||
+        b.ties - a.ties ||
+        a.team.name.localeCompare(b.team.name)
+    );
     const ranking = sortedStandings.findIndex((item) => item.team.id === teamId) + 1;
 
     setTeam((previous) =>
       previous
         ? {
             ...previous,
+            ...stats,
             division: division.name,
             current_ranking: ranking > 0 ? ranking : undefined,
           }
@@ -193,6 +254,10 @@ export default function TeamDetailPage() {
       previous
         ? {
             ...refreshedTeam,
+            season_wins: previous.season_wins,
+            season_losses: previous.season_losses,
+            runs_for: previous.runs_for,
+            runs_against: previous.runs_against,
             division: previous.division,
             current_ranking: previous.current_ranking,
           }
@@ -364,6 +429,13 @@ export default function TeamDetailPage() {
         )}
         {!loading && !visibleTeam && <p>Team not found.</p>}
       </main>
+      {isSeasonEditorOpen && (
+        <SeasonEditor
+          initialSeason={seasonToEdit}
+          onCancel={closeSeasonEditor}
+          onSave={handleSaveSeason}
+        />
+      )}
 
       <Footer />
     </div>

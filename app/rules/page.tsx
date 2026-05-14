@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState } from "react";
 import Header from "@/components/layout/Header/Header";
 import Footer from "@/components/layout/Footer/Footer";
 import RulesSection from "@/components/Rules/RulesSection";
+import SeasonEditor from "@/components/editors/SeasonEditor";
 import type { Rule } from "@/types/rule_mod";
 import type { Season } from "@/types/season_mod";
 import styles from "./page.module.css";
@@ -27,13 +28,18 @@ export default function RulesPage() {
   const [rules, setRules] = useState<Rule[]>([]);
   const [selectedSeason, setSelectedSeason] = useState<Season>();
   const [allSeasons, setAllSeasons] = useState<Season[]>([]);
-  const [, setScreen] = useState<"home" | "seasonEditor">("home");
 
-  const { openCreateSeason, openEditSeason } = useSeasonEditor({
+  const {
+    isSeasonEditorOpen,
+    seasonToEdit,
+    openCreateSeason,
+    openEditSeason,
+    closeSeasonEditor,
+    handleSaveSeason,
+  } = useSeasonEditor({
     selectedSeason,
     setSelectedSeason,
     setAllSeasons,
-    setScreen,
   });
 
   const canManageContent = isAdmin && !isPreviewing;
@@ -188,6 +194,13 @@ export default function RulesPage() {
           onUploadImage={handleUploadRuleImage}
         />
       </main>
+      {isSeasonEditorOpen && (
+        <SeasonEditor
+          initialSeason={seasonToEdit}
+          onCancel={closeSeasonEditor}
+          onSave={handleSaveSeason}
+        />
+      )}
       <Footer />
     </div>
   );

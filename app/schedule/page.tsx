@@ -9,6 +9,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Header from "@/components/layout/Header/Header";
 import Footer from "@/components/layout/Footer/Footer";
+import SeasonEditor from "@/components/editors/SeasonEditor";
 import {
   compareFieldNames,
   groupMatchesByMonth,
@@ -17,6 +18,7 @@ import {
 import { Calendar } from "@/components/common/calendar/calendar";
 import SeriesEditor from "@/components/editors/SeriesEditor";
 import UpcomingMatches from "@/components/home/Matches/UpcomingMatches";
+import PreviousResults from "@/components/home/Matches/PreviousResults";
 import ScheduleEditor, {
   ScheduleDay,
   ScheduleTeamOption,
@@ -122,13 +124,18 @@ export default function SchedulePage() {
   const [fieldOptions, setFieldOptions] = useState<string[]>([]);
   const [comparisonNow] = useState(() => new Date());
   const [testerNotificationsBusy, setTesterNotificationsBusy] = useState(false);
-  const [, setScreen] = useState<"home" | "seasonEditor">("home");
 
-  const { openCreateSeason, openEditSeason } = useSeasonEditor({
+  const {
+    isSeasonEditorOpen,
+    seasonToEdit,
+    openCreateSeason,
+    openEditSeason,
+    closeSeasonEditor,
+    handleSaveSeason,
+  } = useSeasonEditor({
     selectedSeason,
     setSelectedSeason,
     setAllSeasons,
-    setScreen,
   });
 
   const canManageContent = isAdmin && !isPreviewing;
@@ -185,7 +192,7 @@ export default function SchedulePage() {
     );
   }, [searchableTeamOptions, normalizedTeamSearch]);
 
-  const visibleMatches = useMemo(() => {
+  const filteredMatches = useMemo(() => {
     const openSlotFilteredMatches = visibleSeriesMatches.filter((match) =>
       canManageContent && showOpenSlots
         ? true
@@ -198,12 +205,18 @@ export default function SchedulePage() {
             match.home_team_id === selectedTeam.id || match.away_team_id === selectedTeam.id
         )
       : openSlotFilteredMatches;
+    return teamFilteredMatches;
+  }, [visibleSeriesMatches, canManageContent, showOpenSlots, emptySlotTeamIds, selectedTeam]);
 
-    const { upcoming, previous } = splitMatches(teamFilteredMatches, comparisonNow);
-    return showPastGames
-      ? [...upcoming, ...previous]
-      : upcoming;
-  }, [visibleSeriesMatches, canManageContent, showOpenSlots, emptySlotTeamIds, selectedTeam, showPastGames, comparisonNow]);
+  const splitVisibleMatches = useMemo(
+    () => splitMatches(filteredMatches, comparisonNow),
+    [filteredMatches, comparisonNow]
+  );
+
+  const displayedMatches = useMemo(
+    () => (showPastGames ? splitVisibleMatches.previous : splitVisibleMatches.upcoming),
+    [showPastGames, splitVisibleMatches]
+  );
 
   const visibleSeasons = useMemo(
     () => filterVisibleByEditingStatus(allSeasons, canManageContent),
@@ -216,8 +229,8 @@ export default function SchedulePage() {
   );
 
   const months = useMemo(
-    () => groupMatchesByMonth(visibleMatches),
-    [visibleMatches]
+    () => groupMatchesByMonth(displayedMatches),
+    [displayedMatches]
   );
 
   const teamNamesById = useMemo(
@@ -228,12 +241,20 @@ export default function SchedulePage() {
     [teamOptions]
   );
 
+  const teamSlugsById = useMemo(
+    () =>
+      Object.fromEntries(
+        teamOptions.map((team) => [team.id, team.slug])
+      ) as Record<string, string>,
+    [teamOptions]
+  );
+
   const scheduleMatchesReady = useMemo(
     () =>
-      visibleMatches.every(
+      displayedMatches.every(
         (match) => Boolean(teamNamesById[match.home_team_id]) && Boolean(teamNamesById[match.away_team_id])
       ),
-    [visibleMatches, teamNamesById]
+    [displayedMatches, teamNamesById]
   );
 
   const fetchMatches = async (season?: Season) => {
@@ -664,27 +685,41 @@ export default function SchedulePage() {
             className={styles.togglePastButton}
             onClick={() => setShowPastGames((prev) => !prev)}
           >
-            {showPastGames ? "Hide Past Games" : "Show Past Games"}
+            {showPastGames ? "Show Current Games" : "Show Previous Results"}
           </button>
         </div>
 
         <div className={styles.contentGrid}>
           <div className={styles.scheduleColumn}>
-            <UpcomingMatches
-              matches={scheduleMatchesReady ? visibleMatches : []}
-              isAdmin={canManageContent}
-              teamNamesById={teamNamesById}
-              teamOptions={teamOptions.map((team) => ({
-                id: team.id,
-                name: team.name,
-                slug: team.slug,
-                division_id: team.division_id,
-              }))}
-              updateMatch={handleUpdateMatch}
-              deleteMatch={handleDeleteMatch}
-              onAddGames={() => setIsEditing(true)}
-              useCardGroups
-            />
+            {!showPastGames && (
+              <UpcomingMatches
+                matches={scheduleMatchesReady ? displayedMatches : []}
+                isAdmin={canManageContent}
+                teamNamesById={teamNamesById}
+                teamOptions={teamOptions.map((team) => ({
+                  id: team.id,
+                  name: team.name,
+                  slug: team.slug,
+                  division_id: team.division_id,
+                }))}
+                updateMatch={handleUpdateMatch}
+                deleteMatch={handleDeleteMatch}
+                onAddGames={() => setIsEditing(true)}
+                useCardGroups
+              />
+            )}
+            {showPastGames && (
+              <div className={styles.previousResultsWrap}>
+                <PreviousResults
+                  matches={scheduleMatchesReady ? displayedMatches : []}
+                  teamNamesById={teamNamesById}
+                  teamSlugsById={teamSlugsById}
+                  isAdmin={canManageContent}
+                  updateMatch={handleUpdateMatch}
+                  deleteMatch={handleDeleteMatch}
+                />
+              </div>
+            )}
           </div>
 
           <aside className={styles.calendarStack}>
@@ -692,6 +727,13 @@ export default function SchedulePage() {
           </aside>
         </div>
       </main>
+      {isSeasonEditorOpen && (
+        <SeasonEditor
+          initialSeason={seasonToEdit}
+          onCancel={closeSeasonEditor}
+          onSave={handleSaveSeason}
+        />
+      )}
 
       <Footer />
     </div>

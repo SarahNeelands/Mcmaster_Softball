@@ -37,6 +37,15 @@ const PreviousResults: React.FC<PreviousResultsProps> = ({
 }) => {
   const getTeamName = (teamId: string) => teamNamesById[teamId] ?? teamId;
   const getTeamSlug = (teamId: string) => teamSlugsById[teamId] ?? "tbd";
+  const visibleMatches = useMemo(
+    () =>
+      isAdmin
+        ? matches
+        : matches.filter(
+            (match) => match.home_score !== null && match.away_score !== null
+          ),
+    [isAdmin, matches]
+  );
 
   // Tracks which match row is currently being edited
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -80,7 +89,7 @@ const PreviousResults: React.FC<PreviousResultsProps> = ({
     });
     return grouped;
   };
-  const formattedGames = useMemo(() => formatGames(matches), [matches]);
+  const formattedGames = useMemo(() => formatGames(visibleMatches), [visibleMatches]);
 
   // shows - instead of null / undefined scores
   const formatScore = (score: number | undefined | null) =>
