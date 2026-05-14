@@ -119,6 +119,34 @@
   gap: 0.5rem;
 }
 
+.statGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.statCard {
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 0.75rem 0.85rem;
+  background: #fffafa;
+}
+
+.statLabel {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.statValue {
+  margin-top: 0.2rem;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--color-maroon);
+}
+
 .primaryButton {
   border: 1px solid var(--color-maroon);
   background: var(--color-maroon);
@@ -308,5 +336,9 @@
 
   .infoRow {
     grid-template-columns: 1fr;
+  }
+
+  .statGrid {
+    grid-template-columns: 1fr 1fr;
   }
 }

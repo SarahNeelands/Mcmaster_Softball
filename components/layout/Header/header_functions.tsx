@@ -5,26 +5,23 @@ import * as apiS from "@/lib/api/season_api";
 import { setStoredSelectedSeason } from "@/lib/seasons/selection";
 import type { Season } from "@/types/season_mod";
 
-type Screen = "home" | "seasonEditor";
-
 type UseSeasonEditorProps = {
   selectedSeason?: Season;
   setSelectedSeason: React.Dispatch<React.SetStateAction<Season | undefined>>;
   setAllSeasons: React.Dispatch<React.SetStateAction<Season[]>>;
-  setScreen: React.Dispatch<React.SetStateAction<Screen>>;
 };
 
 export function useSeasonEditor({
   selectedSeason,
   setSelectedSeason,
   setAllSeasons,
-  setScreen,
 }: UseSeasonEditorProps) {
   const [seasonToEdit, setSeasonToEdit] = useState<Season | undefined>(undefined);
+  const [isSeasonEditorOpen, setIsSeasonEditorOpen] = useState(false);
 
   const openCreateSeason = () => {
     setSeasonToEdit(undefined);
-    setScreen("seasonEditor");
+    setIsSeasonEditorOpen(true);
   };
 
   const openEditSeason = (season?: Season) => {
@@ -32,12 +29,12 @@ export function useSeasonEditor({
     if (!nextSeason) return;
     setSelectedSeason(nextSeason);
     setSeasonToEdit(nextSeason);
-    setScreen("seasonEditor");
+    setIsSeasonEditorOpen(true);
   };
 
   const closeSeasonEditor = () => {
     setSeasonToEdit(undefined);
-    setScreen("home");
+    setIsSeasonEditorOpen(false);
   };
 
   const handleSaveSeason = async (
@@ -72,6 +69,7 @@ export function useSeasonEditor({
   };
 
   return {
+    isSeasonEditorOpen,
     seasonToEdit,
     openCreateSeason,
     openEditSeason,

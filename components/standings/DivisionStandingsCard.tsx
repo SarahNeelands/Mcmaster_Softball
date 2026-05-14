@@ -118,17 +118,25 @@ export default function DivisionStandingsCard({
       onDrop={handleDrop}
     >
       <div className={styles.header}>
-        {isEditing ? (
-          <input
-            className={styles.titleInput}
-            value={draft.name}
-            onChange={(e) => setDraft((prev) => ({ ...prev, name: e.target.value }))}
-            placeholder="Division name"
-          />
-        ) : (
-          <h3 className={styles.title}>{division.name}</h3>
+        <div className={styles.headerText}>
+          {isEditing ? (
+            <input
+              className={styles.titleInput}
+              value={draft.name}
+              onChange={(e) => setDraft((prev) => ({ ...prev, name: e.target.value }))}
+              placeholder="Division name"
+            />
+          ) : (
+            <h3 className={styles.title}>{division.name}</h3>
+          )}
+        </div>
+        {!hideScores && (
+          <div className={styles.columnLabels} aria-hidden="true">
+            <span className={styles.columnLabel}>Wins</span>
+            <span className={styles.columnLabel}>Losses</span>
+            <span className={styles.scoreLabel}>Score</span>
+          </div>
         )}
-        {!hideScores && <span className={styles.scoreLabel}>Score</span>}
       </div>
 
       {isEditing && !isHoldingArea && (
@@ -212,7 +220,11 @@ export default function DivisionStandingsCard({
                 {isRelegated && <span className={`${styles.arrow} ${styles.down}`}>v</span>}
               </div>
 
-              <div className={styles.points}>{standing.points}</div>
+              <div className={styles.right}>
+                <span className={styles.record}>{standing.wins}</span>
+                <span className={styles.record}>{standing.losses}</span>
+                <div className={styles.points}>{standing.points}</div>
+              </div>
             </li>
           );
         })}

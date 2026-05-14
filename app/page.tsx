@@ -98,9 +98,8 @@ export default function Home() {
   >([]);
   const [testerNotificationsBusy, setTesterNotificationsBusy] = useState(false);
 
-  const [screen, setScreen] = useState<"home" | "seasonEditor">("home");
-
   const {
+    isSeasonEditorOpen,
     seasonToEdit,
     openCreateSeason,
     openEditSeason,
@@ -110,7 +109,6 @@ export default function Home() {
     selectedSeason,
     setSelectedSeason,
     setAllSeasons,
-    setScreen,
   });
 
   const canManageContent = isAdmin && !isPreviewing;
@@ -381,7 +379,7 @@ export default function Home() {
 
       <HeroBanner />
 
-      {screen === "home" && selectedSeason && (
+      {selectedSeason && (
         <main className="main">
           <div className="layout-grid">
             <AnnouncementsSection
@@ -405,14 +403,12 @@ export default function Home() {
         </main>
       )}
 
-      {screen === "seasonEditor" && (
-        <main className="main">
-          <SeasonEditor
-            initialSeason={seasonToEdit}
-            onCancel={closeSeasonEditor}
-            onSave={handleSaveSeason}
-          />
-        </main>
+      {isSeasonEditorOpen && (
+        <SeasonEditor
+          initialSeason={seasonToEdit}
+          onCancel={closeSeasonEditor}
+          onSave={handleSaveSeason}
+        />
       )}
 
       <Footer />

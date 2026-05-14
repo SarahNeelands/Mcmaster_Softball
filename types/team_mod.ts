@@ -9,4 +9,8 @@ export type Team = {
   editing_status: string,
   division?: string,
   current_ranking?: number,
+  season_wins?: number,
+  season_losses?: number,
+  runs_for?: number,
+  runs_against?: number,
 }

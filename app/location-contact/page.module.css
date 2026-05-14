@@ -55,6 +55,12 @@
   align-items: start;
 }
 
+.infoStack {
+  display: grid;
+  gap: 1.5rem;
+  align-content: start;
+}
+
 .infoCard,
 .mapCard {
   background: #ffffff;
@@ -84,6 +90,62 @@
 
 .link:hover {
   text-decoration: underline;
+}
+
+.downloadButton,
+.removeButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  padding: 0.7rem 1rem;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.downloadButton {
+  width: fit-content;
+  border: 1px solid var(--color-maroon);
+  background: var(--color-maroon);
+  color: #fff;
+}
+
+.removeButton {
+  border: 1px solid var(--color-maroon);
+  background: transparent;
+  color: var(--color-maroon);
+}
+
+.removeButton:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.adminFileTools {
+  margin-top: 1rem;
+  display: grid;
+  gap: 0.85rem;
+}
+
+.uploadLabel {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.uploadTitle {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-maroon);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.fileInput {
+  border: 1px solid #e5d6de;
+  border-radius: 10px;
+  background: #fff;
+  padding: 0.65rem 0.75rem;
 }
 
 .locationNote {

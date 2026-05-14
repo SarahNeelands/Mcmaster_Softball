@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Header from "@/components/layout/Header/Header";
 import Footer from "@/components/layout/Footer/Footer";
+import SeasonEditor from "@/components/editors/SeasonEditor";
 import DivisionStandingsCard from "@/components/standings/DivisionStandingsCard";
 import SeriesDropdownButton from "@/components/dropDowns/SeriesDropdownButton";
 import SeriesEditor from "@/components/editors/SeriesEditor";
@@ -46,13 +47,18 @@ export default function StandingsPage() {
     team_id: string;
     source_division_id: string;
   } | null>(null);
-  const [, setScreen] = useState<"home" | "seasonEditor">("home");
 
-  const { openCreateSeason, openEditSeason } = useSeasonEditor({
+  const {
+    isSeasonEditorOpen,
+    seasonToEdit,
+    openCreateSeason,
+    openEditSeason,
+    closeSeasonEditor,
+    handleSaveSeason,
+  } = useSeasonEditor({
     selectedSeason,
     setSelectedSeason,
     setAllSeasons,
-    setScreen,
   });
 
   const canManageContent = isAdmin && !isPreviewing;
@@ -562,6 +568,13 @@ export default function StandingsPage() {
           </div>
         )}
       </main>
+      {isSeasonEditorOpen && (
+        <SeasonEditor
+          initialSeason={seasonToEdit}
+          onCancel={closeSeasonEditor}
+          onSave={handleSaveSeason}
+        />
+      )}
 
       <Footer />
     </div>

@@ -126,6 +126,25 @@ export default function TeamDetail({
             </div>
           )}
 
+          <div className={styles.statGrid}>
+            <div className={styles.statCard}>
+              <div className={styles.statLabel}>Wins</div>
+              <div className={styles.statValue}>{team.season_wins ?? 0}</div>
+            </div>
+            <div className={styles.statCard}>
+              <div className={styles.statLabel}>Losses</div>
+              <div className={styles.statValue}>{team.season_losses ?? 0}</div>
+            </div>
+            <div className={styles.statCard}>
+              <div className={styles.statLabel}>Runs For</div>
+              <div className={styles.statValue}>{team.runs_for ?? 0}</div>
+            </div>
+            <div className={styles.statCard}>
+              <div className={styles.statLabel}>Runs Against</div>
+              <div className={styles.statValue}>{team.runs_against ?? 0}</div>
+            </div>
+          </div>
+
           <div className={styles.infoRows}>
             <div className={styles.infoRow}>
               <div className={styles.label}>Captain</div>

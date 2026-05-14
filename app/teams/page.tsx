@@ -6,6 +6,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Header from "@/components/layout/Header/Header";
 import Footer from "@/components/layout/Footer/Footer";
+import SeasonEditor from "@/components/editors/SeasonEditor";
 import SeriesEditor from "@/components/editors/SeriesEditor";
 import TeamTable from "@/components/teams/TeamTable";
 import SeriesDropdownButton from "@/components/dropDowns/SeriesDropdownButton";
@@ -31,7 +32,6 @@ export default function TeamsPage() {
   const [adminSessionChecked, setAdminSessionChecked] = useState(false);
   const [isPreviewing, setIsPreviewing] = useState(false);
   const [teams, setTeams] = useState<Team[]>([]);
-  const [, setScreen] = useState<"home" | "seasonEditor">("home");
   const [selectedSeason, setSelectedSeason] = useState<Season>();
   const [allSeasons, setAllSeasons] = useState<Season[]>([]);
   const [selectedSeries, setSelectedSeries] = useState<Series>();
@@ -57,11 +57,17 @@ export default function TeamsPage() {
     [allSeries, canManageContent]
   );
 
-  const { openCreateSeason, openEditSeason } = useSeasonEditor({
+  const {
+    isSeasonEditorOpen,
+    seasonToEdit,
+    openCreateSeason,
+    openEditSeason,
+    closeSeasonEditor,
+    handleSaveSeason,
+  } = useSeasonEditor({
     selectedSeason,
     setSelectedSeason,
     setAllSeasons,
-    setScreen,
   });
 
   const [newTeam, setNewTeam] = useState<Team>({
@@ -413,6 +419,13 @@ export default function TeamsPage() {
           onTeamDelete={handleDeleteTeam}
         />
       </main>
+      {isSeasonEditorOpen && (
+        <SeasonEditor
+          initialSeason={seasonToEdit}
+          onCancel={closeSeasonEditor}
+          onSave={handleSaveSeason}
+        />
+      )}
 
       <Footer />
     </div>

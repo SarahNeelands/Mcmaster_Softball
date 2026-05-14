@@ -25,7 +25,27 @@ export type SeasonRow = {
   end_date: string;
 };
 
+let ensureSeasonColumnsPromise: Promise<void> | null = null;
+
+async function EnsureSeasonColumns(): Promise<void> {
+  if (!ensureSeasonColumnsPromise) {
+    ensureSeasonColumnsPromise = (async () => {
+      await pool.query(
+        `ALTER TABLE seasons
+         ADD COLUMN IF NOT EXISTS admin_only BOOLEAN NOT NULL DEFAULT FALSE,
+         ADD COLUMN IF NOT EXISTS score_notifications_enabled BOOLEAN NOT NULL DEFAULT FALSE`
+      );
+    })().catch((error) => {
+      ensureSeasonColumnsPromise = null;
+      throw error;
+    });
+  }
+
+  await ensureSeasonColumnsPromise;
+}
+
 async function HasSeasonAdminOnlyColumn(): Promise<boolean> {
+  await EnsureSeasonColumns();
   const result = await pool.query<{ exists: boolean }>(
     `SELECT EXISTS (
        SELECT 1
@@ -40,6 +60,7 @@ async function HasSeasonAdminOnlyColumn(): Promise<boolean> {
 }
 
 async function HasSeasonScoreNotificationsColumn(): Promise<boolean> {
+  await EnsureSeasonColumns();
   const result = await pool.query<{ exists: boolean }>(
     `SELECT EXISTS (
        SELECT 1

@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Header from "@/components/layout/Header/Header";
 import Footer from "@/components/layout/Footer/Footer";
+import SeasonEditor from "@/components/editors/SeasonEditor";
 import type { Season } from "@/types/season_mod";
 import styles from "./page.module.css";
 import * as apiP from "@/lib/api/publish_api";
@@ -24,13 +25,20 @@ export default function LocationContactPage() {
   const [isPreviewing, setIsPreviewing] = useState(false);
   const [selectedSeason, setSelectedSeason] = useState<Season>();
   const [allSeasons, setAllSeasons] = useState<Season[]>([]);
-  const [, setScreen] = useState<"home" | "seasonEditor">("home");
+  const [captainContactsHref, setCaptainContactsHref] = useState<string | null>(null);
+  const [captainContactsBusy, setCaptainContactsBusy] = useState(false);
 
-  const { openCreateSeason, openEditSeason } = useSeasonEditor({
+  const {
+    isSeasonEditorOpen,
+    seasonToEdit,
+    openCreateSeason,
+    openEditSeason,
+    closeSeasonEditor,
+    handleSaveSeason,
+  } = useSeasonEditor({
     selectedSeason,
     setSelectedSeason,
     setAllSeasons,
-    setScreen,
   });
 
   const canManageContent = isAdmin && !isPreviewing;
@@ -39,6 +47,16 @@ export default function LocationContactPage() {
     () => filterVisibleByEditingStatus(allSeasons, canManageContent),
     [allSeasons, canManageContent]
   );
+
+  const loadCaptainContacts = async () => {
+    const res = await fetch("/api/captain-contacts", { cache: "no-store" });
+    if (!res.ok) {
+      throw new Error(await res.text());
+    }
+
+    const body = await res.json();
+    setCaptainContactsHref(body.available ? body.href : null);
+  };
 
   const handlePublish = async () => {
     try {
@@ -78,6 +96,7 @@ export default function LocationContactPage() {
           isAdmin: session.isAdmin,
         })
       );
+      await loadCaptainContacts();
     };
 
     load().catch((err) => {
@@ -128,33 +147,119 @@ export default function LocationContactPage() {
         </section>
 
         <section className={styles.contentGrid}>
-          <article className={styles.infoCard}>
-            <h2 className={styles.sectionTitle}>Contact Information</h2>
-            <p className={styles.text}>McMaster GSA Softball League</p>
-            <p className={styles.text}>
-              Email:{" "}
-              <a href="mailto:softballgsa@gmail.com" className={styles.link}>
-                softballgsa@gmail.com
-              </a>
-            </p>
-            <p className={styles.text}>
-              Instagram:{" "}
-              <a
-                href="https://www.instagram.com/softballgsa/"
-                className={styles.link}
-                target="_blank"
-                rel="noreferrer"
-              >
-                @softballgsa
-              </a>
-            </p>
-            <div className={styles.locationNote}>
-              <h3 className={styles.noteTitle}>Game Location</h3>
-              <p className={styles.noteText}>
-                All league games take place by Lot P at McMaster University.
+          <div className={styles.infoStack}>
+            <article className={styles.infoCard}>
+              <h2 className={styles.sectionTitle}>Contact Information</h2>
+              <p className={styles.text}>McMaster GSA Softball League</p>
+              <p className={styles.text}>
+                Email:{" "}
+                <a href="mailto:softballgsa@gmail.com" className={styles.link}>
+                  softballgsa@gmail.com
+                </a>
               </p>
-            </div>
-          </article>
+              <p className={styles.text}>
+                Instagram:{" "}
+                <a
+                  href="https://www.instagram.com/softballgsa/"
+                  className={styles.link}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  @softballgsa
+                </a>
+              </p>
+              <div className={styles.locationNote}>
+                <h3 className={styles.noteTitle}>Game Location</h3>
+                <p className={styles.noteText}>
+                  All league games take place by Lot P at McMaster University.
+                </p>
+              </div>
+            </article>
+
+            <article className={styles.infoCard}>
+              <h2 className={styles.sectionTitle}>Captain Contacts</h2>
+              <p className={styles.text}>
+                Download the current captain contact sheet for the league.
+              </p>
+              {captainContactsHref ? (
+                <a
+                  href={captainContactsHref}
+                  download="captain-contacts.pdf"
+                  className={styles.downloadButton}
+                >
+                  Captain Contacts
+                </a>
+              ) : (
+                <p className={styles.noteText}>No captain contact PDF is available right now.</p>
+              )}
+
+              {canManageContent && (
+                <div className={styles.adminFileTools}>
+                  <label className={styles.uploadLabel}>
+                    <span className={styles.uploadTitle}>Upload PDF</span>
+                    <input
+                      type="file"
+                      accept="application/pdf,.pdf"
+                      className={styles.fileInput}
+                      disabled={captainContactsBusy}
+                      onChange={async (event) => {
+                        const file = event.target.files?.[0];
+                        if (!file) return;
+
+                        const formData = new FormData();
+                        formData.append("file", file);
+                        setCaptainContactsBusy(true);
+
+                        try {
+                          const res = await fetch("/api/captain-contacts", {
+                            method: "POST",
+                            body: formData,
+                          });
+
+                          if (!res.ok) {
+                            throw new Error(await res.text());
+                          }
+
+                          await loadCaptainContacts();
+                          event.target.value = "";
+                        } catch (err) {
+                          alert(err instanceof Error ? err.message : "Failed to upload captain contacts PDF.");
+                        } finally {
+                          setCaptainContactsBusy(false);
+                        }
+                      }}
+                    />
+                  </label>
+
+                  <button
+                    type="button"
+                    className={styles.removeButton}
+                    disabled={captainContactsBusy || !captainContactsHref}
+                    onClick={async () => {
+                      setCaptainContactsBusy(true);
+                      try {
+                        const res = await fetch("/api/captain-contacts", {
+                          method: "DELETE",
+                        });
+
+                        if (!res.ok) {
+                          throw new Error(await res.text());
+                        }
+
+                        await loadCaptainContacts();
+                      } catch (err) {
+                        alert(err instanceof Error ? err.message : "Failed to remove captain contacts PDF.");
+                      } finally {
+                        setCaptainContactsBusy(false);
+                      }
+                    }}
+                  >
+                    {captainContactsBusy ? "Working..." : "Remove PDF"}
+                  </button>
+                </div>
+              )}
+            </article>
+          </div>
 
           <article className={styles.mapCard}>
             <h2 className={styles.sectionTitle}>Campus Map</h2>
@@ -171,6 +276,13 @@ export default function LocationContactPage() {
           </article>
         </section>
       </main>
+      {isSeasonEditorOpen && (
+        <SeasonEditor
+          initialSeason={seasonToEdit}
+          onCancel={closeSeasonEditor}
+          onSave={handleSaveSeason}
+        />
+      )}
 
       <Footer />
     </div>
