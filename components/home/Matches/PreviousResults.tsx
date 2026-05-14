@@ -37,15 +37,7 @@ const PreviousResults: React.FC<PreviousResultsProps> = ({
 }) => {
   const getTeamName = (teamId: string) => teamNamesById[teamId] ?? teamId;
   const getTeamSlug = (teamId: string) => teamSlugsById[teamId] ?? "tbd";
-  const visibleMatches = useMemo(
-    () =>
-      isAdmin
-        ? matches
-        : matches.filter(
-            (match) => match.home_score !== null && match.away_score !== null
-          ),
-    [isAdmin, matches]
-  );
+  const visibleMatches = useMemo(() => matches, [matches]);
 
   // Tracks which match row is currently being edited
   const [editingId, setEditingId] = useState<string | null>(null);
