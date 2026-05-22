@@ -533,12 +533,14 @@ export default function StandingsPage() {
             />
           )}
 
-          {visibleDivisions.map((division) => (
+          {visibleDivisions.map((division, index) => (
             <DivisionStandingsCard
               key={division.id}
               division={division}
               advanceAmount={selectedSeries?.advance_amount}
               demoteAmount={selectedSeries?.demote_amount}
+              divisionIndex={index}
+              divisionCount={visibleDivisions.length}
               isAdmin={canManageContent}
               onSaveDivision={handleUpdateDivision}
               onDeleteDivision={handleDeleteDivision}

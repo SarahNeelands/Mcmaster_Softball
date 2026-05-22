@@ -183,6 +183,13 @@ export default function RulesPage() {
             >
               Download Score Sheet
             </a>
+            <a
+              className={styles.badge}
+              href="/downloads/Playing-Rules.pdf"
+              download="Playing-Rules.pdf"
+            >
+              Download General Playing Rules
+            </a>
           </div>
         </section>
         <RulesSection

@@ -11,6 +11,8 @@ type Props = {
   division: Division;
   advanceAmount?: number;
   demoteAmount?: number;
+  divisionIndex?: number;
+  divisionCount?: number;
   teamBasePath?: string;
   isAdmin?: boolean;
   startInEditMode?: boolean;
@@ -40,6 +42,8 @@ export default function DivisionStandingsCard({
   division,
   advanceAmount = 0,
   demoteAmount = 0,
+  divisionIndex = 0,
+  divisionCount = 1,
   teamBasePath = "/teams",
   isAdmin = false,
   startInEditMode = false,
@@ -73,6 +77,8 @@ export default function DivisionStandingsCard({
       a.team.name.localeCompare(b.team.name)
   );
   const showingTeamRows = isHoldingArea;
+  const canPromote = divisionIndex > 0;
+  const canRelegate = divisionIndex < divisionCount - 1;
 
   const handleSave = async () => {
     if (!onSaveDivision) return;
@@ -192,9 +198,9 @@ export default function DivisionStandingsCard({
 
         {!showingTeamRows && rows.map((standing, idx) => {
           const rank = idx + 1;
-          const isPromoted = advanceAmount > 0 && idx < advanceAmount;
+          const isPromoted = canPromote && advanceAmount > 0 && idx < advanceAmount;
           const isRelegated =
-            demoteAmount > 0 && idx >= Math.max(0, rows.length - demoteAmount);
+            canRelegate && demoteAmount > 0 && idx >= Math.max(0, rows.length - demoteAmount);
 
           return (
             <li
