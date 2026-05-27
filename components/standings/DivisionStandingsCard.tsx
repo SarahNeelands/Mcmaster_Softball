@@ -139,8 +139,9 @@ export default function DivisionStandingsCard({
         {!hideScores && (
           <div className={styles.columnLabels} aria-hidden="true">
             <span className={styles.columnLabel}>Wins</span>
+            <span className={styles.columnLabel}>Ties</span>
             <span className={styles.columnLabel}>Losses</span>
-            <span className={styles.scoreLabel}>Score</span>
+            <span className={styles.scoreLabel}>Pts</span>
           </div>
         )}
       </div>
@@ -228,6 +229,7 @@ export default function DivisionStandingsCard({
 
               <div className={styles.right}>
                 <span className={styles.record}>{standing.wins}</span>
+                <span className={styles.record}>{standing.ties}</span>
                 <span className={styles.record}>{standing.losses}</span>
                 <div className={styles.points}>{standing.points}</div>
               </div>

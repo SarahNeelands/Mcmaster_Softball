@@ -228,6 +228,7 @@ function getOrderedDivisionTeamIds(division: Division): string[] {
                     b.points - a.points ||
                     b.wins - a.wins ||
                     a.losses - b.losses ||
+                    b.ties - a.ties ||
                     a.team.name.localeCompare(b.team.name)
             )
             .map((standing) => standing.team.id);

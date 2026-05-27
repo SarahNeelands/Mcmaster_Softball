@@ -28,6 +28,16 @@ import {
 } from "@/lib/seasons/selection";
 import { filterOutEmptySlotTeams } from "@/lib/teams/specialTeams";
 
+function sortStandings(a: Standing, b: Standing) {
+  return (
+    b.points - a.points ||
+    b.wins - a.wins ||
+    a.losses - b.losses ||
+    b.ties - a.ties ||
+    a.team.name.localeCompare(b.team.name)
+  );
+}
+
 export default function StandingsPage() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminSessionChecked, setAdminSessionChecked] = useState(false);
@@ -234,6 +244,10 @@ export default function StandingsPage() {
       try {
         const divisionGroups = await Promise.all(
           visibleSeries.map(async (series) => {
+            if (series.id === selectedSeries?.id) {
+              return visibleDivisions;
+            }
+
             const data = await apiD.GetDivisions("", series.id, "all");
             return (Array.isArray(data) ? data : [data]).filter(Boolean);
           })
@@ -266,14 +280,7 @@ export default function StandingsPage() {
           });
         });
 
-        const aggregated = [...totals.values()].sort(
-          (a, b) =>
-            b.points - a.points ||
-            b.wins - a.wins ||
-            a.losses - b.losses ||
-            b.ties - a.ties ||
-            a.team.name.localeCompare(b.team.name)
-        );
+        const aggregated = [...totals.values()].sort(sortStandings);
 
         if (!cancelled) {
           setSeasonRankings(aggregated);
@@ -291,7 +298,7 @@ export default function StandingsPage() {
     return () => {
       cancelled = true;
     };
-  }, [selectedSeason, visibleSeries, visibleSeasonTeams]);
+  }, [selectedSeason, selectedSeries, visibleSeries, visibleDivisions, visibleSeasonTeams]);
 
   const handlePublish = async () => {
     try {
