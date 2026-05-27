@@ -148,3 +148,11 @@ create table admins (
   password_hash text not null,
   created_at timestamptz default now()
 );
+
+create table site_assets (
+  asset_key text primary key,
+  file_name text not null,
+  content_type text not null,
+  data bytea not null,
+  updated_at timestamptz not null default now()
+);
