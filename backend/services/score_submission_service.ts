@@ -25,6 +25,11 @@ function isMatchClosed(match: Match) {
   return match.score_status === "finalized" || match.score_status === "published_single_submission";
 }
 
+function isMatchInSchedulingWindow(match: Match, now: Date, windowEnd: Date) {
+  const scheduledAt = getMatchScheduledAt(match.date, match.time);
+  return scheduledAt > now && scheduledAt <= windowEnd;
+}
+
 function assertSubmissionAllowed(entry: SubmissionLookup) {
   if (!entry) {
     throw new Error("Invalid submission link.");
@@ -183,6 +188,8 @@ export async function sendScoreRequestEmails(matchId: string) {
   const scheduledAt = getMatchScheduledAt(match.date, match.time);
   const desiredSendAt = new Date(scheduledAt.getTime() - 60 * 60 * 1000);
   const sendAt = desiredSendAt > new Date() ? desiredSendAt.toISOString() : undefined;
+  const failedEmails: Array<{ side: "home" | "away"; email: string; error: string }> = [];
+  const scheduledSides: Array<"home" | "away"> = [];
 
   for (const item of links) {
     const stored = await repo.getLinkByMatchAndSide(match.id, item.side);
@@ -199,73 +206,136 @@ export async function sendScoreRequestEmails(matchId: string) {
       throw new Error(`Missing raw token for unsent ${item.side} link.`);
     }
 
-    const recipientEmail = normalizeAndValidateEmail(
-      item.email,
-      `${item.side === "home" ? match.home_team_name : match.away_team_name} (${item.side})`
-    );
+    try {
+      const recipientEmail = normalizeAndValidateEmail(
+        item.email,
+        `${item.side === "home" ? match.home_team_name : match.away_team_name} (${item.side})`
+      );
 
-    const submitUrl = `${appUrl}/submit-score?token=${encodeURIComponent(item.token)}`;
-    const subject = `Submit score: ${match.home_team_name} vs ${match.away_team_name}`;
-    const text =
-      `Score submission link for ${match.home_team_name} vs ${match.away_team_name}\n\n` +
-      `Scheduled: ${match.date} ${match.time}\n` +
-      `Link type: ${item.side}\n` +
-      `Submit here: ${submitUrl}\n\n` +
-      `This link can be forwarded, but it can only be used once.\n` +
-      `It expires 24 hours after the scheduled match time.`;
+      const submitUrl = `${appUrl}/submit-score?token=${encodeURIComponent(item.token)}`;
+      const subject = `Submit score: ${match.home_team_name} vs ${match.away_team_name}`;
+      const text =
+        `Score submission link for ${match.home_team_name} vs ${match.away_team_name}\n\n` +
+        `Scheduled: ${match.date} ${match.time}\n` +
+        `Link type: ${item.side}\n` +
+        `Submit here: ${submitUrl}\n\n` +
+        `This link can be forwarded, but it can only be used once.\n` +
+        `It expires 24 hours after the scheduled match time.`;
 
-    await sendEmail({
-      to: recipientEmail,
-      subject,
-      text,
-      scheduledAt: sendAt,
-      idempotencyKey: `score-request-${stored.id}`,
-    });
+      await sendEmail({
+        to: recipientEmail,
+        subject,
+        text,
+        scheduledAt: sendAt,
+        idempotencyKey: `score-request-${stored.id}`,
+      });
 
-    await repo.markEmailSent(stored.id);
+      await repo.markEmailSent(stored.id);
+      scheduledSides.push(item.side);
+    } catch (error) {
+      failedEmails.push({
+        side: item.side,
+        email: item.email,
+        error: error instanceof Error ? error.message : "Unknown email error.",
+      });
+    }
   }
 
-  await repo.updateMatchScoreState({
-    matchId: match.id,
-    scoreStatus: "awaiting_scores",
-    scoreRequestSentAt: "now",
-  });
+  if (scheduledSides.length > 0) {
+    await repo.updateMatchScoreState({
+      matchId: match.id,
+      scoreStatus: "awaiting_scores",
+      scoreRequestSentAt: "now",
+    });
+  }
 
-  return { ok: true };
+  if (failedEmails.length > 0) {
+    return {
+      ok: scheduledSides.length > 0,
+      scheduledSides,
+      failedEmails,
+    };
+  }
+
+  return { ok: true, scheduledSides, failedEmails };
 }
 
 export async function runDailyScoreCron() {
   const singleSubmissionResult = await publishSingleSideSubmissions();
   const noSubmissionResult = await notifyFounderOfNoSubmissionExpirations();
 
-  const windowEnd = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
-  const matches = await repo.getMatchesNeedingScoreRequests(windowEnd);
+  const now = new Date();
+  const windowEnd = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+  const matches = await repo.getMatchesNeedingScoreRequests(windowEnd.toISOString());
   const preparedMatchIds: string[] = [];
+  const failedMatches: Array<{ matchId: string; errors: string[] }> = [];
 
   // Daily preparation widens the window to 24 hours and relies on the provider
   // to honor a future send time 1 hour before first pitch.
   for (const match of matches) {
-    await sendScoreRequestEmails(match.id);
-    preparedMatchIds.push(match.id);
+    if (!isMatchInSchedulingWindow(match, now, windowEnd)) {
+      continue;
+    }
+
+    try {
+      const result = await sendScoreRequestEmails(match.id);
+      if (result.ok) {
+        preparedMatchIds.push(match.id);
+      }
+      if (result.failedEmails.length > 0) {
+        failedMatches.push({
+          matchId: match.id,
+          errors: result.failedEmails.map((failure) => `${failure.side}: ${failure.error}`),
+        });
+      }
+    } catch (error) {
+      failedMatches.push({
+        matchId: match.id,
+        errors: [error instanceof Error ? error.message : "Unknown score request error."],
+      });
+    }
   }
 
   return {
     publishedMatchIds: singleSubmissionResult.publishedMatchIds,
     notifiedMatchIds: noSubmissionResult.notifiedMatchIds,
     preparedMatchIds,
+    failedMatches,
   };
 }
 
 export async function prepareScoreRequestsForSeason(seasonId: string) {
-  const matches = await repo.getMatchesNeedingManualSeasonScoreRequests(seasonId);
+  const now = new Date();
+  const windowEnd = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+  const matches = await repo.getMatchesNeedingScoreRequests(windowEnd.toISOString(), seasonId);
   const preparedMatchIds: string[] = [];
+  const failedMatches: Array<{ matchId: string; errors: string[] }> = [];
 
   for (const match of matches) {
-    await sendScoreRequestEmails(match.id);
-    preparedMatchIds.push(match.id);
+    if (!isMatchInSchedulingWindow(match, now, windowEnd)) {
+      continue;
+    }
+
+    try {
+      const result = await sendScoreRequestEmails(match.id);
+      if (result.ok) {
+        preparedMatchIds.push(match.id);
+      }
+      if (result.failedEmails.length > 0) {
+        failedMatches.push({
+          matchId: match.id,
+          errors: result.failedEmails.map((failure) => `${failure.side}: ${failure.error}`),
+        });
+      }
+    } catch (error) {
+      failedMatches.push({
+        matchId: match.id,
+        errors: [error instanceof Error ? error.message : "Unknown score request error."],
+      });
+    }
   }
 
-  return { preparedMatchIds };
+  return { preparedMatchIds, failedMatches };
 }
 
 async function notifyFounderConflict(match: repo.MatchWithTeams, links: ScoreSubmissionLink[]) {

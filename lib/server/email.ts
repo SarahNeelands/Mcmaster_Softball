@@ -29,7 +29,7 @@ export async function sendEmail(input: EmailInput) {
       subject: input.subject,
       text: input.text,
       html: input.html,
-      ...(input.scheduledAt ? { scheduledAt: input.scheduledAt } : {}),
+      ...(input.scheduledAt ? { scheduled_at: input.scheduledAt } : {}),
     }),
   });
 

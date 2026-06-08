@@ -18,11 +18,8 @@ export async function POST(request: Request) {
     }
 
     const season = await seasonService.GetSeasonById(seasonId, true);
-    if (!season.admin_only) {
-      return NextResponse.json({ error: "Only Tester seasons can use this control." }, { status: 400 });
-    }
 
-    if (!season.score_notifications_enabled) {
+    if (season.admin_only && !season.score_notifications_enabled) {
       return NextResponse.json({ preparedMatchIds: [] }, { status: 200 });
     }
 

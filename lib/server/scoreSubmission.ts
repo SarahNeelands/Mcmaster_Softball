@@ -24,12 +24,15 @@ export function parseScoreValue(value: unknown) {
 }
 
 export function getMatchScheduledAt(date: string, time: string) {
-  return new Date(`${date}T${normalizeTimeString(time)}:00`);
+  return getZonedDateTime(date, normalizeTimeString(time), "America/Toronto");
 }
 
 function normalizeTimeString(time: string) {
-  if (/^\d{2}:\d{2}$/.test(time)) {
-    return time;
+  const twentyFourHourMatch = time.match(/^(\d{1,2}):(\d{2})$/);
+  if (twentyFourHourMatch) {
+    const hours = Number(twentyFourHourMatch[1]);
+    const minutes = Number(twentyFourHourMatch[2]);
+    return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
   }
 
   const match = time.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
@@ -45,4 +48,61 @@ function normalizeTimeString(time: string) {
   if (modifier === "AM" && hours === 12) hours = 0;
 
   return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
+}
+
+function getZonedDateTime(date: string, time: string, timeZone: string) {
+  const [year, month, day] = date.split("-").map(Number);
+  const [hour, minute] = time.split(":").map(Number);
+
+  if (
+    !Number.isFinite(year) ||
+    !Number.isFinite(month) ||
+    !Number.isFinite(day) ||
+    !Number.isFinite(hour) ||
+    !Number.isFinite(minute)
+  ) {
+    return new Date(`${date}T${time}:00`);
+  }
+
+  let candidate = new Date(Date.UTC(year, month - 1, day, hour, minute));
+
+  for (let i = 0; i < 2; i += 1) {
+    const zonedParts = getZonedParts(candidate, timeZone);
+    const desiredWallTime = Date.UTC(year, month - 1, day, hour, minute);
+    const actualWallTime = Date.UTC(
+      zonedParts.year,
+      zonedParts.month - 1,
+      zonedParts.day,
+      zonedParts.hour,
+      zonedParts.minute
+    );
+
+    candidate = new Date(candidate.getTime() + desiredWallTime - actualWallTime);
+  }
+
+  return candidate;
+}
+
+function getZonedParts(date: Date, timeZone: string) {
+  const formatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  });
+
+  const parts = Object.fromEntries(
+    formatter.formatToParts(date).map((part) => [part.type, part.value])
+  );
+
+  return {
+    year: Number(parts.year),
+    month: Number(parts.month),
+    day: Number(parts.day),
+    hour: Number(parts.hour),
+    minute: Number(parts.minute),
+  };
 }

@@ -254,20 +254,8 @@ export async function getMatchesNeedingScoreRequests(windowEndIso: string, seaso
        AND (
          (
            m.score_request_sent_at IS NULL
-           AND (
-             CASE
-               WHEN m.time ~* '^[0-9]{1,2}:[0-9]{2}\\s*(AM|PM)$'
-                 THEN TO_TIMESTAMP(m.date || ' ' || m.time, 'YYYY-MM-DD HH12:MI AM')
-               ELSE TO_TIMESTAMP(m.date || ' ' || m.time, 'YYYY-MM-DD HH24:MI')
-             END
-           ) <= $1::timestamptz
-           AND (
-             CASE
-               WHEN m.time ~* '^[0-9]{1,2}:[0-9]{2}\\s*(AM|PM)$'
-                 THEN TO_TIMESTAMP(m.date || ' ' || m.time, 'YYYY-MM-DD HH12:MI AM')
-               ELSE TO_TIMESTAMP(m.date || ' ' || m.time, 'YYYY-MM-DD HH24:MI')
-             END
-           ) > NOW()
+           AND m.date::date >= (NOW() AT TIME ZONE 'America/Toronto')::date
+           AND m.date::date <= (($1::timestamptz AT TIME ZONE 'America/Toronto')::date + INTERVAL '1 day')
          )
          OR EXISTS (
            SELECT 1
@@ -361,7 +349,16 @@ export async function getMatchesReadyForNoSubmissionNotice() {
      WHERE m.score_request_sent_at IS NOT NULL
        AND ht.slug NOT LIKE '${EMPTY_SLOT_SLUG_PREFIX}%'
        AND at.slug NOT LIKE '${EMPTY_SLOT_SLUG_PREFIX}%'
-       AND m.score_request_sent_at <= NOW() - INTERVAL '24 hours'
+       AND (
+         (
+           m.date::date +
+           CASE
+             WHEN m.time ~* '^[0-9]{1,2}:[0-9]{2}\\s*(AM|PM)$'
+               THEN TO_TIMESTAMP(m.time, 'HH12:MI AM')::time
+             ELSE m.time::time
+           END
+         ) AT TIME ZONE 'America/Toronto'
+       ) <= NOW() - INTERVAL '24 hours'
        AND m.home_score IS NULL
        AND m.away_score IS NULL
        AND m.first_submitted_at IS NULL
