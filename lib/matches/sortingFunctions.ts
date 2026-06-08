@@ -42,7 +42,10 @@ export function groupMatchesByMonth(matches: Match[]): MatchesByMonth[] {
   const map = new Map<string, MatchesByMonth>();
 
   for (const match of matches) {
-    const d = new Date(match.date);
+    const [yearPart, monthPart, dayPart] = match.date.split("-").map(Number);
+    const d = Number.isFinite(yearPart) && Number.isFinite(monthPart) && Number.isFinite(dayPart)
+      ? new Date(yearPart, monthPart - 1, dayPart)
+      : new Date(match.date);
     const year = d.getFullYear();
     const month = d.getMonth();
     const key = `${year}-${month}`;

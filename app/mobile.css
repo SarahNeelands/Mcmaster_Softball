@@ -1,0 +1,243 @@
+/* Phone-specific layout polish layered after the broader responsive helpers. */
+@media (max-width: 640px) {
+  html {
+    font-size: 15px;
+  }
+
+  body {
+    background: var(--color-background, #f8f8f8);
+  }
+
+  html,
+  body {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  .page,
+  .main {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    padding-inline: 0;
+  }
+
+  body > *,
+  main,
+  section,
+  article,
+  [class*="page"],
+  [class*="main"],
+  [class*="card"],
+  [class*="panel"] {
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .main {
+    padding-block: 0.75rem;
+  }
+
+  .layout-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    width: 100%;
+    padding-inline: 0.75rem;
+  }
+
+  header[class*="Header_header"] {
+    position: static;
+    padding: 0.75rem;
+    gap: 0.75rem;
+  }
+
+  [class*="Header_leftGroup"] {
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  [class*="Logo_logo"] {
+    justify-content: center;
+  }
+
+  [class*="Logo_mark"] {
+    width: 38px;
+    height: 38px;
+  }
+
+  nav[class*="NavBar_nav"] {
+    overflow-x: auto;
+    justify-content: flex-start;
+    padding-bottom: 0.1rem;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  [class*="NavBar_navList"] {
+    width: max-content;
+    min-width: 100%;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    gap: 0.45rem;
+  }
+
+  [class*="NavBar_navItem"] a {
+    display: block;
+    padding: 0.45rem 0.65rem;
+    border-radius: 999px;
+    background: rgba(107, 35, 53, 0.08);
+    white-space: nowrap;
+    font-size: 0.88rem;
+  }
+
+  [class*="Header_actions"],
+  [class*="Header_controlColumns"] {
+    width: 100%;
+    justify-content: center;
+  }
+
+  [class*="Header_controlColumns"] {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  [class*="Header_actions"] button,
+  [class*="Header_actions"] label,
+  [class*="Header_actions"] select {
+    min-height: 42px;
+  }
+
+  [class*="HeroBanner_hero"] {
+    min-height: 15rem;
+    padding: 3rem 1rem;
+    background-position: center;
+  }
+
+  [class*="HeroBanner_title"] {
+    font-size: 1.85rem;
+    line-height: 1.08;
+    letter-spacing: 0.04em;
+  }
+
+  [class*="HeroBanner_subtitle"] {
+    margin-top: 0.75rem;
+    font-size: 1rem;
+    line-height: 1.35;
+  }
+
+  [class*="AnnouncementsSection_section"],
+  [class*="MatchesSection_section"] {
+    padding: 0;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  [class*="AnnouncementsSection_sectionHeader"],
+  [class*="MatchesSection_heading"] {
+    padding-inline: 0.15rem;
+  }
+
+  [class*="AnnouncementsSection_sectionHeader"] {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  [class*="AnnouncementsSection_sectionHeader"] h2,
+  [class*="MatchesSection_heading"] {
+    font-size: 1.35rem;
+  }
+
+  [class*="PreviousResults_panel"] {
+    border-radius: 8px;
+    padding: 0.9rem;
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  [class*="AnnouncementCard_titleRow"],
+  [class*="UpcomingMatches_header"],
+  [class*="PreviousResults_header"] {
+    align-items: flex-start;
+    gap: 0.55rem;
+  }
+
+  [class*="MatchesSection_column"]::before {
+    display: none;
+  }
+
+  [class*="contentGrid"] {
+    grid-template-columns: 1fr;
+    width: 100%;
+    padding-inline: 0.75rem;
+    margin-right: 0;
+  }
+
+  [class*="filterBar"],
+  [class*="toolbar"],
+  [class*="seriesBar"] {
+    align-items: stretch;
+    justify-content: stretch;
+    padding-inline: 0.75rem;
+  }
+
+  [class*="teamFilter"] {
+    min-width: 0;
+    width: 100%;
+  }
+
+  table {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: hidden;
+    table-layout: auto;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    min-height: 42px;
+  }
+
+  a[class*="MatchesSection_viewScheduleButton"],
+  [class*="AnnouncementsSection_actionButton"],
+  [class*="AnnouncementsSection_secondaryButton"],
+  [class*="AnnouncementsSection_closeButton"],
+  [class*="AnnouncementCard_editButton"],
+  [class*="UpcomingMatches_editButton"],
+  [class*="UpcomingMatches_rowEdit"],
+  [class*="UpcomingMatches_miniAction"],
+  [class*="PreviousResults_rowEdit"],
+  [class*="PreviousResults_miniDelete"],
+  [class*="togglePastButton"],
+  [class*="createButton"] {
+    width: auto !important;
+  }
+}
+
+@media (max-width: 420px) {
+  [class*="Header_controlColumns"] {
+    grid-template-columns: 1fr;
+  }
+
+  [class*="HeroBanner_title"] {
+    font-size: 1.55rem;
+  }
+
+  [class*="UpcomingMatches_actions"],
+  [class*="PreviousResults_actions"],
+  [class*="AnnouncementsSection_editorFooter"] {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  [class*="UpcomingMatches_actions"] button,
+  [class*="PreviousResults_actions"] button,
+  [class*="AnnouncementsSection_editorFooter"] button {
+    width: 100% !important;
+  }
+}

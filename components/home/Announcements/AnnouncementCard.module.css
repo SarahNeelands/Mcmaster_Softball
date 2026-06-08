@@ -81,20 +81,57 @@
 
 @media (max-width: 640px) {
   .card {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto;
+    row-gap: 0.45rem;
+    padding-inline: 0.7rem;
+    max-width: 100%;
+    min-width: 0;
+    overflow-wrap: anywhere;
   }
 
   .dateCell {
+    grid-column: 1;
     grid-row: 1;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0;
   }
 
   .titleCell {
+    grid-column: 1;
     grid-row: 2;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .titleRow {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: start;
+    gap: 0.5rem;
+    width: 100%;
+  }
+
+  .title {
+    width: 100%;
+    font-weight: 700;
   }
 
   .body {
     grid-column: 1;
     grid-row: 3;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .body * {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+
+  .body p,
+  .body ul,
+  .body ol {
+    width: 100%;
   }
 }

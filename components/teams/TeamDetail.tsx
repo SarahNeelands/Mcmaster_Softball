@@ -4,6 +4,7 @@ import type { Team } from "@/types/team_mod";
 import type { Match } from "@/types/match_mod";
 import { Calendar } from "@/components/common/calendar/calendar";
 import MatchesSection from "../home/Matches/MatchesSection";
+import { groupMatchesByMonth } from "@/lib/matches/sortingFunctions";
 
 interface Props {
   team: Team;
@@ -16,27 +17,6 @@ interface Props {
   teamNamesById?: Record<string, string>;
   teamSlugsById?: Record<string, string>;
   teamOptions?: { id: string; name: string; division_id?: string }[];
-}
-
-function buildCalendarMonths(matches: Match[]) {
-  const monthMap = new Map<string, { month: number; year: number; matches: Match[] }>();
-
-  for (const match of matches) {
-    const date = new Date(`${match.date}T00:00:00`);
-    const month = date.getMonth();
-    const year = date.getFullYear();
-    const key = `${year}-${month}`;
-
-    if (!monthMap.has(key)) {
-      monthMap.set(key, { month, year, matches: [] });
-    }
-
-    monthMap.get(key)!.matches.push(match);
-  }
-
-  return Array.from(monthMap.values()).sort(
-    (a, b) => a.year - b.year || a.month - b.month
-  );
 }
 
 export default function TeamDetail({
@@ -53,10 +33,27 @@ export default function TeamDetail({
 }: Props) {
   const [isEditingTeam, setIsEditingTeam] = useState(false);
   const [draftTeam, setDraftTeam] = useState<Team>(team);
+  const [comparisonDate] = useState(() => new Date());
 
   const months = useMemo(
-    () => buildCalendarMonths([...upcomingGames, ...previousGames]),
-    [upcomingGames, previousGames]
+    () => {
+      const currentMonthKey =
+        comparisonDate.getFullYear() * 12 + comparisonDate.getMonth();
+      const allMonths = groupMatchesByMonth([...upcomingGames, ...previousGames]);
+      const currentAndFutureMonths = allMonths.filter(
+        (month) => month.year * 12 + month.month >= currentMonthKey
+      );
+      const previousMonths = allMonths
+        .filter((month) => month.year * 12 + month.month < currentMonthKey)
+        .sort((a, b) => {
+          const aKey = a.year * 12 + a.month;
+          const bKey = b.year * 12 + b.month;
+          return bKey - aKey;
+        });
+
+      return [...currentAndFutureMonths, ...previousMonths];
+    },
+    [upcomingGames, previousGames, comparisonDate]
   );
 
   return (
@@ -219,11 +216,9 @@ export default function TeamDetail({
             </div>
           </div>
         </div>
-      </aside>
 
-      <aside className={styles.rightColumn}>
         <div className={styles.calendarCard}>
-          <Calendar months={months} />
+          <Calendar months={months} comparisonDate={comparisonDate} />
         </div>
       </aside>
 

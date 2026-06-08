@@ -179,8 +179,49 @@
     padding: 1.25rem;
   }
 
+  .timeBlock {
+    grid-template-columns: 1fr;
+    gap: 0.3rem;
+  }
+
+  .time {
+    display: block;
+    width: 100%;
+  }
+
+  .table {
+    width: 100%;
+  }
+
   .row {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    font-size: 0.9rem;
+    grid-template-columns: 2rem minmax(0, 1fr) auto minmax(0, 1fr) 2rem;
+    width: 100%;
+    border-left: 0;
+    border-top: 1px solid rgba(0, 0, 0, 0.12);
+    margin-left: 0;
+    padding: 0.5rem 0 0;
+    font-size: 0.82rem;
+  }
+
+  .row .team:first-of-type {
+    text-align: left;
+    justify-self: start;
+  }
+
+  .row .team:last-of-type {
+    text-align: right;
+    justify-self: end;
+  }
+
+  .score,
+  .vs {
+    text-align: center;
+  }
+
+  .rowEdit,
+  .miniDelete {
+    grid-column: 1 / -1;
+    justify-self: start;
+    width: auto;
   }
 }

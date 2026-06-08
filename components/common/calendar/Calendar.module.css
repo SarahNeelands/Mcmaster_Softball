@@ -57,3 +57,13 @@
   background: #6b2335;
   display: inline-block;
 }
+
+.pastDot {
+  background: #d1d5db;
+}
+
+@media (max-width: 900px) {
+  .desktopPastMonth {
+    display: none;
+  }
+}

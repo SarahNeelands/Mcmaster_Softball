@@ -1,0 +1,131 @@
+/* Responsive helper styles for phone-friendly layout */
+
+html {
+  text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+img,
+svg,
+video,
+iframe {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  min-width: 0;
+}
+
+.page,
+.main,
+.content,
+.container,
+.section,
+.card {
+  width: min(100%, 1180px);
+  max-width: 100%;
+  margin-inline: auto;
+  padding-inline: clamp(0.75rem, 3vw, 1.5rem);
+}
+
+.page {
+  padding-block-start: 1rem;
+}
+
+section,
+.card,
+.article,
+.form-section {
+  width: 100%;
+}
+
+table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+td,
+th {
+  word-break: break-word;
+  white-space: normal;
+}
+
+@media (max-width: 900px) {
+  .layout-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  header,
+  nav,
+  footer,
+  .page,
+  .main,
+  .content,
+  .section,
+  .card {
+    padding-inline: 1rem;
+  }
+
+  .hero-banner,
+  .announcement-card,
+  .standings-card,
+  .detail-card,
+  .form-card {
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .grid-cols-2,
+  .grid-cols-3,
+  .grid-row,
+  .form-row,
+  .stacked-form {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 0.75rem !important;
+  }
+
+  nav,
+  .nav-menu,
+  .nav-links,
+  .page-nav {
+    width: 100%;
+  }
+
+  .horizontal-scroll,
+  .table-wrapper,
+  .list-grid,
+  .card-list {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    width: 100% !important;
+  }
+
+  .hide-mobile {
+    display: none !important;
+  }
+}

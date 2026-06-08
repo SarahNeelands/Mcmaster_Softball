@@ -236,3 +236,70 @@
   background: white;
   color: #111827;
 }
+
+@media (max-width: 640px) {
+  .card {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.35rem;
+    padding: 0.65rem 0.55rem;
+  }
+
+  .title {
+    font-size: 1rem;
+  }
+
+  .columnLabels,
+  .right {
+    grid-template-columns: repeat(3, 1.15rem) 1.55rem;
+    gap: 0.18rem;
+  }
+
+  .columnLabel,
+  .scoreLabel {
+    font-size: 0.62rem;
+    text-align: center;
+  }
+
+  .row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.35rem;
+    padding: 0.65rem 0.55rem;
+  }
+
+  .left {
+    gap: 0.35rem;
+    min-width: 0;
+  }
+
+  .rank {
+    width: 2.55rem;
+    gap: 0.2rem;
+  }
+
+  .rankText {
+    font-size: 0.82rem;
+  }
+
+  .teamLink {
+    max-width: 100%;
+    font-size: 0.9rem;
+  }
+
+  .record,
+  .points {
+    font-size: 0.86rem;
+    text-align: center;
+  }
+
+  .points {
+    width: auto;
+  }
+}

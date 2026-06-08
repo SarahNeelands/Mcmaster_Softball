@@ -229,8 +229,25 @@ export default function SchedulePage() {
   );
 
   const months = useMemo(
-    () => groupMatchesByMonth(displayedMatches),
-    [displayedMatches]
+    () => {
+      const currentMonthKey =
+        comparisonNow.getFullYear() * 12 + comparisonNow.getMonth();
+
+      const allMonths = groupMatchesByMonth(filteredMatches);
+      const currentAndFutureMonths = allMonths.filter(
+        (month) => month.year * 12 + month.month >= currentMonthKey
+      );
+      const previousMonths = allMonths
+        .filter((month) => month.year * 12 + month.month < currentMonthKey)
+        .sort((a, b) => {
+          const aKey = a.year * 12 + a.month;
+          const bKey = b.year * 12 + b.month;
+          return bKey - aKey;
+        });
+
+      return [...currentAndFutureMonths, ...previousMonths];
+    },
+    [filteredMatches, comparisonNow]
   );
 
   const teamNamesById = useMemo(
@@ -723,7 +740,7 @@ export default function SchedulePage() {
           </div>
 
           <aside className={styles.calendarStack}>
-            <Calendar months={months} />
+            <Calendar months={months} comparisonDate={comparisonNow} />
           </aside>
         </div>
       </main>

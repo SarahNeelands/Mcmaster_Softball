@@ -9,18 +9,31 @@ interface CalendarMonth {
 
 interface CalendarProps {
   months: CalendarMonth[];
+  comparisonDate?: Date;
 }
 
-export function Calendar({ months }: CalendarProps) {
+function getMatchDateTime(match: Match) {
+  return new Date(`${match.date}T${match.time || "00:00"}:00`);
+}
+
+export function Calendar({ months, comparisonDate = new Date() }: CalendarProps) {
+  const currentMonthStart = new Date(
+    comparisonDate.getFullYear(),
+    comparisonDate.getMonth(),
+    1
+  ).getTime();
+
   return (
     <>
       {months.map((month) => {
         const firstDayOffset = new Date(month.year, month.month, 1).getDay();
+        const monthStart = new Date(month.year, month.month, 1).getTime();
+        const isPastMonth = monthStart < currentMonthStart;
 
         return (
           <div
             key={`${month.year}-${month.month}`}
-            className={styles.month}
+            className={`${styles.month} ${isPastMonth ? styles.desktopPastMonth : ""}`}
           >
             {/* Month and year label */}
             <h3 className={styles.calendarLabel}>
@@ -31,7 +44,7 @@ export function Calendar({ months }: CalendarProps) {
             </h3>
 
             <div className={styles.monthGrid}>
-              {Array.from({ length: 35 }).map((_, idx) => {
+              {Array.from({ length: 42 }).map((_, idx) => {
                 const dayNum = idx + 1 - firstDayOffset;
                 const cellDate = new Date(month.year, month.month, dayNum);
                 const inMonth = cellDate.getMonth() === month.month;
@@ -58,9 +71,15 @@ export function Calendar({ months }: CalendarProps) {
 
                     {inMonth && matchesOnDay.length > 0 && (
                       <div className={styles.dotsGrid}>
-                        {matchesOnDay.map((m) => (
-                          <span key={m.id} className={styles.dot} />
-                        ))}
+                        {matchesOnDay.map((m) => {
+                          const isPastMatch = getMatchDateTime(m) < comparisonDate;
+                          return (
+                            <span
+                              key={m.id}
+                              className={`${styles.dot} ${isPastMatch ? styles.pastDot : ""}`}
+                            />
+                          );
+                        })}
                       </div>
                     )}
                   </div>
