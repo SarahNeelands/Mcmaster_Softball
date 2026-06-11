@@ -10,6 +10,17 @@ type SubmissionLookup = {
   match: repo.MatchWithTeams;
 };
 
+type ScoreRequestEmailRecord = {
+  matchId: string;
+  side: "home" | "away";
+  teamName: string;
+  email: string;
+  opponentName: string;
+  matchLabel: string;
+  scheduledFor: string;
+  requestedDeliveryAt: string | null;
+};
+
 function normalizeAndValidateEmail(email: string, label: string) {
   const normalized = email.trim();
   const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -190,6 +201,7 @@ export async function sendScoreRequestEmails(matchId: string) {
   const sendAt = desiredSendAt > new Date() ? desiredSendAt.toISOString() : undefined;
   const failedEmails: Array<{ side: "home" | "away"; email: string; error: string }> = [];
   const scheduledSides: Array<"home" | "away"> = [];
+  const sentEmails: ScoreRequestEmailRecord[] = [];
 
   for (const item of links) {
     const stored = await repo.getLinkByMatchAndSide(match.id, item.side);
@@ -232,6 +244,16 @@ export async function sendScoreRequestEmails(matchId: string) {
 
       await repo.markEmailSent(stored.id);
       scheduledSides.push(item.side);
+      sentEmails.push({
+        matchId: match.id,
+        side: item.side,
+        teamName: item.side === "home" ? match.home_team_name : match.away_team_name,
+        email: recipientEmail,
+        opponentName: item.side === "home" ? match.away_team_name : match.home_team_name,
+        matchLabel: `${match.home_team_name} vs ${match.away_team_name}`,
+        scheduledFor: `${match.date} ${match.time}`,
+        requestedDeliveryAt: sendAt ?? null,
+      });
     } catch (error) {
       failedEmails.push({
         side: item.side,
@@ -253,11 +275,12 @@ export async function sendScoreRequestEmails(matchId: string) {
     return {
       ok: scheduledSides.length > 0,
       scheduledSides,
+      sentEmails,
       failedEmails,
     };
   }
 
-  return { ok: true, scheduledSides, failedEmails };
+  return { ok: true, scheduledSides, sentEmails, failedEmails };
 }
 
 export async function runDailyScoreCron() {
@@ -268,6 +291,7 @@ export async function runDailyScoreCron() {
   const windowEnd = new Date(now.getTime() + 24 * 60 * 60 * 1000);
   const matches = await repo.getMatchesNeedingScoreRequests(windowEnd.toISOString());
   const preparedMatchIds: string[] = [];
+  const sentEmails: ScoreRequestEmailRecord[] = [];
   const failedMatches: Array<{ matchId: string; errors: string[] }> = [];
 
   // Daily preparation widens the window to 24 hours and relies on the provider
@@ -279,8 +303,9 @@ export async function runDailyScoreCron() {
 
     try {
       const result = await sendScoreRequestEmails(match.id);
-      if (result.ok) {
+      if (result.sentEmails.length > 0) {
         preparedMatchIds.push(match.id);
+        sentEmails.push(...result.sentEmails);
       }
       if (result.failedEmails.length > 0) {
         failedMatches.push({
@@ -296,12 +321,17 @@ export async function runDailyScoreCron() {
     }
   }
 
-  return {
+  const result = {
     publishedMatchIds: singleSubmissionResult.publishedMatchIds,
     notifiedMatchIds: noSubmissionResult.notifiedMatchIds,
     preparedMatchIds,
+    sentEmails,
     failedMatches,
   };
+
+  await sendDailyScoreEmailSummary(result);
+
+  return result;
 }
 
 export async function prepareScoreRequestsForSeason(seasonId: string) {
@@ -318,7 +348,7 @@ export async function prepareScoreRequestsForSeason(seasonId: string) {
 
     try {
       const result = await sendScoreRequestEmails(match.id);
-      if (result.ok) {
+      if (result.sentEmails.length > 0) {
         preparedMatchIds.push(match.id);
       }
       if (result.failedEmails.length > 0) {
@@ -336,6 +366,54 @@ export async function prepareScoreRequestsForSeason(seasonId: string) {
   }
 
   return { preparedMatchIds, failedMatches };
+}
+
+async function sendDailyScoreEmailSummary(result: {
+  publishedMatchIds: string[];
+  notifiedMatchIds: string[];
+  preparedMatchIds: string[];
+  sentEmails: ScoreRequestEmailRecord[];
+  failedMatches: Array<{ matchId: string; errors: string[] }>;
+}) {
+  const reportTo = process.env.DAILY_EMAIL_REPORT_TO || getFounderEmail();
+  const today = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Toronto",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+
+  const sentLines =
+    result.sentEmails.length > 0
+      ? result.sentEmails.map((email) => {
+          const delivery = email.requestedDeliveryAt
+            ? `queued for ${email.requestedDeliveryAt}`
+            : "sent immediately";
+          return `- ${email.email} (${email.teamName}, ${email.side}) for ${email.matchLabel} on ${email.scheduledFor}; ${delivery}`;
+        })
+      : ["- None"];
+
+  const failureLines =
+    result.failedMatches.length > 0
+      ? result.failedMatches.flatMap((match) => [
+          `- Match ${match.matchId}`,
+          ...match.errors.map((error) => `  - ${error}`),
+        ])
+      : ["- None"];
+
+  await sendEmail({
+    to: reportTo,
+    subject: `Daily score email report: ${today}`,
+    text:
+      `Daily score email report for ${today} (America/Toronto)\n\n` +
+      `Score request emails queued/sent: ${result.sentEmails.length}\n` +
+      `${sentLines.join("\n")}\n\n` +
+      `Matches with score requests prepared: ${result.preparedMatchIds.length}\n` +
+      `Single-sided scores published: ${result.publishedMatchIds.length}\n` +
+      `No-submission notices sent: ${result.notifiedMatchIds.length}\n\n` +
+      `Failures:\n${failureLines.join("\n")}`,
+    idempotencyKey: `daily-score-email-report-${today}`,
+  });
 }
 
 async function notifyFounderConflict(match: repo.MatchWithTeams, links: ScoreSubmissionLink[]) {
