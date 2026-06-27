@@ -43,6 +43,19 @@ const testCases = [
             strict_1.default.equal(selected, null);
         },
     },
+    {
+        name: "accepts Date values from the database driver",
+        run: () => {
+            const selected = (0, season_selection_1.selectCurrentOrMostRecentSeason)([
+                {
+                    id: "2026",
+                    start_date: new Date("2026-03-15T04:00:00.000Z"),
+                    end_date: new Date("2027-03-15T04:00:00.000Z"),
+                },
+            ], new Date("2026-06-26T12:00:00.000Z"));
+            strict_1.default.equal(selected?.id, "2026");
+        },
+    },
 ];
 let passed = 0;
 for (const testCase of testCases) {

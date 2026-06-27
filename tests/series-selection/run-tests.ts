@@ -3,8 +3,8 @@ import { selectCurrentOrMostRecentSeries } from "../../backend/services/series_s
 
 type SeriesCase = {
   id: string;
-  start_date: string;
-  end_date: string;
+  start_date: string | Date | number;
+  end_date: string | Date | number;
 };
 
 type TestCase = {
@@ -60,6 +60,23 @@ const testCases: TestCase[] = [
     run: () => {
       const selected = selectCurrentOrMostRecentSeries<SeriesCase>([], "2026-06-26");
       assert.equal(selected, null);
+    },
+  },
+  {
+    name: "accepts Date values from the database driver",
+    run: () => {
+      const selected = selectCurrentOrMostRecentSeries(
+        [
+          {
+            id: "series-1",
+            start_date: new Date("2026-03-15T04:00:00.000Z"),
+            end_date: new Date("2027-03-15T04:00:00.000Z"),
+          },
+        ],
+        new Date("2026-06-26T12:00:00.000Z")
+      );
+
+      assert.equal(selected?.id, "series-1");
     },
   },
 ];

@@ -1,15 +1,23 @@
 type SeriesWindow = {
-  start_date: string;
-  end_date: string;
+  start_date: string | Date | number;
+  end_date: string | Date | number;
 };
 
-function toDateOnly(value: string): string {
-  return value.slice(0, 10);
+function toDateOnly(value: string | Date | number): string {
+  if (value instanceof Date) {
+    return value.toISOString().slice(0, 10);
+  }
+
+  if (typeof value === "number") {
+    return new Date(value).toISOString().slice(0, 10);
+  }
+
+  return String(value).slice(0, 10);
 }
 
 export function selectCurrentOrMostRecentSeries<T extends SeriesWindow>(
   series: T[],
-  today: string
+  today: string | Date | number
 ): T | null {
   const normalizedToday = toDateOnly(today);
 

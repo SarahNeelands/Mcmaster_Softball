@@ -3,8 +3,8 @@ import { selectCurrentOrMostRecentSeason } from "../../backend/services/season_s
 
 type SeasonCase = {
   id: string;
-  start_date: string;
-  end_date: string;
+  start_date: string | Date | number;
+  end_date: string | Date | number;
 };
 
 type TestCase = {
@@ -60,6 +60,23 @@ const testCases: TestCase[] = [
     run: () => {
       const selected = selectCurrentOrMostRecentSeason<SeasonCase>([], "2026-06-26");
       assert.equal(selected, null);
+    },
+  },
+  {
+    name: "accepts Date values from the database driver",
+    run: () => {
+      const selected = selectCurrentOrMostRecentSeason(
+        [
+          {
+            id: "2026",
+            start_date: new Date("2026-03-15T04:00:00.000Z"),
+            end_date: new Date("2027-03-15T04:00:00.000Z"),
+          },
+        ],
+        new Date("2026-06-26T12:00:00.000Z")
+      );
+
+      assert.equal(selected?.id, "2026");
     },
   },
 ];

@@ -2,7 +2,13 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.selectCurrentOrMostRecentSeries = selectCurrentOrMostRecentSeries;
 function toDateOnly(value) {
-    return value.slice(0, 10);
+    if (value instanceof Date) {
+        return value.toISOString().slice(0, 10);
+    }
+    if (typeof value === "number") {
+        return new Date(value).toISOString().slice(0, 10);
+    }
+    return String(value).slice(0, 10);
 }
 function selectCurrentOrMostRecentSeries(series, today) {
     const normalizedToday = toDateOnly(today);
