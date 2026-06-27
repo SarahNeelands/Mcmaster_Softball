@@ -32,7 +32,14 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Missing or invalid type" }, { status: 400 });
   } catch (e) {
     console.error("GET seasons route error:", e);
-    return NextResponse.json({ error: "Failed to get season/s" }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: "Failed to get season/s",
+        details: e instanceof Error ? e.message : String(e),
+        stack: e instanceof Error ? e.stack ?? null : null,
+      },
+      { status: 500 }
+    );
   }
 }
 
