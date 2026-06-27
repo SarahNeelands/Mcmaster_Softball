@@ -12,36 +12,12 @@ function isAdminOnlySeason(season: Pick<Season, "admin_only"> | null | undefined
 // Season GET functions
 //==============================================================================
 
-export async function GetCurrentSeason(includeAdminOnly = false): Promise<Season> {
+export async function GetCurrentSeason(includeAdminOnly = false): Promise<Season | null> {
   const all = await GetAllSeasons(includeAdminOnly);
   const today = new Date().toISOString().slice(0, 10);
   const selected = selectCurrentOrMostRecentSeason(all, today);
 
-  if (selected) {
-    return selected;
-  }
-
-  const date = new Date();
-  const year = date.toISOString().slice(0, 4);
-  const oneYearFromToday = new Date(date);
-  oneYearFromToday.setFullYear(date.getFullYear() + 1);
-
-  const start = date.toISOString().slice(0, 10);
-  const end = oneYearFromToday.toISOString().slice(0, 10);
-
-  const n: Season = {
-    id: "",
-    name: year,
-    series_ids: [],
-    start_date: start,
-    end_date: end,
-    editing_status: "draft",
-    admin_only: false,
-    score_notifications_enabled: false,
-  };
-
-  const created = await CreateNewSeason(n);
-  return await FormatSeason(created);
+  return selected;
 }
 
 export async function GetAllSeasons(includeAdminOnly = false): Promise<Season[]> {

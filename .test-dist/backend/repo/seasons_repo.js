@@ -12,16 +12,9 @@ const db_1 = require("../database/db");
 let ensureSeasonColumnsPromise = null;
 async function EnsureSeasonColumns() {
     if (!ensureSeasonColumnsPromise) {
-        ensureSeasonColumnsPromise = (async () => {
-            await db_1.pool.query(`ALTER TABLE seasons
-         ADD COLUMN IF NOT EXISTS admin_only BOOLEAN NOT NULL DEFAULT FALSE,
-         ADD COLUMN IF NOT EXISTS score_notifications_enabled BOOLEAN NOT NULL DEFAULT FALSE`);
-        })().catch((error) => {
-            ensureSeasonColumnsPromise = null;
-            throw error;
-        });
+        ensureSeasonColumnsPromise = Promise.resolve();
     }
-    await ensureSeasonColumnsPromise;
+    return ensureSeasonColumnsPromise;
 }
 async function HasSeasonAdminOnlyColumn() {
     await EnsureSeasonColumns();
