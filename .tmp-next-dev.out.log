@@ -1,0 +1,19 @@
+
+> mcmaster-softball@0.1.0 dev
+> next dev -p 3010
+
+▲ Next.js 16.1.6 (Turbopack)
+- Local:         http://localhost:3010
+- Network:       http://38.9.91.123:3010
+- Environments: .env.local
+
+✓ Starting...
+Creating turbopack project {
+  dir: 'C:\\Users\\srnee\\Documents\\GitHub\\Mcmaster_Softball',
+  testMode: true
+}
+✓ Ready in 1306ms
+PG connected: { db: 'mcmaster_softball', usr: 'admin', addr: '::1', port: 5432 }
+ GET /api/seasons?type=current 200 in 399ms (compile: 258ms, render: 141ms)
+ GET /api/series?season_id=d61ca830-3b1b-4094-ba2d-257911ceb45d&type=current 200 in 57ms (compile: 37ms, render: 20ms)
+ GET /api/series?season_id=d61ca830-3b1b-4094-ba2d-257911ceb45d&type=all 200 in 14ms (compile: 3ms, render: 10ms)

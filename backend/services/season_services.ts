@@ -2,6 +2,7 @@ import { Season } from "../../types/season_mod";
 import * as repo from "../repo/seasons_repo";
 import { GetSeasonSeriesIds } from "./series_services";
 import { GetAllTeamsOfSeason } from "./team_services";
+import { selectCurrentOrMostRecentSeason } from "./season_selection";
 
 function isAdminOnlySeason(season: Pick<Season, "admin_only"> | null | undefined): boolean {
   return Boolean(season?.admin_only);
@@ -14,25 +15,10 @@ function isAdminOnlySeason(season: Pick<Season, "admin_only"> | null | undefined
 export async function GetCurrentSeason(includeAdminOnly = false): Promise<Season> {
   const all = await GetAllSeasons(includeAdminOnly);
   const today = new Date().toISOString().slice(0, 10);
+  const selected = selectCurrentOrMostRecentSeason(all, today);
 
-  const current = all.find(
-    (season) => season.start_date <= today && season.end_date >= today
-  );
-
-  if (current) {
-    return current;
-  }
-
-  const previous = [...all]
-    .filter((season) => season.end_date < today)
-    .sort((a, b) => b.end_date.localeCompare(a.end_date))[0];
-
-  if (previous) {
-    return previous;
-  }
-
-  if (all.length > 0) {
-    return all[0];
+  if (selected) {
+    return selected;
   }
 
   const date = new Date();

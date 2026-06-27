@@ -2,31 +2,7 @@ import {Series} from "../../types/series_mod"
 import * as repo from "../repo/series_repo"
 import * as seasonRepo from "../repo/seasons_repo"
 import { GetSeriesDivisionIds, SeedSeriesDivisionsFromPreviousSeries } from "./division_services"
-import {
-    buildFollowupSeriesPayload,
-    findExistingFollowupSeries,
-    shouldCreateFollowupSeries,
-} from "./series_rollover";
-
-async function CreateFollowupSeries(
-    previousSeries: repo.SeriesRow,
-    season: seasonRepo.SeasonRow,
-    existingSeries: repo.SeriesRow[]
-): Promise<Series> {
-    const existingFollowup = findExistingFollowupSeries(existingSeries, previousSeries.end_date);
-
-    if (existingFollowup) {
-        return await FormatSeries(existingFollowup);
-    }
-
-    const created = await CreateNewSeries(
-        buildFollowupSeriesPayload(previousSeries, season, existingSeries),
-        season.id,
-        previousSeries.id
-    );
-
-    return created;
-}
+import { selectCurrentOrMostRecentSeries } from "./series_selection";
 
 
 //==============================================================================
@@ -39,20 +15,12 @@ export async function GetCurrentSeries(season_id: string): Promise<Series> {
     }
 
     const season = seasonRows[0];
-    const current = await repo.GetCurrentSeries(season_id);
-
-    if (current) {
-        return await FormatSeries(current);
-    }
-
     const allSeries = await repo.GetAllSeasonsSeries(season_id);
-    const previous = await repo.GetPreviousSeries(season_id);
-    if (shouldCreateFollowupSeries(previous, season)) {
-        return await CreateFollowupSeries(previous, season, allSeries);
-    }
+    const today = new Date().toISOString().slice(0, 10);
+    const selected = selectCurrentOrMostRecentSeries(allSeries, today);
 
-    if (previous) {
-        return await FormatSeries(previous);
+    if (selected) {
+        return await FormatSeries(selected);
     }
 
     const n: Series = {

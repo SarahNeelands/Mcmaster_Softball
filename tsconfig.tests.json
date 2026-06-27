@@ -16,7 +16,11 @@
   "include": [
     "backend/services/series_rollover.ts",
     "backend/services/series_seed.ts",
+    "backend/services/season_selection.ts",
+    "backend/services/series_selection.ts",
     "tests/series-rollover/run-tests.ts",
+    "tests/season-selection/run-tests.ts",
+    "tests/series-selection/run-tests.ts",
     "types/*.ts",
     "backend/repo/seasons_repo.ts",
     "backend/repo/series_repo.ts"

@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test:series-rollover": "cmd /c if exist .test-dist rmdir /s /q .test-dist && tsc -p tsconfig.tests.json && node .test-dist/tests/series-rollover/run-tests.js"
+    "test:series-rollover": "cmd /c if exist .test-dist rmdir /s /q .test-dist && tsc -p tsconfig.tests.json && node .test-dist/tests/series-rollover/run-tests.js",
+    "test:season-selection": "cmd /c if exist .test-dist rmdir /s /q .test-dist && tsc -p tsconfig.tests.json && node .test-dist/tests/season-selection/run-tests.js",
+    "test:series-selection": "cmd /c if exist .test-dist rmdir /s /q .test-dist && tsc -p tsconfig.tests.json && node .test-dist/tests/series-selection/run-tests.js"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
