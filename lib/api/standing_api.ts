@@ -1,7 +1,15 @@
 import { Standing } from "@/types/standing_mod";
 
 export async function GetSeriesStandings(series_id: string): Promise<Standing[]> {
-  const url = `/api/standings?series_id=${encodeURIComponent(series_id)}&type=series`;
+  const params = new URLSearchParams({
+    type: "series",
+  });
+
+  if (series_id) {
+    params.set("series_id", series_id);
+  }
+
+  const url = `/api/standings?${params.toString()}`;
 
   const res = await fetch(url);
   if (!res.ok) throw new Error(await res.text());
@@ -9,7 +17,15 @@ export async function GetSeriesStandings(series_id: string): Promise<Standing[]>
 }
 
 export async function GetDivisionStandings(division_id: string): Promise<Standing[]> {
-  const url = `/api/standings?division_id=${encodeURIComponent(division_id)}&type=division`;
+  const params = new URLSearchParams({
+    type: "division",
+  });
+
+  if (division_id) {
+    params.set("division_id", division_id);
+  }
+
+  const url = `/api/standings?${params.toString()}`;
 
   const res = await fetch(url);
   if (!res.ok) throw new Error(await res.text());
@@ -17,7 +33,19 @@ export async function GetDivisionStandings(division_id: string): Promise<Standin
 }
 
 export async function GetTeamStanding(team_id: string, series_id: string): Promise<Standing | null> {
-  const url = `/api/standings?team_id=${encodeURIComponent(team_id)}&series_id=${encodeURIComponent(series_id)}&type=team`;
+  const params = new URLSearchParams({
+    type: "team",
+  });
+
+  if (team_id) {
+    params.set("team_id", team_id);
+  }
+
+  if (series_id) {
+    params.set("series_id", series_id);
+  }
+
+  const url = `/api/standings?${params.toString()}`;
 
   const res = await fetch(url);
   if (!res.ok) throw new Error(await res.text());

@@ -5,7 +5,19 @@ export async function GetSeries(
   season_id: string,
   type: "current" | "specific" | "all"
 ): Promise<Series[] | Series> {
-  const url = `/api/series?series_id=${encodeURIComponent(series_id)}&season_id=${encodeURIComponent(season_id)}&type=${encodeURIComponent(type)}`;
+  const params = new URLSearchParams({
+    type,
+  });
+
+  if (season_id) {
+    params.set("season_id", season_id);
+  }
+
+  if (series_id) {
+    params.set("series_id", series_id);
+  }
+
+  const url = `/api/series?${params.toString()}`;
 
   const res = await fetch(url);
   if (!res.ok) throw new Error(await res.text());

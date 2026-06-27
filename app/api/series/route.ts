@@ -9,9 +9,9 @@ export async function GET(request: Request) {
   try {
     const isAdmin = await isAdminRequest();
     const url = new URL(request.url);
-    const season_id = url.searchParams.get("season_id");
-    const series_id = url.searchParams.get("series_id");
-    const search = url.searchParams.get("type");
+    const season_id = url.searchParams.get("season_id")?.trim() || null;
+    const series_id = url.searchParams.get("series_id")?.trim() || null;
+    const search = url.searchParams.get("type")?.trim();
 
     if (search === "current") {
       if (!season_id) {

@@ -5,7 +5,19 @@ export async function GetDivisions(
   series_id: string,
   type: "specific" | "all"
 ): Promise<Division[] | Division> {
-  const url = `/api/divisions?division_id=${encodeURIComponent(division_id)}&series_id=${encodeURIComponent(series_id)}&type=${encodeURIComponent(type)}`;
+  const params = new URLSearchParams({
+    type,
+  });
+
+  if (division_id) {
+    params.set("division_id", division_id);
+  }
+
+  if (series_id) {
+    params.set("series_id", series_id);
+  }
+
+  const url = `/api/divisions?${params.toString()}`;
 
   const res = await fetch(url);
   if (!res.ok) throw new Error(await res.text());

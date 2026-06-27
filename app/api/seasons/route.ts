@@ -8,8 +8,8 @@ export async function GET(request: Request) {
   try {
     const isAdmin = await isAdminRequest();
     const url = new URL(request.url);
-    const season_id = url.searchParams.get("season_id");
-    const search = url.searchParams.get("type"); // "current" | "specific" | "all"
+    const season_id = url.searchParams.get("season_id")?.trim() || null;
+    const search = url.searchParams.get("type")?.trim(); // "current" | "specific" | "all"
 
     if (search === "current") {
       const items = await service.GetCurrentSeason(isAdmin);

@@ -2,7 +2,15 @@
 import { Season } from "@/types/season_mod";
 
 export async function GetSeasons(season_id: string, type: "current" | "specific" | "all"): Promise<Season[]> {
-  const url = `/api/seasons?season_id=${encodeURIComponent(season_id)}&type=${encodeURIComponent(type)}`;
+  const params = new URLSearchParams({
+    type,
+  });
+
+  if (season_id) {
+    params.set("season_id", season_id);
+  }
+
+  const url = `/api/seasons?${params.toString()}`;
 
   const res = await fetch(url, { cache: "no-store" }); 
   if (!res.ok) throw new Error(await res.text());
